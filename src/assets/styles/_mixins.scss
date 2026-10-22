@@ -1,0 +1,11 @@
+@use 'colors' as c;
+
+@mixin section-black100 {
+    background-color: c.$primary_black100;
+    color: c.$primary_light25;
+}
+
+@mixin section-green100 {
+    background-color: c.$forest_green100;
+    color: c.$primary_light25;
+}

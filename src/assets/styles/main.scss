@@ -1,0 +1,19 @@
+/* --- IMPORT AF FILER */
+@use 'buttons';
+@use 'typography';
+@use 'spacings' as s;
+@use 'colors' as c;
+@use 'flex' as f;
+
+body {
+    margin: 0 auto;
+    background-color: c.$primary_light25;
+}
+
+section {
+    padding: s.$spacing-xxl s.$spacing-m;
+}
+
+.double-button {
+    @include f.flex-buttons;
+}
