@@ -26,7 +26,7 @@ import BaseButton from './BaseButton.vue'
 
   .kort-wrapper {
     position: relative;
-    width: 25rem;
+    width: 20rem;
     height: fit-content;
     margin: auto;
 

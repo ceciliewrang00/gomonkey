@@ -23,3 +23,9 @@ p {
     font-size: clamp(1rem, 1.5vw, 1.25rem);
     text-decoration: none;
 }
+
+@mixin button_header {
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    font-size: clamp(1rem, 1.5vw, 2rem);
+}

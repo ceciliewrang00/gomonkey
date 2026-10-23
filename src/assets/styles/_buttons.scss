@@ -44,7 +44,7 @@
 }
 
 .button-blue {
-        background-color: c.$secondary_blue25;
+    background-color: c.$secondary_blue25;
     color: c.$primary_black100;
     padding:0.5rem 1.5rem;
     @include t.button;
@@ -68,5 +68,16 @@
     &:hover {
         background-color: c.$primary_black100;
         color: c.$forest_pink100;
+    }
+}
+
+.button-header {
+    @include t.button_header;
+    color: c.$primary_black100;
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline 2px;
+        font-weight: 600;
     }
 }
