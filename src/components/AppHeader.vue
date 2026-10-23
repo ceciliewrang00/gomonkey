@@ -49,7 +49,7 @@ header {
 .actions {
   display: flex;
   align-items: center;
-  gap: s.$spacing-xxxl;
+  gap: s.$spacing-m;
 }
 
 .burger {
