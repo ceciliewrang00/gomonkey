@@ -32,7 +32,10 @@ const isOpen = ref(false)
 @use '@/assets/styles/spacings' as s;
 
 header {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-color: c.$primary_light25;
   display: flex;
   align-items: center;
   justify-content: space-between;

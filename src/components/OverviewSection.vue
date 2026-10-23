@@ -32,7 +32,11 @@ import BaseButton from './BaseButton.vue'
   gap: s.$spacing-xl;
 
   #overblik-tekst {
-    max-width: 45rem;
+    max-width: 40rem;
+
+    h1 {
+      margin-bottom: s.$spacing-l;
+    }
   }
 
   #kort-wrapper {

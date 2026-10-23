@@ -5,6 +5,10 @@
 @use 'colors' as c;
 @use 'flex' as f;
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     max-width: 90rem;
     margin: 0 auto;
@@ -12,7 +16,7 @@ body {
 }
 
 header {
-    margin: s.$spacing-xs s.$spacing-m;
+    padding: s.$spacing-xs s.$spacing-m;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -20,6 +24,7 @@ header {
 
 section {
     padding: s.$spacing-xxl s.$spacing-m;
+    scroll-margin-top: 5rem;
 }
 
 .double-button {

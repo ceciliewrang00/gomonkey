@@ -30,12 +30,21 @@ import BaseButton from './BaseButton.vue'
   justify-content: flex-end;
 
   #baner-content{
-    max-width: 45rem;
+    max-width: 40rem;
+
+    h2 {
+      margin-bottom: s.$spacing-s;
+    }
+
+    h2 {
+      margin-bottom: s.$spacing-l;
+    }
   }
 
   .baner-img {
     margin: auto;
-    width: clamp(20rem, 40vw, 35rem)
+    width: clamp(20rem, 40vw, 35rem);
+    border-radius: 1rem;
   }
 }
 </style>
