@@ -4,13 +4,15 @@ import BaseButton from './BaseButton.vue'
 
 <template>
   <section id="overblik">
-    <h1>Overblik over parken</h1>
-    <p>
-      Før du kaster dig ud i det, så få styr på terrænet. Kortet viser dig alle vores baner, hvor de starter, og hvor højt du kommer op.
-      <br>
-      Hver bane har sin egen farve og sit eget niveau, så du nemt kan se, hvor du skal hen.
-    </p>
-    <div class="kort-wrapper">
+    <div id="overblik-tekst">
+      <h1>Overblik over parken</h1>
+      <p>
+        Før du kaster dig ud i det, så få styr på terrænet. Kortet viser dig alle vores baner, hvor de starter, og hvor højt du kommer op.
+        <br>
+        Hver bane har sin egen farve og sit eget niveau, så du nemt kan se, hvor du skal hen.
+      </p>
+    </div>
+    <div id="kort-wrapper">
       <img src="@/assets/images/kort.svg" alt="Kort over GoMonkey Odense" class="overblik-kort">
       <BaseButton variant="primary">Se kort</BaseButton>
     </div>
@@ -20,11 +22,20 @@ import BaseButton from './BaseButton.vue'
 <style lang="scss" scoped>
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/mixins' as m;
+@use '@/assets/styles/spacings' as s;
 
 #overblik {
   @include m.section-black100;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: s.$spacing-xl;
 
-  .kort-wrapper {
+  #overblik-tekst {
+    max-width: 45rem;
+  }
+
+  #kort-wrapper {
     position: relative;
     width: 20rem;
     height: fit-content;
