@@ -19,6 +19,12 @@ p {
     font-size: clamp(1rem, 1.5vw, 1.25rem);
 }
 
+li {
+    font-family: "Inter", sans-serif;
+    font-weight: 300;
+    font-size: clamp(1rem, 1.5vw, 1.25rem);
+}
+
 @mixin button {
     font-family: "Inter", sans-serif;
     font-weight: 900;
