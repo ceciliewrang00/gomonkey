@@ -11,25 +11,44 @@ const URL = 'https://gomonkey-baner-default-rtdb.europe-west1.firebasedatabase.a
 // Tom liste til banerne. Siden opdateres, når listen får data
 const baner = ref([])
 
+// true mens vi venter på databasen
+const loading = ref(true)
+
+// Gemmer en fejlbesked, hvis noget går galt
+const error = ref(null)
+
 // Når siden er vist: hent data fra databasen
 onMounted(async () => {
-    // API-kald: spørger databasen om banerne
-    const res = await fetch(URL)
+    try {
+        // API-kald: spørger databasen om banerne
+        const res = await fetch(URL)
 
-    // Laver svaret om til noget JavaScript kan bruge
-    const data = await res.json()
+        // Hvis databasen svarer med en fejl (fx 401 eller 404), så stop her
+        if (!res.ok) throw new Error(`Fejl ${res.status}`)
 
-    // Firebase giver et objekt. Vi laver det til en liste og gemmer navnet (fx "grøn1") som id
-    baner.value = Object.entries(data)
-    .map(([id, bane]) => ({ id, ...bane })) // Laver Firebase-objektet om til en liste og gemmer navnet (fx "grøn1") som id
-    .sort((a, b) => parseFloat(a.difficulty) - parseFloat(b.difficulty)) //vi sammenligner a og b ud fra difficulty og fjerner % via parseFloat
+        const data = await res.json()
+
+        // Laver Firebase-objektet om til en liste, gemmer navnet som id og sorterer efter sværhedsgrad
+        baner.value = Object.entries(data)
+            .map(([id, bane]) => ({ id, ...bane }))
+            .sort((a, b) => parseFloat(a.difficulty) - parseFloat(b.difficulty))
+    } catch (e) {
+        // Hvis noget fejler, gemmer vi en besked, som vi kan vise
+        error.value = 'Banerne kunne ikke hentes. Prøv igen senere.'
+        console.error(e)
+    } finally {
+        // Uanset om det gik godt eller dårligt, er vi færdige med at vente
+        loading.value = false
+    }
 })
 </script>
 
 <template>
     <section id="bane__info">
+        <p v-if="loading">Henter baner...</p>
+        <p v-else-if="error">{{ error }}</p>
         <!-- Ét kort pr. bane (v-for gentager article) -->
-        <article v-for="bane in baner" :key="bane.id" :class="bane.class" class="bane">
+         <article v-else v-for="bane in baner" :key="bane.id" :class="bane.class" class="bane">
             <div class="bane__content">
                 <div class="bane-icon">
                     <h2 class="h2-baneinfo">{{ bane.name }}</h2>
@@ -68,14 +87,6 @@ onMounted(async () => {
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
 
-.h2-baneinfo {
-    font-family: "Inter", sans-serif;
-    font-weight: 900;
-    font-size: clamp(1.5rem, 3vw, 2.25rem);
-    margin: 0;
-    padding-top: s.$spacing-xs;
-}
-
 .bane {
     display: flex;
     flex-wrap: wrap;
@@ -93,19 +104,31 @@ onMounted(async () => {
     justify-content: flex-end;
 }
 
-.bane-icon {
-  display: flex;
-  flex-direction: row;
-  gap: s.$spacing-xs;
-  align-items: center;
-}
-
-.track-badge {
-    height: 10px;
-}
-
 .bane__content {
     max-width: 40rem;
+
+    .bane-icon {
+    display: flex;
+    flex-direction: row;
+    gap: s.$spacing-xs;
+    align-items: center;
+
+        .h2-baneinfo {
+        font-family: "Inter", sans-serif;
+        font-weight: 900;
+        font-size: clamp(1.5rem, 3vw, 2.25rem);
+        margin: 0;
+        padding-top: s.$spacing-xs;
+        }
+    }
+
+    ul {
+        display: flex;
+        flex-direction: column;
+        gap: s.$spacing-xs;
+        list-style: none;
+        padding: 0;
+    }
 }
 
 .bane__img__wrapper {
