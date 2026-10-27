@@ -11,7 +11,7 @@
 @use '@/assets/styles/colors' as c;
 
 #banner {
-  background-image: url('@/assets/images/banner.svg');
+  background-image: url('@/assets/images/banner.webp');
   background-repeat: no-repeat;
   background-size: cover;
   color: c.$primary_light25;

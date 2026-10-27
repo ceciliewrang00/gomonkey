@@ -13,7 +13,7 @@ import BaseButton from './BaseButton.vue'
       </p>
     </div>
     <div id="kort-wrapper">
-      <img src="@/assets/images/kort.svg" alt="Kort over GoMonkey Odense" class="overblik-kort">
+      <img src="@/assets/images/kort.webp" alt="Kort over GoMonkey Odense" class="overblik-kort">
       <BaseButton variant="primary">Se kort</BaseButton>
     </div>
   </section>
@@ -40,6 +40,11 @@ import BaseButton from './BaseButton.vue'
     width: clamp(20rem, 40vw, 35rem);
     height: fit-content;
     margin: auto;
+
+    img {
+      width: clamp(20rem, 40vw, 35rem);
+      height: auto;
+    }
 
     &:after {
       content: "";

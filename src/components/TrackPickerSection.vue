@@ -13,7 +13,7 @@ import BaseButton from './BaseButton.vue'
         <BaseButton variant="blue">Start banevælger</BaseButton>
       </div>
     </div>
-    <img src="@/assets/images/bane-img.svg" alt="To personer igang med at udfører en forhindring" class="baner-img">
+    <img src="@/assets/images/bane-img.webp" alt="To personer igang med at udfører en forhindring" class="baner-img">
   </section>
 </template>
 

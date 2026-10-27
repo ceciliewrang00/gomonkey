@@ -7,7 +7,7 @@ import BaseButton from './BaseButton.vue'
     <div id="hero__content">
       <div id="hero__content__title">
         <div class="forest-icon">
-          <img src="@/assets/images/forrest-ikon.svg" alt="Ikon med træer">
+          <img src="@/assets/images/forrest-ikon.webp" alt="Ikon med træer" class="icon">
           <h2>Forrest Odense</h2>
         </div>
         <h1>Oplev banerne</h1>
@@ -47,6 +47,12 @@ import BaseButton from './BaseButton.vue'
 .forest-icon {
   display: flex;
   flex-direction: row;
-  gap: 1.5rem
+  gap: 1.5rem;
+  align-items: flex-end;
 }
+
+.icon {
+    width: 3rem;
+    height: 3rem;
+  }
 </style>
