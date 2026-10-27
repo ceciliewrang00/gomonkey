@@ -27,39 +27,41 @@ onMounted(async () => {
 </script>
 
 <template>
-    <!-- Ét kort pr. bane (v-for gentager article) -->
-    <article v-for="bane in baner" :key="bane.id" :class="bane.class" class="bane">
-        <div class="bane__content">
-            <div class="bane-icon">
-                <h2 class="h2-baneinfo">{{ bane.name }}</h2>
+    <section id="bane__info">
+        <!-- Ét kort pr. bane (v-for gentager article) -->
+        <article v-for="bane in baner" :key="bane.id" :class="bane.class" class="bane">
+            <div class="bane__content">
+                <div class="bane-icon">
+                    <h2 class="h2-baneinfo">{{ bane.name }}</h2>
 
-                <!-- Sender farve og nummer videre til TrackBadge -->
-                <TrackBadge :color="bane.color" :number="bane.number" class="track-badge"/>
-            </div>
+                    <!-- Sender farve og nummer videre til TrackBadge -->
+                    <TrackBadge :color="bane.color" :number="bane.number" class="track-badge"/>
+                </div>
 
-            <p>{{ bane.description }}</p>
+                <p>{{ bane.description }}</p>
 
-            <ul>
-                <!-- v-if = vis kun linjen, hvis banen har den information -->
-                <li v-if="bane.requirements">Krav: {{ bane.requirements }}</li>
-                <li v-if="bane.trackHeight">Banehøjde: {{ bane.trackHeight }}</li>
-                <li v-if="bane.obstacles">Forhindringer: {{ bane.obstacles }}</li>
-                <li v-if="bane.longestGlide">Længste svæv: {{ bane.longestGlide }}</li>
-                <li v-if="bane.glideAmount">Antal svæv: {{ bane.glideAmount }}</li>
-                <li v-if="bane.trackLength">Banelængde: {{ bane.trackLength }}</li>
-            </ul>
+                <ul>
+                    <!-- v-if = vis kun linjen, hvis banen har den information -->
+                    <li v-if="bane.requirements">Krav: {{ bane.requirements }}</li>
+                    <li v-if="bane.trackHeight">Banehøjde: {{ bane.trackHeight }}</li>
+                    <li v-if="bane.obstacles">Forhindringer: {{ bane.obstacles }}</li>
+                    <li v-if="bane.longestGlide">Længste svæv: {{ bane.longestGlide }}</li>
+                    <li v-if="bane.glideAmount">Antal svæv: {{ bane.glideAmount }}</li>
+                    <li v-if="bane.trackLength">Banelængde: {{ bane.trackLength }}</li>
+                </ul>
 
-            <div class="difficulty">
-                <p>Sværhedsgrad:</p>
-                <div class="difficulty__track">
-                    <div class="difficulty__fill" :style="{ width: bane.difficulty }"></div>
+                <div class="difficulty">
+                    <p>Sværhedsgrad:</p>
+                    <div class="difficulty__track">
+                        <div class="difficulty__fill" :style="{ width: bane.difficulty }"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="bane__img__wrapper" v-if="bane.image">
-            <img :src="`/${bane.image}`" :alt="bane.altImg" class="bane__img"/>
-        </div>
-    </article>
+            <div class="bane__img__wrapper" v-if="bane.image">
+                <img :src="`/${bane.image}`" :alt="bane.altImg" class="bane__img"/>
+            </div>
+        </article>
+    </section>
 </template>
 
 <style lang="scss" scoped>

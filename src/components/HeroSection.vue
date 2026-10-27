@@ -15,7 +15,7 @@ import BaseButton from './BaseButton.vue'
       </div>
       <p>Fra den første forsigtige tur på svævebanen til frit fald fra ti meters højde. Hos GoMonkey er der en bane til alle, uanset om du er en nybegynder eller en erfaren klatreabe.</p>
       <div class="double-button">
-        <BaseButton variant="secondary" href="#">Se banerne</BaseButton>
+        <BaseButton variant="secondary" href="#bane__info">Se banerne</BaseButton>
         <BaseButton variant="primary" href="#overblik">Se oversigtskort</BaseButton>
       </div>
     </div>
