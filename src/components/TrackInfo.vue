@@ -31,7 +31,7 @@ onMounted(async () => {
     <article v-for="bane in baner" :key="bane.id" :class="bane.class" class="bane">
         <div class="bane__content">
             <div class="bane-icon">
-                <h2>{{ bane.name }}</h2>
+                <h2 class="h2-baneinfo">{{ bane.name }}</h2>
 
                 <!-- Sender farve og nummer videre til TrackBadge -->
                 <TrackBadge :color="bane.color" :number="bane.number" class="track-badge"/>
@@ -66,6 +66,14 @@ onMounted(async () => {
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
 
+.h2-baneinfo {
+    font-family: "Inter", sans-serif;
+    font-weight: 900;
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    margin: 0;
+    padding-top: s.$spacing-xs;
+}
+
 .bane {
     display: flex;
     flex-wrap: wrap;
@@ -87,7 +95,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: row;
   gap: s.$spacing-xs;
-  align-items: flex-end;
+  align-items: center;
 }
 
 .track-badge {
