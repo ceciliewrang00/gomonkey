@@ -33,10 +33,6 @@ import BaseButton from './BaseButton.vue'
 
   #overblik-tekst {
     max-width: 40rem;
-
-    h1 {
-      margin-bottom: s.$spacing-l;
-    }
   }
 
   #kort-wrapper {

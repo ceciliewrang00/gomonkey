@@ -1,4 +1,5 @@
 
+@use 'spacings' as s;
 h1 {
     font-family: "Inter", sans-serif;
     font-weight: 900;
@@ -11,12 +12,18 @@ h2 {
     font-weight: 400;
     font-size: clamp(1.25rem, 3vw, 2rem);
     margin: 0;
+    padding-top: s.$spacing-xs;
 }
 
 p {
     font-family: "Inter", sans-serif;
     font-weight: 300;
     font-size: clamp(1rem, 1.5vw, 1.25rem);
+    padding-top: s.$spacing-m;
+}
+
+ul {
+    padding-top: s.$spacing-m;
 }
 
 li {

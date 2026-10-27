@@ -22,7 +22,7 @@ header {
     justify-content: space-between;
 }
 
-section {
+section, article {
     padding: s.$spacing-xxl s.$spacing-m;
     scroll-margin-top: 5rem;
 }

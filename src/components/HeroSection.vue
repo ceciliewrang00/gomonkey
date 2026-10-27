@@ -40,8 +40,6 @@ import BaseButton from './BaseButton.vue'
     #hero__content__title {
       display: flex;
       flex-direction: column;
-      gap: s.$spacing-s;
-      margin-bottom: s.$spacing-l;
     }
   }
 }

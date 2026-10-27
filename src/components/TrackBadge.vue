@@ -65,15 +65,15 @@ $track-colors: (
 
 .badge {
   position: relative;
-  height: 64px;
+  height: 40px;
 }
 
 // Bladene ligger oven på hinanden
 .layer {
   position: absolute;
   top: 0;
-  width: 55px;
-  height: 64px;
+  width: 30px;
+  height: 40px;
 }
 
 // Laver en klasse pr. farve, fx .layer--groen

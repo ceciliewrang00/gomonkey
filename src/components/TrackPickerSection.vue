@@ -31,14 +31,6 @@ import BaseButton from './BaseButton.vue'
 
   #baner-content{
     max-width: 40rem;
-
-    h2 {
-      margin-bottom: s.$spacing-s;
-    }
-
-    h2 {
-      margin-bottom: s.$spacing-l;
-    }
   }
 
   .baner-img {
