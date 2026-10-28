@@ -8,6 +8,7 @@
     @include t.button;
     border-radius: 1rem;
     border: solid 0.1rem c.$primary_black100;
+    width: fit-content;
 
     &:hover {
         background-color: c.$primary_light25;
@@ -22,6 +23,7 @@
     @include t.button;
     border-radius: 1rem;
     border: solid 0.1rem c.$primary_black100;  
+    width: fit-content;
 
     &:hover {
         background-color: c.$primary_black100;
@@ -36,6 +38,7 @@
     @include t.button;
     border-radius: 1rem;
     border: solid 0.1rem c.$secondary_purple50;
+    width: fit-content;
 
     &:hover {
         background-color: c.$primary_black100;
@@ -50,6 +53,7 @@
     @include t.button;
     border-radius: 1rem;
     border: solid 0.1rem c.$secondary_blue25;
+    width: fit-content;
 
     &:hover {
         background-color: c.$primary_black100;
@@ -64,6 +68,7 @@
     @include t.button;
     border-radius: 1rem;
     border: solid 0.1rem c.$forest_pink100;
+    width: fit-content;
 
     &:hover {
         background-color: c.$primary_black100;

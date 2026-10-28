@@ -1,5 +1,6 @@
 <script setup>
 // ref = værdi Vue holder øje med. onMounted = kører når siden er vist. watch = kører når en værdi ændrer sig
+import BaseButton from '@/components/BaseButton.vue'
 import { ref, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -118,7 +119,15 @@ async function save() {
 
 <template>
     <main class="admin">
-        <RouterLink to="/">← Tilbage til forsiden</RouterLink>
+        <div class="head">
+            <img src="@/assets/images/logo.svg" alt="GoMonkey logo">
+
+            <div class="double-button">
+                <BaseButton to="/" variant="pink">← Tilbage til forsiden</BaseButton>
+                <BaseButton @click="logout" variant="pink">Log ud</BaseButton>
+            </div>
+        </div>
+
         <h1>Admin</h1>
 
         <!-- Login vises, hvis man ikke er logget ind -->
@@ -137,7 +146,6 @@ async function save() {
 
         <!-- Resten vises kun, når man er logget ind -->
         <template v-else>
-            <button type="button" @click="logout">Log ud</button>
 
             <label for="bane">Vælg bane</label>
             <select id="bane" v-model="selectedId">
@@ -148,7 +156,7 @@ async function save() {
             </select>
 
             <!-- Formularen vises først, når en bane er valgt -->
-            <form v-if="selectedId" @submit.prevent="save">
+            <form v-if="selectedId" @submit.prevent="save" class="input">
                 <!-- Ét felt pr. post i FIELDS (v-for gentager div'en) -->
                 <div v-for="field in FIELDS" :key="field.key" class="field">
                     <label :for="field.key">{{ field.label }}</label>
@@ -170,7 +178,7 @@ async function save() {
                     <input v-else :id="field.key" v-model="form[field.key]" type="text" />
                 </div>
 
-                <button type="submit">Gem</button>
+                <BaseButton type="submit" variant="primary">Gem</BaseButton>
             </form>
 
             <p v-if="message">{{ message }}</p>
@@ -179,13 +187,43 @@ async function save() {
 </template>
 
 <style lang="scss" scoped>
+
+@use '@/assets/styles/buttons' as b;
+@use '@/assets/styles/spacings' as s;
+@use '@/assets/styles/colors' as c;
+@use '@/assets/styles/flex' as f;
+
 .admin {
+    margin-top: 2rem;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    max-width: 40rem;
-    margin: 0 auto;
-    padding: 2rem 1rem;
+    gap: 2rem;
+    padding: s.$spacing-xxl s.$spacing-m;
+
+    .head {
+        padding: s.$spacing-xs s.$spacing-m;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    input,
+    textarea,
+    select {
+        font-family: "Inter", sans-serif;
+        font-weight: 300;
+        font-size: clamp(1rem, 1.5vw, 1.25rem);
+        padding: 0.75rem 1rem;
+        border: 2px solid c.$primary_black50;
+        border-radius: 0.5rem;
+        background-color: white;
+        color: c.$primary_black100;
+
+        &:focus {
+            outline: none;
+            border-color: c.$forest_green100;
+        }
+    }
 
     form,
     .field {
