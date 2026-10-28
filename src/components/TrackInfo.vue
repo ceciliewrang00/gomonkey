@@ -84,22 +84,19 @@ onMounted(async () => {
 <style lang="scss" scoped>
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
+@use '@/assets/styles/flex' as f;
 
 .bane {
-    display: flex;
-    flex-wrap: wrap;
-    gap: s.$spacing-xl;
     border-bottom: 1px solid c.$primary_black100;
     margin: auto;
 }
 
 .img-right {
-    flex-direction: row;
+    @include f.flex-row;
 }
 
 .img-left {
-    flex-direction: row-reverse;
-    justify-content: flex-end;
+    @include f.flex-row-reverse;
 }
 
 .bane__content {
@@ -108,7 +105,7 @@ onMounted(async () => {
     .bane-icon {
     display: flex;
     flex-direction: row;
-    gap: 1.5rem;
+    gap: 0;
     align-items: center;
 
         .h2-baneinfo {

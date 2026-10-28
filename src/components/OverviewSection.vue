@@ -23,13 +23,11 @@ import BaseButton from './BaseButton.vue'
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/mixins' as m;
 @use '@/assets/styles/spacings' as s;
+@use '@/assets/styles/flex' as f;
 
 #overblik {
   @include m.section-black100;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: s.$spacing-xl;
+  @include f.flex-row;
 
   #overblik-tekst {
     max-width: 40rem;

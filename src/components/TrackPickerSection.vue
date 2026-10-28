@@ -20,14 +20,11 @@ import BaseButton from './BaseButton.vue'
 <style lang="scss" scoped>
 @use '@/assets/styles/mixins' as m;
 @use '@/assets/styles/spacings' as s;
+@use '@/assets/styles/flex' as f;
 
 #baner {
   @include m.section-green100;
-  display: flex;
-  flex-direction: row-reverse;
-  flex-wrap: wrap;
-  gap: s.$spacing-xl;
-  justify-content: flex-end;
+  @include f.flex-row-reverse;
 
   #baner-content{
     max-width: 40rem;

@@ -34,7 +34,7 @@ import BaseButton from './BaseButton.vue'
   flex-direction: column;
 
   #hero__content {
-    max-width: 43rem;
+    max-width: 40rem;
   
 
     #hero__content__title {
