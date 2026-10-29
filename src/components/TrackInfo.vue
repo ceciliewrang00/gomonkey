@@ -26,6 +26,7 @@ onMounted(async () => {
         // Hvis databasen svarer med en fejl (fx 401 eller 404), så stop her
         if (!res.ok) throw new Error(`Fejl ${res.status}`)
 
+        // Åbner svaret fra databasen og laver det om til data, JavaScript kan arbejde med
         const data = await res.json()
 
         // Laver Firebase-objektet om til en liste, gemmer navnet som id og sorterer efter sværhedsgrad
@@ -38,6 +39,7 @@ onMounted(async () => {
         console.error(e)
     } finally {
         // Uanset om det gik godt eller dårligt, er vi færdige med at vente
+        //Altså fjerner vi teksten med at banerne hentes
         loading.value = false
     }
 })
