@@ -123,7 +123,7 @@ async function save() {
             <img src="@/assets/images/logo.svg" alt="GoMonkey logo">
 
             <div class="double-button">
-                <BaseButton to="/" variant="pink">← Tilbage til forsiden</BaseButton>
+                <RouterLink to="/" class="button-pink">← Tilbage til forsiden</RouterLink>
                 <BaseButton @click="logout" variant="pink">Log ud</BaseButton>
             </div>
         </div>
@@ -140,7 +140,7 @@ async function save() {
             <label for="password">Adgangskode</label>
             <input id="password" v-model="password" type="password" required />
 
-            <button type="submit">Log ind</button>
+            <BaseButton version="pink" type="submit">Log ind</BaseButton>
             <p v-if="loginError">{{ loginError }}</p>
         </form>
 
