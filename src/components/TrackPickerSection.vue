@@ -10,7 +10,7 @@ import BaseButton from './BaseButton.vue'
       <p>Svar på fem hurtige spørgsmål, så finder vi den bane, der passer til dig og din gruppe. Det tager under et minut.</p>
       <div class="double-button">
         <BaseButton variant="purple" href="#bane__info">Se banerne</BaseButton>
-        <BaseButton variant="blue">Start banevælger</BaseButton>
+        <RouterLink class="button-blue" to="/banequiz">Start banevælger</RouterLink>
       </div>
     </div>
     <img src="@/assets/images/bane-img.webp" alt="To personer igang med at udfører en forhindring" class="baner-img">

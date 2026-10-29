@@ -26,16 +26,25 @@ p {
     font-weight: 300;
     font-size: clamp(1rem, 1.5vw, 1.25rem);
     padding-top: s.$spacing-m;
+    line-height: 1.6;
 }
 
 ul {
     padding-top: s.$spacing-m;
 }
 
+.text {
+    font-family: "Inter", sans-serif;
+    font-weight: 300;
+    font-size: clamp(1rem, 1.5vw, 1.25rem);
+    line-height: 1.6;
+}
+
 li {
     font-family: "Inter", sans-serif;
     font-weight: 300;
     font-size: clamp(1rem, 1.5vw, 1.25rem);
+    line-height: 1.6;
 }
 
 @mixin button {

@@ -21,3 +21,9 @@
     justify-content: flex-end;
     gap: s.$spacing-xl;
 }
+
+@mixin flex-column {
+    display: flex;
+    flex-direction: column;
+    gap: s.$spacing-s;
+}
