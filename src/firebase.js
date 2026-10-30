@@ -6,13 +6,13 @@ import { getAuth } from 'firebase/auth'
 
 // Her skal indstillingerne fra din Firebase-webapp stå.
 const firebaseConfig = {
-  apiKey: "AIzaSyB65DfKsafhswz0Rv8YFRnR8HUYb_6gcCI",
-  authDomain: "gomonkey-quiz.firebaseapp.com",
-  databaseURL: "https://gomonkey-quiz-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "gomonkey-quiz",
-  storageBucket: "gomonkey-quiz.firebasestorage.app",
-  messagingSenderId: "73714530074",
-  appId: "1:73714530074:web:225881332b1de528d7dea3"
+  apiKey: "AIzaSyDMnisSSwIUsSZl6tXNM6bhFSZ2tdDP7JA",
+  authDomain: "gomonkey-baner.firebaseapp.com",
+  databaseURL: "https://gomonkey-baner-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gomonkey-baner",
+  storageBucket: "gomonkey-baner.firebasestorage.app",
+  messagingSenderId: "603732478138",
+  appId: "1:603732478138:web:6acca55c1b663705b11a83",
 };
 
 
