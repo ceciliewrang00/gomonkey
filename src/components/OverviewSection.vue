@@ -14,7 +14,7 @@ import BaseButton from './BaseButton.vue'
     </div>
     <div id="kort-wrapper">
       <img src="@/assets/images/kort.webp" alt="Kort over GoMonkey Odense" class="overblik-kort">
-      <BaseButton variant="primary">Se kort</BaseButton>
+      <RouterLink class="button-primary" to="/kort">Se kort</RouterLink>
     </div>
   </section>
 </template>
@@ -56,7 +56,7 @@ import BaseButton from './BaseButton.vue'
       border-radius: 1rem;
     }
 
-    button {
+    .button-primary {
       position: absolute;
       top: 50%;
       left: 50%;
