@@ -581,12 +581,9 @@ onBeforeUnmount(() => {
         @click.capture="stopKlikEfterTraek"
         @wheel.prevent="vedHjul"
       ></div>
-
-      <div class="kort-toplinje" aria-hidden="true">
+      
+<div class="kort-toplinje" aria-hidden="true">
         <span class="kort-brand">GoMonkey <span>Odense</span></span>
-      </div>
-
-      <div class="kort-tophoejre">
         <button type="button" class="kort-reset-top" @click="nulstilKort">
           Vis hele parken
         </button>

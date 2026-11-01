@@ -17,6 +17,11 @@ function haandterFilterAendring(nytFilter) {
 
 <template>
   <main class="kort-app">
+    <!-- Luk-knap (Går til forsiden) -->
+    <button class="kort-luk-knap" @click="$router.push('/')" aria-label="Luk kort og gå til forside">
+      ✕
+    </button>
+
     <!-- Filter -->
     <KortFilter @filter-changed="haandterFilterAendring" />
 
@@ -35,11 +40,16 @@ function haandterFilterAendring(nytFilter) {
      Det her er indholdet af den gamle style.css og App.vue, uden de globale regler på body og *. -->
 <style lang="scss">
 .kort-app {
-  display: flex;
-  gap: 0;
-  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
   height: 100vh;
   height: 100dvh;
+  z-index: 999;
+  
+  display: flex;
+  gap: 0;
   overflow: hidden;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   color: #1b2b21;
@@ -51,18 +61,36 @@ function haandterFilterAendring(nytFilter) {
   *::after {
     box-sizing: border-box;
   }
-
-  button {
-    font: inherit;
+  
+  .kort-luk-knap {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: #102b1b;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-  }
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    transition: background 0.2s ease, transform 0.1s ease;
 
-  button:focus-visible,
-  .kort-visning:focus-visible {
-    outline: 3px solid #a2d8a2;
-    outline-offset: 3px;
-  }
+    &:hover {
+      background: #1f472f;
+      transform: scale(1.05);
+    }
 
+    &:active {
+      transform: scale(0.95);
+    }
+  }
   // ---------- Kortets område ----------
 
   // Kortets område fylder alt ved siden af filteret
