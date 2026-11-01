@@ -13,7 +13,7 @@ import BaseButton from './BaseButton.vue'
       </p>
     </div>
     <div id="kort-wrapper">
-      <img src="@/assets/images/kort.webp" alt="Kort over GoMonkey Odense" class="overblik-kort">
+      <img src="@/assets/images/gomonkeykort.webp" alt="Kort over GoMonkey Odense" class="overblik-kort">
       <RouterLink class="button-primary" to="/kort">Se kort</RouterLink>
     </div>
   </section>
