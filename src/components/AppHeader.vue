@@ -8,22 +8,22 @@ const isOpen = ref(false)
 
 <template>
   <header>
-    <img src="@/assets/images/logo.svg" alt="GoMonkey logo">
-    <div class="menu">
-      <nav :class="{ open: isOpen }">
-        <BaseButton variant="header" href="#">Cave</BaseButton>
-        <BaseButton variant="header" href="#">Forest</BaseButton>
-        <BaseButton variant="header" href="#">Alt godt</BaseButton>
-        <BaseButton variant="header" href="#">EAN</BaseButton>
-      </nav>
+      <img src="@/assets/images/logo.svg" alt="GoMonkey logo">
+      <div class="menu">
+        <nav :class="{ open: isOpen }">
+          <BaseButton variant="header" href="#">Cave</BaseButton>
+          <BaseButton variant="header" href="#">Forest</BaseButton>
+          <BaseButton variant="header" href="#">Alt godt</BaseButton>
+          <BaseButton variant="header" href="#">EAN</BaseButton>
+        </nav>
 
-      <div class="actions">
-        <button class="burger" aria-label="Menu" @click="isOpen = !isOpen">
-          {{ isOpen ? '✕' : '☰' }}
-        </button>
-        <BaseButton variant="primary">BOOK</BaseButton>
+        <div class="actions">
+          <button class="burger" aria-label="Menu" @click="isOpen = !isOpen">
+            {{ isOpen ? '✕' : '☰' }}
+          </button>
+          <BaseButton variant="primary">BOOK</BaseButton>
+        </div>
       </div>
-    </div>
   </header>
 </template>
 
