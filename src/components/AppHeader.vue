@@ -21,7 +21,7 @@ const isOpen = ref(false)
         <button class="burger" aria-label="Menu" @click="isOpen = !isOpen">
           {{ isOpen ? '✕' : '☰' }}
         </button>
-        <BaseButton variant="pink">BOOK</BaseButton>
+        <BaseButton variant="primary">BOOK</BaseButton>
       </div>
     </div>
   </header>

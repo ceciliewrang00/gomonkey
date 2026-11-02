@@ -9,11 +9,11 @@ import BaseButton from './BaseButton.vue'
       <h2>Kan du ikke afgøre, hvor du skal begynde?</h2>
       <p>Svar på fem hurtige spørgsmål, så finder vi den bane, der passer til dig og din gruppe. Det tager under et minut.</p>
       <div class="double-button">
-        <BaseButton variant="purple" href="#bane-info">Se banerne</BaseButton>
-        <RouterLink class="button-blue" to="/banequiz">Start banevælger</RouterLink>
+        <RouterLink class="button-primary" to="/banequiz">Start banevælger</RouterLink>
+        <BaseButton variant="secondary" href="#bane-info">Se banerne</BaseButton>
       </div>
     </div>
-    <img src="@/assets/images/bane-img.webp" alt="To personer igang med at udfører en forhindring" class="baner-img">
+    <img src="@/assets/images/bane-img.webp" alt="Et kort over parken" class="baner-img">
   </section>
 </template>
 
@@ -21,6 +21,7 @@ import BaseButton from './BaseButton.vue'
 @use '@/assets/styles/mixins' as m;
 @use '@/assets/styles/spacings' as s;
 @use '@/assets/styles/flex' as f;
+@use '@/assets/styles/colors' as c;
 
 #baner {
   @include m.section-green100;
@@ -30,6 +31,15 @@ import BaseButton from './BaseButton.vue'
   #baner-content{
     min-width: 20rem;
     max-width: s.$tekst-bredde;
+  }
+
+  .button-secondary {
+    color: c.$primary_light25;
+    border: solid 2px c.$primary_light25;
+
+    &:hover{
+      border: solid 2px c.$secondary_purple100;
+    }
   }
 
   .baner-img {

@@ -6,73 +6,25 @@
     color: c.$primary_light25;
     padding:0.5rem 1.5rem;
     @include t.button;
+    border: none;
     border-radius: 1rem;
-    border: solid 0.1rem c.$primary_black100;
     width: fit-content;
 
     &:hover {
-        background-color: c.$primary_light25;
-        color: c.$primary_black100;
+        background-color: c.$secondary_purple100;
     }
 }
 
 .button-secondary {
-    background-color: c.$primary_light25;
-    color: c.$primary_black100;
+    background-color: none;
     padding:0.5rem 1.5rem;
     @include t.button;
-    border-radius: 1rem;
-    border: solid 0.1rem c.$primary_black100;  
     width: fit-content;
+    border-radius: 1rem;
 
     &:hover {
-        background-color: c.$primary_black100;
+        background-color: c.$secondary_purple100;
         color: c.$primary_light25;
-    }
-}
-
-.button-purple {
-    background-color: c.$secondary_purple50;
-    color: c.$primary_black100;
-    padding:0.5rem 1.5rem;
-    @include t.button;
-    border-radius: 1rem;
-    border: solid 0.1rem c.$secondary_purple50;
-    width: fit-content;
-
-    &:hover {
-        background-color: c.$primary_black100;
-        color: c.$secondary_purple50;
-    }
-}
-
-.button-blue {
-    background-color: c.$secondary_blue25;
-    color: c.$primary_black100;
-    padding:0.5rem 1.5rem;
-    @include t.button;
-    border-radius: 1rem;
-    border: solid 0.1rem c.$secondary_blue25;
-    width: fit-content;
-
-    &:hover {
-        background-color: c.$primary_black100;
-        color: c.$secondary_blue25;
-    }
-}
-
-.button-pink {
-    background-color: c.$forest_pink100;
-    color: c.$primary_black100;
-    padding:0.5rem 1.5rem;
-    @include t.button;
-    border-radius: 1rem;
-    border: solid 0.1rem c.$forest_pink100;
-    width: fit-content;
-
-    &:hover {
-        background-color: c.$primary_black100;
-        color: c.$forest_pink100;
     }
 }
 
@@ -80,9 +32,9 @@
     @include t.button_header;
     color: c.$primary_black100;
     text-decoration: none;
+    font-weight: 800;
 
     &:hover {
-        text-decoration: underline 2px;
-        font-weight: 600;
+        color: c.$secondary_purple100;
     }
 }

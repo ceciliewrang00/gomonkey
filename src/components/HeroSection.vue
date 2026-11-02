@@ -15,8 +15,8 @@ import BaseButton from './BaseButton.vue'
       </div>
       <p>Fra den første forsigtige tur på svævebanen til frit fald fra ti meters højde. Hos GoMonkey er der en bane til alle, uanset om du er en nybegynder eller en erfaren klatreabe.</p>
       <div class="double-button">
-        <BaseButton variant="secondary" href="#bane-info">Se banerne</BaseButton>
         <BaseButton variant="primary" href="#overblik">Se oversigtskort</BaseButton>
+        <BaseButton variant="secondary" href="#bane-info">Se banerne</BaseButton>
       </div>
     </div>
   </section>
@@ -25,8 +25,10 @@ import BaseButton from './BaseButton.vue'
 <style lang="scss" scoped>
 
 @use '@/assets/styles/spacings' as s;
+@use '@/assets/styles/colors' as c;
 
 #hero {
+  background-color: c.$forest-pink100;
   background-image: url('@/assets/images/leaves.svg');
   background-repeat: repeat;
   background-size: 150px;
@@ -54,5 +56,15 @@ import BaseButton from './BaseButton.vue'
 .icon {
     width: 3rem;
     height: 3rem;
+  }
+
+  .button-secondary {
+    color: c.$primary_black100;
+    border: solid 2px c.$primary-black100;
+
+    &:hover{
+      color: c.$primary_light25;
+      border: solid 2px c.$secondary_purple100;
+    }
   }
 </style>
