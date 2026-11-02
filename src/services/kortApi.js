@@ -1,9 +1,7 @@
-import { KORTBANER_URL } from './api.js'
-
-// Henter banerne til kortet fra Firebase (API-kaldet)
+// Henter banerne til kortet fra den lokale popup.json fil
 export async function hentKortbaner({ signal } = {}) {
-  // signal gør, at kaldet kan afbrydes, hvis siden forlades. no-store undgår gammel cache
-  const response = await fetch(`${KORTBANER_URL}.json`, { signal, cache: 'no-store' })
+  // Henter direkte fra public/popup.json. no-store undgår gammel cache.
+  const response = await fetch('/popup.json', { signal, cache: 'no-store' })
 
   if (!response.ok) {
     throw new Error(`Banedata kunne ikke hentes (HTTP ${response.status}).`)
@@ -11,7 +9,7 @@ export async function hentKortbaner({ signal } = {}) {
 
   const svar = await response.json()
 
-  // Understøtter både [...], { baner: [...] } og Firebase-objekt med ID-nøgler.
+  // Understøtter både [...], { baner: [...] } og objekt med ID-nøgler.
   const data = Array.isArray(svar)
     ? svar
     : Array.isArray(svar?.baner)
@@ -28,7 +26,6 @@ export async function hentKortbaner({ signal } = {}) {
   const idSet = new Set()
   for (const bane of data) {
     // Aktiviteter (fx sort og bounce) har ingen segmenter, så den må mangle.
-    // Er den der, skal den dog være en liste
     const segmenterFejl = bane?.segmenter !== undefined && !Array.isArray(bane.segmenter)
 
     if (typeof bane?.id !== 'string' || typeof bane?.navn !== 'string' || segmenterFejl) {
