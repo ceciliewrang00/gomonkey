@@ -9,7 +9,7 @@ import BaseButton from './BaseButton.vue'
       <h2>Kan du ikke afgøre, hvor du skal begynde?</h2>
       <p>Svar på fem hurtige spørgsmål, så finder vi den bane, der passer til dig og din gruppe. Det tager under et minut.</p>
       <div class="double-button">
-        <BaseButton variant="purple" href="#bane__info">Se banerne</BaseButton>
+        <BaseButton variant="purple" href="#bane-info">Se banerne</BaseButton>
         <RouterLink class="button-blue" to="/banequiz">Start banevælger</RouterLink>
       </div>
     </div>
@@ -24,9 +24,8 @@ import BaseButton from './BaseButton.vue'
 
 #baner {
   @include m.section-green100;
+  // Billedet flugter med venstre kant og teksten med højre kant (se _flex.scss)
   @include f.flex-row-reverse;
-  // Billedet flugter med venstre kant og teksten med højre kant (samme kanter som hero og banner)
-  justify-content: space-between;
 
   #baner-content{
     min-width: 20rem;
@@ -35,7 +34,8 @@ import BaseButton from './BaseButton.vue'
 
   .baner-img {
     // Kun auto op/ned, så billedet stadig centreres lodret ud for teksten
-    margin: auto 0;
+    // margin-block ændrer kun top/bund, så margin-right: auto fra mixinen bevares
+    margin-block: auto;
     width: s.$billede-bredde;
     border-radius: 1rem;
   }

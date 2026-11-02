@@ -19,9 +19,17 @@
     display: flex;
     flex-wrap: wrap;
     flex-direction: row-reverse;
+    // I row-reverse betyder flex-end venstre. Så alt lægger sig til venstre,
+    // også når elementerne ryger ned på hver sin linje
     justify-content: flex-end;
     gap: s.$spacing-xl;
     margin: 0 auto;
+
+    // Det sidste element i HTML'en står længst til venstre.
+    // margin-right: auto skubber de andre ud til højre kant, når de står på samme linje
+    > :last-child {
+        margin-right: auto;
+    }
 }
 
 @mixin flex-column {

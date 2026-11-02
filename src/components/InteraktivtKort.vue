@@ -744,21 +744,12 @@ onBeforeUnmount(() => {
         @click.capture="stopKlikEfterTraek"
         @wheel.prevent="vedHjul"
       ></div>
-<<<<<<< HEAD
-      
-<div class="kort-toplinje" aria-hidden="true">
-        <span class="kort-brand">GoMonkey <span>Odense</span></span>
-=======
 
-      <!-- Tilbageknap og logo øverst til venstre (logoet er kun pynt, derfor aria-hidden) -->
+      <!-- Toplinjen øverst til venstre: tilbageknap, logo og "Vis hele parken" (tilbage til zoom 1).
+           Logoet er kun pynt, derfor aria-hidden -->
       <div class="kort-toplinje">
         <TilbageKnap />
         <span class="kort-brand" aria-hidden="true">GoMonkey <span>Odense</span></span>
-      </div>
-
-      <!-- Knap øverst til højre: tilbage til zoom 1 -->
-      <div class="kort-tophoejre">
->>>>>>> d1dfac7 (mange rettelser)
         <button type="button" class="kort-reset-top" @click="nulstilKort">
           Vis hele parken
         </button>

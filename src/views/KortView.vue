@@ -21,16 +21,7 @@ function haandterFilterAendring(nytFilter) {
   <!-- Siden er delt i to: filteret til venstre og kortet til højre.
        Dataflow: KortFilter → (emit) → KortView → (prop) → InteraktivtKort -->
   <main class="kort-app">
-<<<<<<< HEAD
-    <!-- Luk-knap (Går til forsiden) -->
-    <button class="kort-luk-knap" @click="$router.push('/')" aria-label="Luk kort og gå til forside">
-      ✕
-    </button>
-
-    <!-- Filter -->
-=======
     <!-- Filter. @filter-changed lytter efter beskeden fra filteret -->
->>>>>>> d1dfac7 (mange rettelser)
     <KortFilter @filter-changed="haandterFilterAendring" />
 
     <!-- Kortet. :filter sender filteret ind som prop.
@@ -75,25 +66,6 @@ function haandterFilterAendring(nytFilter) {
   *::after {
     box-sizing: border-box;
   }
-<<<<<<< HEAD
-  
-  .kort-luk-knap {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-    width: 44px;
-    height: 44px;
-    border: 0;
-    border-radius: 50%;
-    background: #102b1b;
-    color: #ffffff;
-    font-size: 20px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-=======
 
   // Knapper bruger samme skrift som resten af siden.
   // Tilbageknappen undtages, så den beholder skriften fra button-secondary
@@ -102,17 +74,9 @@ function haandterFilterAendring(nytFilter) {
   }
 
   button {
->>>>>>> d1dfac7 (mange rettelser)
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-    transition: background 0.2s ease, transform 0.1s ease;
+  }
 
-<<<<<<< HEAD
-    &:hover {
-      background: #1f472f;
-      transform: scale(1.05);
-    }
-=======
   // Toplinjen lader klik gå igennem til kortet, så knappen skal kunne klikkes igen
   .tilbage-knap {
     pointer-events: auto;
@@ -124,12 +88,7 @@ function haandterFilterAendring(nytFilter) {
     outline: 3px solid #a2d8a2;
     outline-offset: 3px;
   }
->>>>>>> d1dfac7 (mange rettelser)
 
-    &:active {
-      transform: scale(0.95);
-    }
-  }
   // ---------- Kortets område ----------
 
   // Kortets område fylder alt ved siden af filteret
@@ -200,27 +159,19 @@ function haandterFilterAendring(nytFilter) {
 
   // ---------- Toplinje ----------
 
-  // Logo og "Vis hele parken" ligger oven på kortet (z-index: 4).
-  // pointer-events: none lader klik gå igennem til kortet – undtagen på knappen,
+  // Tilbageknap, logo og "Vis hele parken" ligger oven på kortet (z-index: 4).
+  // pointer-events: none lader klik gå igennem til kortet – undtagen på knapperne,
   // som får pointer-events: auto igen.
   // clamp(16px, 3vw, 42px) = afstand fra kanten, der skalerer med skærmen
-  .kort-toplinje,
-  .kort-tophoejre {
+  .kort-toplinje {
     position: absolute;
     z-index: 4;
     top: 24px;
+    left: clamp(16px, 3vw, 42px);
     display: flex;
     align-items: center;
     gap: 12px;
     pointer-events: none;
-  }
-
-  .kort-toplinje {
-    left: clamp(16px, 3vw, 42px);
-  }
-
-  .kort-tophoejre {
-    right: clamp(16px, 3vw, 42px);
   }
 
   .kort-brand {
@@ -432,7 +383,7 @@ function haandterFilterAendring(nytFilter) {
     }
 
     .kort-brand,
-    .kort-tophoejre,
+    .kort-reset-top,
     .kort-vejledning {
       display: none !important;
     }

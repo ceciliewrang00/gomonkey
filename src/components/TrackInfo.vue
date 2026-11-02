@@ -48,8 +48,17 @@ onMounted(async () => {
 <template>
     <p v-if="loading">Henter baner...</p>
     <p v-else-if="error">{{ error }}</p>
-    <!-- Ét kort pr. bane (v-for gentager article) -->
-    <article v-else v-for="bane in baner" :key="bane.id" :class="bane.class" class="bane">
+    <!-- Ét kort pr. bane (v-for gentager article).
+         Den første bane får id="bane-info", så "Se banerne"-knapperne kan linke hertil.
+         Id'et kan ikke sidde på <template>, for den bliver ikke vist på siden -->
+    <article
+        v-else
+        v-for="(bane, index) in baner"
+        :key="bane.id"
+        :id="index === 0 ? 'bane-info' : undefined"
+        :class="bane.class"
+        class="bane"
+    >
         <div class="bane__content">
             <div class="bane-icon">
                 <h2 class="h2-baneinfo">{{ bane.name }}</h2>
@@ -100,9 +109,9 @@ onMounted(async () => {
     justify-content: space-between;
 }
 
+// flex-row-reverse skubber selv tekst og billede ud til hver sin kant (se _flex.scss)
 .img-left {
     @include f.flex-row-reverse;
-    justify-content: space-between;
 }
 
 .bane__content {
