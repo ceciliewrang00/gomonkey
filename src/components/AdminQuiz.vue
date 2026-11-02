@@ -436,7 +436,7 @@ onMounted(() => {
       <div v-if="nytSpoergsmaal.svar.length > 2" class="knapper">
         <BaseButton
           type="button"
-          variant="pink"
+          variant="secondary"
           :disabled="gemmer"
           @click="fjernSvarmulighed(svar.id)"
         >
@@ -446,7 +446,7 @@ onMounted(() => {
     </div>
 
     <div class="knapper">
-      <BaseButton type="button" variant="pink" :disabled="gemmer" @click="tilfoejSvarmulighed">
+      <BaseButton type="button" variant="secondary" :disabled="gemmer" @click="tilfoejSvarmulighed">
         Tilføj svarmulighed
       </BaseButton>
       <BaseButton type="button" variant="primary" :disabled="gemmer" @click="opretSpoergsmaal">
@@ -536,7 +536,7 @@ onMounted(() => {
       <div class="knapper">
         <BaseButton
           type="button"
-          variant="pink"
+          variant="secondary"
           :disabled="sletterId !== ''"
           @click="sletSpoergsmaal(sp)"
         >

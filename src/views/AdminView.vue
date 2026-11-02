@@ -99,9 +99,9 @@ onUnmounted(() => {
       <img src="@/assets/images/logo.svg" alt="GoMonkey logo">
 
       <div class="double-button">
-        <RouterLink to="/" class="button-pink">← Tilbage til forsiden</RouterLink>
+        <RouterLink to="/" class="button-primary">← Tilbage til forsiden</RouterLink>
         <!-- Log ud vises kun, når man er logget ind -->
-        <BaseButton v-if="bruger" type="button" variant="pink" @click="logUd">Log ud</BaseButton>
+        <BaseButton v-if="bruger" type="button" variant="primary" @click="logUd">Log ud</BaseButton>
       </div>
     </div>
 
@@ -131,7 +131,7 @@ onUnmounted(() => {
       <p v-if="loginFejl" role="alert">{{ loginFejl }}</p>
 
       <div class="knapper">
-        <BaseButton type="submit" variant="pink" :disabled="loggerInd">
+        <BaseButton type="submit" variant="primary" :disabled="loggerInd">
           {{ loggerInd ? 'Logger ind...' : 'Log ind' }}
         </BaseButton>
       </div>
@@ -146,14 +146,14 @@ onUnmounted(() => {
       <div class="knapper">
         <BaseButton
           type="button"
-          :variant="fane === 'baner' ? 'primary' : 'pink'"
+          :variant="fane === 'baner' ? 'primary' : 'secondary'"
           @click="fane = 'baner'"
         >
           Baner
         </BaseButton>
         <BaseButton
           type="button"
-          :variant="fane === 'quiz' ? 'primary' : 'pink'"
+          :variant="fane === 'quiz' ? 'primary' : 'secondary'"
           @click="fane = 'quiz'"
         >
           Quiz
@@ -278,6 +278,16 @@ onUnmounted(() => {
   button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .button-secondary {
+    color: c.$primary_black100;
+    background-color: transparent;
+    border: solid 2px c.$primary_black100;
+
+    &:hover{
+      border: solid 2px c.$secondary_purple100;
+    }
   }
 }
 </style>
