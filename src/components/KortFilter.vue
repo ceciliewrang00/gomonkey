@@ -394,13 +394,20 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
+// Farverne kommer fra _colors.scss, så filteret passer til resten af siderne
+@use '@/assets/styles/colors' as c;
+
+// Skygge under knapper, der ligger oven på kortet
+$skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
+
 /* Ramme om hele filteret. position: relative gør, at Filtre-knappen placeres i forhold til den */
 .filter-wrapper {
   position: relative;
 }
 
-/* "Filtre"-knappen på mobil, øverst til venstre oven på kortet (z-index: 10) */
+/* "Filtre"-knappen på mobil, øverst til venstre oven på kortet (z-index: 10).
+   Sort med lys tekst, ligesom button-primary */
 .mobil-filter-knap {
   display: flex;
   align-items: center;
@@ -409,23 +416,25 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   top: 15px;
   left: 15px;
   z-index: 10;
-  background: #102b1b;
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-weight: 700;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  background: c.$primary_black100;
+  color: c.$primary_light25;
+  // Samme kant som Tilbage-knappen, så de to knapper er lige høje
+  border: solid 2px c.$primary_black100;
+  padding: 0.5rem 1.5rem;
+  border-radius: 1rem;
+  font-weight: 900;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  box-shadow: $skygge;
   cursor: pointer;
 }
 
 /* Den lille runde boble med antal valgte baner */
 .filter-badge {
-  background: #CED0C0;
-  color: #102b1b;
+  background: c.$forest_pink100;
+  color: c.$primary_black100;
   font-size: 0.75rem;
-  padding: 2px 6px;
-  border-radius: 50%;
+  padding: 2px 7px;
+  border-radius: 1rem;
 }
 
 /* Halvgennemsigtig sort baggrund bag filteret på mobil. position: fixed = dækker hele skærmen */
@@ -436,7 +445,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(c.$primary_black100, 0.4);
   z-index: 99;
 }
 
@@ -450,7 +459,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   width: 100vw;
   height: 100dvh;
   min-height: 100dvh;
-  background-color: #EFE9E5;
+  background-color: c.$primary_light25;
   border: none;
   border-radius: 0;
   padding: 1.5rem;
@@ -462,7 +471,8 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   z-index: 100;
   transition: left 0.3s ease-in-out;
   overflow-y: auto;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: "Inter", sans-serif;
+  color: c.$primary_black100;
 }
 
 /* Listen fylder den ledige plads (flex: 1) og kan scrolles, hvis den er for lang */
@@ -482,7 +492,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   background: none;
   border: none;
   font-size: 1.8rem;
-  color: #0B1C0E;
+  color: c.$primary_black100;
   cursor: pointer;
   line-height: 1;
 }
@@ -492,39 +502,45 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #3A4303;
+  gap: 0.75rem;
+  border-bottom: 2px solid c.$primary_black100;
   padding-bottom: 0.75rem;
 }
 
+/* Fed overskrift ligesom h1 på resten af sitet, bare mindre */
 .filter-header h2 {
   margin: 0;
-  font-size: 1.25rem;
-  color: #000F02;
+  padding: 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 900;
+  color: c.$primary_black100;
 }
 
-/* "Ryd filtre"-knappen */
+/* "Ryd filtre"-knappen: en lille button-secondary */
 .nulstil-link {
-  background: #CED0C0;
-  border: none;
-  color: #000F02;
+  margin-left: auto;
+  background: transparent;
+  border: solid 2px c.$primary_black100;
+  color: c.$primary_black100;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 900;
   cursor: pointer;
-  padding: 10px 20px;
-  border-radius: 6px;
+  padding: 0.35rem 1rem;
+  border-radius: 1rem;
 }
 
 .indlaeser-tekst {
-  font-size: 0.85rem;
-  color: #000F02;
+  font-size: 0.9rem;
+  font-weight: 300;
+  color: c.$primary_black100;
   padding: 0.5rem 0;
 }
 
-/* Grupperne under hinanden med 25px mellemrum */
+/* Grupperne under hinanden med mellemrum */
 .filter-liste {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 1.25rem;
 }
 
 /* Boksen om en hel gruppe (fx grøn). overflow: hidden klipper hjørnerne runde */
@@ -533,17 +549,16 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   flex-direction: column;
   gap: 0;
   background: transparent;
-  border: 1px solid #0B1C0E;
-  border-radius: 8px;
+  border: 2px solid c.$primary_black100;
+  border-radius: 1rem;
   padding: 0;
   overflow: hidden;
   transition: border-color 0.3s ease, background 0.3s ease;
 }
 
-/* Åben gruppe får grå baggrund */
+/* Åben gruppe får en lys baggrund */
 .gruppe-dropdown-container.er-aaben {
-  background: #CED0C0; 
-  border: 1px solid #CED0C0;
+  background: c.$primary_light50;
 }
 
 /* Linjen med gruppens navn og pilen */
@@ -560,7 +575,6 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: #EFE9E5;
   font-weight: 700;
   flex: 1;
   pointer-events: none;
@@ -570,7 +584,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
 .fold-knap {
   background: none;
   border: none;
-  color: #000F02;
+  color: c.$primary_black100;
   cursor: pointer;
   padding: 0.5rem;
   display: flex;
@@ -601,7 +615,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
 .underpunkter-liste.aaben {
   max-height: 500px;
   opacity: 1;
-  border-top: 1px solid #0B1C0E;
+  border-top: 1px solid c.$primary_black25;
 }
 
 .underpunkter-wrapper {
@@ -616,39 +630,41 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   gap: 0.75rem;
   padding: 16px 16px;
   cursor: pointer;
-  color: #000F02;
+  color: c.$primary_black100;
+  transition: background-color 0.2s ease;
 }
 
-/* "Vis alle"-rækken */
+/* "Vis alle"-rækken: ser ud som button-secondary, når den ikke er valgt */
 .vis-alle-item {
-  border-radius: 8px;
-  background: #CED0C0;
+  border-radius: 1rem;
+  border: 2px solid c.$primary_black100;
 }
 
 .filter-item.underpunkt {
   padding-left: 0.75rem;
 }
 
-/* Valgt række: mørk baggrund. !important vinder over andre regler */
+/* Valgt række: sort baggrund og lys tekst. !important vinder over andre regler */
 .filter-item.aktiv {
-  background: #0B1C0E !important;
+  background: c.$primary_black100 !important;
   font-weight: 700;
 }
 
 .filter-item.aktiv .titel,
 .filter-item.aktiv .undertekst {
-  color: #EFE9E5 !important;
+  color: c.$primary_light25 !important;
 }
 
 /* Egen tjekboks: appearance: none fjerner browserens standard-tjekboks */
 .filter-item input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
   margin-top: 0;
-  border: 1px solid #0B1C0E;
-  border-radius: 10px;
+  border: 2px solid c.$primary_black100;
+  border-radius: 50%;
   background: transparent;
   cursor: pointer;
   display: flex;
@@ -658,14 +674,14 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
 }
 
 .filter-item input[type="checkbox"]:checked {
-  background: #CED0C0;
-  border-color: #CED0C0;
+  background: c.$primary_light25;
+  border-color: c.$primary_light25;
 }
 
 /* ::after indsætter et ✓ i tjekboksen, når den er afkrydset */
 .filter-item input[type="checkbox"]:checked::after {
   content: "✓";
-  color: #0B1C0E;
+  color: c.$primary_black100;
   font-size: 10px;
   font-weight: bold;
   line-height: 1;
@@ -692,45 +708,44 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   flex-shrink: 0;
 }
 
-/* Ikonets farve pr. bane. Ikonet bruger currentColor, altså color herunder */
+/* Ikonets farve pr. bane. Ikonet bruger currentColor, altså color herunder.
+   Farverne er de samme som banernes streger på kortet, så man kan genkende dem */
 .bane-ikon.gron { color: #14c053; }
 .bane-ikon.bla { color: #46a9e2; }
 .bane-ikon.rod { color: #db3434; }
-.bane-ikon.sort { color: #333333; }
+.bane-ikon.sort { color: c.$primary_black75; }
 .bane-ikon.bounce,
-.bane-ikon.standard { color: #EFE9E5; }
-
-.filter-item.aktiv .bane-ikon.bounce,
-.filter-item.aktiv .bane-ikon.standard { color: #EFE9E5; }
+.bane-ikon.standard { color: c.$secondary_peach100; }
 
 .filter-tekst .titel {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: #000F02;
+  color: c.$primary_black100;
 }
 
 .filter-tekst .undertekst {
-  font-size: 0.78rem;
-  color: #000F02;
-  font-weight: 400;
+  font-size: 0.8rem;
+  color: c.$primary_black75;
+  font-weight: 300;
 }
 
 /* Bunden med "Anvend filtre". margin-top: auto skubber den helt ned */
 .filter-footer {
   margin-top: auto;
   padding-top: 1rem;
-  border-top: 1px solid #3A4303;
+  border-top: 2px solid c.$primary_black100;
 }
 
+/* "Anvend filtre" ser ud som button-primary, bare i fuld bredde */
 .anvend-knap {
   width: 100%;
-  background-color: #CED0C0;
-  color: #0B1C0E;
+  background-color: c.$primary_black100;
+  color: c.$primary_light25;
   border: none;
   padding: 0.75rem;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 1rem;
+  border-radius: 1rem;
+  font-weight: 900;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
   cursor: pointer;
 }
 
@@ -744,16 +759,16 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
 
 .badge-info {
   font-size: 0.7rem;
-  background: #AEB298;
-  padding: 2px 6px;
-  border-radius: 4px;
-  color: #0B1C0E;
+  background: c.$forest_green25;
+  padding: 2px 8px;
+  border-radius: 1rem;
+  color: c.$primary_black100;
   font-weight: 400;
 }
 
 .filter-item.aktiv .badge-info {
-  color: #0B1C0E;
-  background: #9CA181;
+  color: c.$primary_black100;
+  background: c.$forest_green50;
 }
 
 /* DESKTOP (over 800px): filteret står fast til venstre (position: static)
@@ -771,47 +786,44 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
     width: 380px;
     height: 100%;
     min-height: 100%;
-    background-color: #EFE9E5;
+    background-color: c.$primary_light25;
     border-radius: 0;
     padding: 1.25rem;
     z-index: 1;
   }
-
-  .filter-item.aktiv {
-    background: #0B1C0E;
-  }
 }
 
-/* Hover-effekter kun på enheder med mus. På touch ville de "hænge fast" efter et tryk */
+/* Hover-effekter kun på enheder med mus. På touch ville de "hænge fast" efter et tryk.
+   Lilla hover, ligesom knapperne på resten af sitet */
 @media (hover: hover) {
   .nulstil-link:hover {
-    background: #0B1C0E;
-    color: #EFE9E5;
+    background: c.$secondary_purple100;
+    border-color: c.$secondary_purple100;
+    color: c.$primary_light25;
   }
 
-  .filter-item:hover {
-    background: #0B1C0E;
+  .filter-item:not(.aktiv):hover {
+    background: c.$secondary_purple100;
   }
 
-  .filter-item:hover .titel,
-  .filter-item:hover .undertekst {
-    color: #EFE9E5;
+  .filter-item:not(.aktiv):hover .titel,
+  .filter-item:not(.aktiv):hover .undertekst {
+    color: c.$primary_light25;
   }
 
-  .filter-item:hover .badge-info {
-    color: #0B1C0E;
-    background: #9CA181;
+  /* Tjekboksen bliver lys, så den kan ses på den lilla baggrund */
+  .filter-item:not(.aktiv):hover input[type="checkbox"] {
+    border-color: c.$primary_light25;
   }
 
-  /* Ændrer tjekboksen ved hover på desktop */
-  .filter-item:hover input[type="checkbox"]:not(:checked) {
-    border-color: #CED0C0;
-    background-color: rgba(206, 208, 192, 0.2);
+  .vis-alle-item:not(.aktiv):hover {
+    border-color: c.$secondary_purple100;
   }
 
-  .anvend-knap:hover {
-    background-color: #0B1C0E;
-    color: #EFE9E5;
+  .anvend-knap:hover,
+  .mobil-filter-knap:hover {
+    background-color: c.$secondary_purple100;
+    border-color: c.$secondary_purple100;
   }
 }
 </style>

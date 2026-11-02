@@ -279,15 +279,5 @@ onUnmounted(() => {
     opacity: 0.5;
     cursor: not-allowed;
   }
-
-  .button-secondary {
-    color: c.$primary_black100;
-    background-color: transparent;
-    border: solid 2px c.$primary_black100;
-
-    &:hover{
-      border: solid 2px c.$secondary_purple100;
-    }
-  }
 }
 </style>

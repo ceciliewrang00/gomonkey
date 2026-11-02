@@ -21,10 +21,13 @@
     @include t.button;
     width: fit-content;
     border-radius: 1rem;
+    color: c.$primary_black100;
+    border: solid 2px c.$primary-black100;
 
     &:hover {
         background-color: c.$secondary_purple100;
         color: c.$primary_light25;
+        border: solid 2px c.$secondary_purple100;
     }
 }
 

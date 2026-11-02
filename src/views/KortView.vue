@@ -37,8 +37,17 @@ function haandterFilterAendring(nytFilter) {
 
 <!-- IKKE scoped, for kortets SVG bliver sat ind med JavaScript og ville ikke få scoped-klasser.
      Alt ligger under .kort-app, så intet rammer resten af sitet (admin, forside osv.).
-     Det her er indholdet af den gamle style.css og App.vue, uden de globale regler på body og *. -->
+     Farverne kommer fra _colors.scss, så kortet passer til resten af siderne -->
 <style lang="scss">
+@use '@/assets/styles/colors' as c;
+
+// Kortets egen baggrundsfarve. Den er ikke en del af farvepaletten,
+// men skal matche selve kort-tegningen (public/kort-base.svg)
+$kort-baggrund: #a9b790;
+
+// Skygge under de bokse, der ligger oven på kortet
+$skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
+
 // Hele kortsiden: fylder skærmens fulde højde.
 // display: flex lægger filteret og kortet ved siden af hinanden.
 // 100dvh er højden på mobil uden browserens adresselinje. 100vh er en reserve
@@ -51,13 +60,13 @@ function haandterFilterAendring(nytFilter) {
   height: 100vh;
   height: 100dvh;
   z-index: 999;
-  
+
   display: flex;
   gap: 0;
   overflow: hidden;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  color: #1b2b21;
-  background: #f2efeb;
+  font-family: "Inter", sans-serif;
+  color: c.$primary_black100;
+  background: c.$primary_light25;
   font-synthesis: none;
 
   // border-box: padding og kant tælles med i bredden, så elementer ikke bliver for brede
@@ -68,8 +77,9 @@ function haandterFilterAendring(nytFilter) {
   }
 
   // Knapper bruger samme skrift som resten af siden.
-  // Tilbageknappen undtages, så den beholder skriften fra button-secondary
-  button:not(.tilbage-knap) {
+  // Tilbageknappen undtages, så den beholder skriften fra button-secondary.
+  // :where() gør reglen svag, så knappernes egne klasser (fx font-weight) vinder
+  :where(button:not(.tilbage-knap)) {
     font: inherit;
   }
 
@@ -77,15 +87,22 @@ function haandterFilterAendring(nytFilter) {
     cursor: pointer;
   }
 
-  // Toplinjen lader klik gå igennem til kortet, så knappen skal kunne klikkes igen
+  // Tilbageknappen er button-secondary, men får lys baggrund,
+  // så den kan ses oven på kortet. pointer-events: auto, fordi toplinjen lader klik gå igennem
   .tilbage-knap {
     pointer-events: auto;
+    background-color: c.$primary_light25;
+    box-shadow: $skygge;
+
+    &:hover {
+      background-color: c.$secondary_purple100;
+    }
   }
 
-  // Tydelig grøn ramme, når man bruger tastaturet (Tab) til at gå mellem knapper
+  // Tydelig lilla ramme, når man bruger tastaturet (Tab) til at gå mellem knapper
   button:focus-visible,
   .kort-visning:focus-visible {
-    outline: 3px solid #a2d8a2;
+    outline: 3px solid c.$secondary_purple100;
     outline-offset: 3px;
   }
 
@@ -97,7 +114,7 @@ function haandterFilterAendring(nytFilter) {
     min-width: 0;
     height: 100%;
     // Samme farve som kortet, så der aldrig kan skinne hvidt igennem
-    background: #a9b790;
+    background: $kort-baggrund;
     border-radius: 0;
     overflow: hidden;
     display: flex;
@@ -126,7 +143,7 @@ function haandterFilterAendring(nytFilter) {
     min-height: 0;
     overflow: hidden;
     border-radius: 0;
-    background: #a9b790;
+    background: $kort-baggrund;
   }
 
   // Boksen, som SVG'en sættes ind i.
@@ -169,40 +186,47 @@ function haandterFilterAendring(nytFilter) {
     top: 24px;
     left: clamp(16px, 3vw, 42px);
     display: flex;
-    align-items: center;
+    // stretch giver alle elementer i toplinjen samme højde
+    align-items: stretch;
     gap: 12px;
     pointer-events: none;
   }
 
+  // Logoet: sort boks med lys tekst, ligesom de sorte sektioner på forsiden
   .kort-brand {
     display: inline-flex;
     gap: 0.45rem;
     align-items: center;
-    border-radius: 12px;
-    background: #102b1b;
-    color: white;
-    font-weight: 800;
-    font-size: 0.92rem;
-    padding: 14px 18px;
-    box-shadow: 0 3px 15px #14281920;
+    border-radius: 1rem;
+    background: c.$primary_black100;
+    color: c.$primary_light25;
+    font-weight: 900;
+    font-size: 1rem;
+    padding: 0.6rem 1.25rem;
+    box-shadow: $skygge;
 
     span {
-      font-weight: 400;
+      font-weight: 300;
     }
   }
 
+  // "Vis hele parken": samme form som button-secondary, men med lys baggrund
   .kort-reset-top {
     pointer-events: auto;
-    border: 0;
-    border-radius: 10px;
-    background: #f9faf5;
-    color: #193121;
-    font-weight: 750;
-    padding: 13px 17px;
-    min-height: 44px;
+    border: solid 2px c.$primary_black100;
+    border-radius: 1rem;
+    background: c.$primary_light25;
+    color: c.$primary_black100;
+    font-weight: 900;
+    // Samme skriftstørrelse som knapperne på resten af sitet (button-mixin i _typography.scss)
+    font-size: clamp(1rem, 1.5vw, 1.25rem);
+    padding: 0.5rem 1.5rem;
+    box-shadow: $skygge;
 
     &:hover {
-      background: #e6eee1;
+      background: c.$secondary_purple100;
+      border-color: c.$secondary_purple100;
+      color: c.$primary_light25;
     }
 
     &:active {
@@ -212,7 +236,7 @@ function haandterFilterAendring(nytFilter) {
 
   // ---------- Zoomknapper ----------
 
-  // Den hvide boks med + og − nederst til højre
+  // Den lyse boks med + og − nederst til højre
   .kort-vaerktoejer {
     position: absolute;
     bottom: 29px;
@@ -221,17 +245,18 @@ function haandterFilterAendring(nytFilter) {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: white;
+    background: c.$primary_light25;
     padding: 4px;
-    border-radius: 10px;
-    box-shadow: 0 4px 18px #0003;
+    border-radius: 1rem;
+    box-shadow: $skygge;
 
     button {
       background: transparent;
       border: 0;
+      border-radius: 0.75rem;
       width: 46px;
       height: 46px;
-      color: #1b2820;
+      color: c.$primary_black100;
       font-size: 31px;
       line-height: 1;
       font-weight: 300;
@@ -242,8 +267,8 @@ function haandterFilterAendring(nytFilter) {
       }
 
       &:not(:disabled):hover {
-        background: #ebf0e9;
-        border-radius: 6px;
+        background: c.$secondary_purple100;
+        color: c.$primary_light25;
       }
 
       &:not(:disabled):active {
@@ -256,7 +281,7 @@ function haandterFilterAendring(nytFilter) {
   .kort-vaerktoej-linje {
     height: 1px;
     width: 31px;
-    background: #ced6c9;
+    background: c.$primary_black25;
   }
 
   // Zoomniveauet (fx "1.3×") lige over zoomknapperne
@@ -265,12 +290,12 @@ function haandterFilterAendring(nytFilter) {
     right: clamp(17px, 3vw, 42px);
     bottom: 139px;
     z-index: 4;
-    color: #203a28;
-    background: #fffef2ed;
-    border-radius: 9px;
+    color: c.$primary_black100;
+    background: rgba(c.$primary_light25, 0.93);
+    border-radius: 0.75rem;
     padding: 5px 9px;
-    font-size: 0.79rem;
-    font-weight: 750;
+    font-size: 0.8rem;
+    font-weight: 600;
   }
 
   // ---------- Valgt bane og vejledning ----------
@@ -286,27 +311,31 @@ function haandterFilterAendring(nytFilter) {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: #14291edb;
-    color: #fff;
-    border: 1px solid #ffffff59;
-    border-radius: 14px;
-    padding: 9px 12px 9px 14px;
-    font-weight: 700;
+    background: rgba(c.$primary_black100, 0.88);
+    color: c.$primary_light25;
+    border-radius: 1rem;
+    padding: 9px 12px 9px 16px;
+    font-weight: 600;
     backdrop-filter: blur(7px);
+    box-shadow: $skygge;
 
     &[hidden] {
       display: none !important;
     }
 
     button {
-      background: #ffffff2a;
+      background: rgba(c.$primary_light25, 0.15);
       border: 0;
-      border-radius: 7px;
-      color: white;
+      border-radius: 0.75rem;
+      color: c.$primary_light25;
       font-size: 24px;
       line-height: 1;
       min-width: 32px;
       min-height: 32px;
+
+      &:hover {
+        background: c.$secondary_purple100;
+      }
     }
   }
 
@@ -315,7 +344,7 @@ function haandterFilterAendring(nytFilter) {
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    border: 1px solid #fff6;
+    border: 1px solid rgba(c.$primary_light25, 0.4);
   }
 
   // Hjælpeteksten nederst til venstre
@@ -324,12 +353,12 @@ function haandterFilterAendring(nytFilter) {
     bottom: 25px;
     left: clamp(16px, 3vw, 42px);
     z-index: 2;
-    color: #1f392a;
-    font-size: 0.83rem;
-    font-weight: 600;
-    background: #f4f6e8cf;
+    color: c.$primary_black100;
+    font-size: 0.85rem;
+    font-weight: 400;
+    background: rgba(c.$primary_light25, 0.85);
     padding: 11px 14px;
-    border-radius: 10px;
+    border-radius: 1rem;
     pointer-events: none;
   }
 
@@ -344,21 +373,27 @@ function haandterFilterAendring(nytFilter) {
     left: 50%;
     transform: translate(-50%, -50%);
     padding: 20px 25px;
-    background: white;
-    border-radius: 12px;
+    background: c.$primary_light25;
+    border-radius: 1rem;
     text-align: center;
-    box-shadow: 0 8px 30px #0003;
+    box-shadow: $skygge;
 
     &.fejl {
-      color: #a12222;
+      color: c.$secondary_orange100;
     }
 
+    // "Prøv igen" ser ud som button-primary
     button {
       border: 0;
-      background: #132d1d;
-      color: #fff;
-      border-radius: 8px;
-      padding: 10px 15px;
+      background: c.$primary_black100;
+      color: c.$primary_light25;
+      border-radius: 1rem;
+      padding: 0.5rem 1.5rem;
+      font-weight: 900;
+
+      &:hover {
+        background: c.$secondary_purple100;
+      }
     }
   }
 

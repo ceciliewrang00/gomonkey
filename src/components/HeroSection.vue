@@ -57,14 +57,4 @@ import BaseButton from './BaseButton.vue'
     width: 3rem;
     height: 3rem;
   }
-
-  .button-secondary {
-    color: c.$primary_black100;
-    border: solid 2px c.$primary-black100;
-
-    &:hover{
-      color: c.$primary_light25;
-      border: solid 2px c.$secondary_purple100;
-    }
-  }
 </style>

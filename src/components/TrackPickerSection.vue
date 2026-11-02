@@ -33,14 +33,6 @@ import BaseButton from './BaseButton.vue'
     max-width: s.$tekst-bredde;
   }
 
-  .button-secondary {
-    color: c.$primary_light25;
-    border: solid 2px c.$primary_light25;
-
-    &:hover{
-      border: solid 2px c.$secondary_purple100;
-    }
-  }
 
   .baner-img {
     // Kun auto op/ned, så billedet stadig centreres lodret ud for teksten
