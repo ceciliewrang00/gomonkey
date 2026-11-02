@@ -5,7 +5,7 @@ import BaseButton from './BaseButton.vue'
 <template>
   <section id="overblik">
     <div id="overblik-tekst">
-      <h1>Overblik over parken</h1>
+      <h2>Overblik over parken</h2>
       <p>
         Før du kaster dig ud i det, så få styr på terrænet. Kortet viser dig alle vores baner, hvor de starter, og hvor højt du kommer op.
         <br>

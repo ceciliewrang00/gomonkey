@@ -8,12 +8,12 @@ import BaseButton from './BaseButton.vue'
       <div id="hero__content__title">
         <div class="forest-icon">
           <img src="@/assets/images/forrest-ikon.webp" alt="Ikon med træer" class="icon">
-          <h2>Forrest Odense</h2>
+          <h4>Forrest Odense</h4>
         </div>
         <h1>Oplev banerne</h1>
-        <h2>GoMonkey Forrest Odense</h2>
+        <h3>GoMonkey Forrest Odense</h3>
       </div>
-      <p>Fra den første forsigtige tur på svævebanen til frit fald fra ti meters højde. Hos GoMonkey er der en bane til alle, uanset om du er en nybegynder eller en erfaren klatreabe.</p>
+      <p>Fra den første forsigtige tur på svævebanen til frit fald fra ti meters højde. <br>Hos GoMonkey er der en bane til alle, uanset om du er en nybegynder eller en erfaren klatreabe.</p>
       <div class="double-button">
         <BaseButton variant="primary" href="#overblik">Se oversigtskort</BaseButton>
         <BaseButton variant="secondary" href="#bane-info">Se banerne</BaseButton>
@@ -36,7 +36,7 @@ import BaseButton from './BaseButton.vue'
   flex-direction: column;
 
   #hero__content {
-    max-width: 40rem;
+    max-width: 50rem;
   
 
     #hero__content__title {

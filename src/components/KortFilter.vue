@@ -558,7 +558,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 
 /* Åben gruppe får en lys baggrund */
 .gruppe-dropdown-container.er-aaben {
-  background: c.$primary_light50;
+  background: c.$forest_green25;
 }
 
 /* Linjen med gruppens navn og pilen */
@@ -725,8 +725,8 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 
 .filter-tekst .undertekst {
   font-size: 0.8rem;
-  color: c.$primary_black75;
-  font-weight: 300;
+  color: c.$primary_black100;
+  font-weight: 400;
 }
 
 /* Bunden med "Anvend filtre". margin-top: auto skubber den helt ned */
@@ -759,10 +759,10 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 
 .badge-info {
   font-size: 0.7rem;
-  background: c.$forest_green25;
+  background: c.$forest_green100;
   padding: 2px 8px;
   border-radius: 1rem;
-  color: c.$primary_black100;
+  color: c.$primary_light50;
   font-weight: 400;
 }
 
@@ -797,13 +797,13 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
    Lilla hover, ligesom knapperne på resten af sitet */
 @media (hover: hover) {
   .nulstil-link:hover {
-    background: c.$secondary_purple100;
-    border-color: c.$secondary_purple100;
+    background: c.$primary_black100;
+    border-color:c.$primary_black100;
     color: c.$primary_light25;
   }
 
   .filter-item:not(.aktiv):hover {
-    background: c.$secondary_purple100;
+    background: c.$primary_black100;
   }
 
   .filter-item:not(.aktiv):hover .titel,

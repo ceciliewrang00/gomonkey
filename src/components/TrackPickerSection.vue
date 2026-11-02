@@ -5,8 +5,8 @@ import BaseButton from './BaseButton.vue'
 <template>
   <section id="baner">
     <div id="baner-content">
-      <h1>Hvilken bane skal du prøve?</h1>
-      <h2>Kan du ikke afgøre, hvor du skal begynde?</h2>
+      <h2>Hvilken bane skal du prøve?</h2>
+      <h3>Kan du ikke afgøre, hvor du skal begynde?</h3>
       <p>Svar på fem hurtige spørgsmål, så finder vi den bane, der passer til dig og din gruppe. Det tager under et minut.</p>
       <div class="double-button">
         <RouterLink class="button-primary" to="/banequiz">Start banevælger</RouterLink>

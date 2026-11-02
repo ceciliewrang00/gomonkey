@@ -3,24 +3,31 @@
 h1 {
     font-family: "Inter", sans-serif;
     font-weight: 900;
-    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-size: 48px;
     margin: 0;
 }
 
 h2 {
     font-family: "Inter", sans-serif;
-    font-weight: 400;
-    font-size: clamp(1.25rem, 3vw, 2rem);
+    font-weight: 900;
+    font-size: 40px;
     margin: 0;
     padding-top: s.$spacing-xs;
 }
 
 h3 {
     font-family: "Inter", sans-serif;
-    font-weight: 600;
-    font-size: clamp(1rem, 3vw, 1.25rem);
+    font-weight: 400;
+    font-size: 24px;
     margin: 0;
     padding-top: s.$spacing-xs;
+}
+
+h4 {
+    font-family: "Inter", sans-serif;
+    font-weight: 300;
+    font-size: 24px;
+    margin: 0;
 }
 
 label {
@@ -32,8 +39,7 @@ label {
 p {
     font-family: "Inter", sans-serif;
     font-weight: 300;
-    font-size: clamp(1rem, 1.5vw, 1.25rem);
-    padding-top: s.$spacing-m;
+    font-size: 18px;
     line-height: 1.6;
 }
 

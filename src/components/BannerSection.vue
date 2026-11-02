@@ -3,7 +3,7 @@
 
 <template>
   <section id="banner">
-    <h1>Skru’ op for modet</h1>
+    <h2>Skru’ op for modet</h2>
   </section>
 </template>
 
@@ -14,6 +14,14 @@
   background-image: url('@/assets/images/banner.webp');
   background-repeat: no-repeat;
   background-size: cover;
+  background-position: center;
   color: c.$primary_light25;
+
+  min-height: 30vh;
+  
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Rykker teksten mod venstre */
+  
 }
 </style>
