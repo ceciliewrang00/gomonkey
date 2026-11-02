@@ -1,11 +1,28 @@
 <script setup>
+// KORTFILTER
+// Sidebaren til venstre for kortet, hvor man vælger, hvilke baner der skal fremhæves.
+// Banerne hentes fra Firebase og vises i tre fold-ud-grupper: grøn, blå og svære.
+// Når man trykker "Anvend filtre", sendes de valgte bane-id'er til KortView.vue med emit.
+// På mobil er filteret skjult bag en "Filtre"-knap og glider ind fra venstre.
+
 import { ref, computed, onMounted } from 'vue'
 
+// Databaseadresserne står samlet i api.js
+import { KORTFILTER_URL } from '@/services/api.js'
+
+// Beskeden, der sendes op til KortView.vue med det nye filter
 const emit = defineEmits(['filter-changed'])
 
+// Id'erne på de baner, der er sat flueben ved, fx ['gron-1', 'rod']
 const valgteFiltre = ref([])
+
+// Er filteret åbent på mobil?
 const erAaben = ref(false)
+
+// Alle baner/grupper fra Firebase
 const banerListe = ref([])
+
+// true, mens banerne hentes ("Henter baner...")
 const indlaeser = ref(true)
 
 // Holder styr på status for dropdown-grupperne.
@@ -20,7 +37,7 @@ const aabneGrupper = ref({
 //---------------------------------HENT DATA----------------------------------------------------------------------------
 
 //Gemmer adressen til Firebase-databasen, så den kan genbruges i API-kaldet
-const databaseUrl = 'https://kortfilterapi-default-rtdb.europe-west1.firebasedatabase.app/.json'
+const databaseUrl = `${KORTFILTER_URL}.json`
 
 
 // API-kald med fetch(), som henter data fra ekstern database
@@ -134,6 +151,11 @@ function haandterFilterValg(id, checked) {
 
 //-------------------------------------------------------------------------------------------------------------
 // Filtrér baner ud fra din JSON-struktur
+// Listen fra Firebase indeholder både hovedgrupper (fx id 'gron') og
+// underpunkter (fx 'gron-1', markeret med underpunkt: true).
+// computed regner grupperne ud igen af sig selv, når banerListe ændrer sig.
+// find giver det første match, filter giver alle matches.
+// Bounce ligger under grøn, og sort (frit fald) ligger under svære baner
 const gronneHovedgruppe = computed(() => banerListe.value.find(b => b.id === 'gron'))
 const gronneUnderliggende = computed(() => 
   banerListe.value.filter(b => b.id === 'bounce' || (b.underpunkt === true && b.id.startsWith('gron')))
@@ -155,18 +177,22 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
 
 <template>
   <div class="filter-wrapper">
+    <!-- Knappen "Filtre" (kun på mobil). Tallet viser, hvor mange baner der er valgt -->
     <button type="button" class="mobil-filter-knap" @click="togglerFilter">
       <span>Filtre</span>
       <span v-if="valgteFiltre.length > 0" class="filter-badge">{{ valgteFiltre.length }}</span>
     </button>
 
+    <!-- Mørk baggrund bag det åbne filter på mobil. Klik på den lukker filteret -->
     <div v-if="erAaben" class="mobil-overlay" @click="erAaben = false"></div>
 
+    <!-- Selve filteret. Klassen er-aaben får det til at glide ind på mobil -->
     <aside class="filter-sidebar" :class="{ 'er-aaben': erAaben }">
       <div class="filter-header">
         <h2>Filtre</h2>
-        
-        <button 
+
+        <!-- "Ryd filtre" vises kun, når der er valgt noget -->
+        <button
           v-if="valgteFiltre.length > 0"
           type="button" 
           class="nulstil-link" 
@@ -174,17 +200,20 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
           Ryd filtre
         </button>
 
+        <!-- Luk-kryds (kun på mobil) -->
         <button type="button" class="luk-knap" @click="erAaben = false">×</button>
       </div>
 
       <div class="filter-sektion">
-        
+
+        <!-- Vises, mens banerne hentes. Bagefter vises listen (v-else) -->
         <div v-if="indlaeser" class="indlaeser-tekst">
           Henter baner...
         </div>
 
         <div v-else class="filter-liste">
           <!-- Vis alle (med runde kanter) -->
+          <!-- Er afkrydset, når intet er valgt. Klik tømmer listen med valgte baner -->
           <label class="filter-item vis-alle-item" :class="{ aktiv: valgteFiltre.length === 0 }">
             <input 
               type="checkbox" 
@@ -197,7 +226,10 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
           </label>
           
           <!-- GRØN HOVEDGRUPPE -->
+          <!-- Vises kun, hvis gruppen findes i data (v-if).
+               De tre grupper (grøn, blå, svære) er bygget helt ens -->
           <div v-if="gronneHovedgruppe" class="gruppe-dropdown-container" :class="{ 'er-aaben': aabneGrupper.gron }">
+            <!-- Overskriften. Klik folder gruppen ud eller ind -->
             <div class="gruppe-hoved-linie" @click="togglerGruppe('gron')">
               <div class="filter-item hovedgruppe-overskrift">
                 <div class="filter-tekst">
@@ -205,6 +237,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
                   <span v-if="gronneHovedgruppe.undertekst" class="undertekst">{{ gronneHovedgruppe.undertekst }}</span>
                 </div>
               </div>
+              <!-- Pil, der drejer 180 grader, når gruppen er åben -->
               <button type="button" class="fold-knap">
                 <svg class="pil-ikon" :class="{ roteret: aabneGrupper.gron }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="6 9 12 15 18 9"></polyline>
@@ -215,12 +248,15 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
             <!-- Underpunkter for Grøn (med glat animation) -->
             <div class="underpunkter-liste" :class="{ 'aaben': aabneGrupper.gron }">
               <div class="underpunkter-wrapper">
-                <label 
+                <!-- Én række pr. bane (v-for). :key hjælper Vue med at holde styr på rækkerne.
+                     Hele rækken er en <label>, så man kan klikke hvor som helst på den -->
+                <label
                   v-for="bane in gronneUnderliggende"
                   :key="bane.id" 
                   class="filter-item underpunkt" 
                   :class="{ aktiv: valgteFiltre.includes(bane.id) }"
                 >
+                  <!-- Flueben. $event.target.checked er true, når der sættes flueben -->
                   <input
                     type="checkbox"
                     :checked="valgteFiltre.includes(bane.id)"
@@ -229,10 +265,13 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
                   <div class="filter-tekst">
                     <div class="titel-linie">
                       <span class="titel">{{ bane.titel }}</span>
+                      <!-- Blad-ikon. bane.farve bliver en klasse (fx "gron"), som giver
+                           ikonet farven. Uden farve bruges klassen 'standard' -->
                       <svg class="bane-ikon" :class="bane.farve || 'standard'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31.27 55.1">
                         <path fill="currentColor" d="M5.36,53.92c-.02.34.54,1,.84,1.13.35.15,1.3-.07,1.5-.42l2.6-4.41c7.33-.3,11.97-5.79,14.72-12.25,2.17-5.08,3.18-10.33,3.48-15.91C28.91,14.55,29.81,7.32,31.27,0c-6.44,1.92-11.99,4.79-16.96,8.81C8.64,13.49,4.31,19.24,1.74,26.11c-2.98,8.59-2.44,15.63,4.04,22.07,0,0-.42,5.74-.42,5.74Z"/>
                       </svg>
                     </div>
+                    <!-- Undertekst og små mærker vises kun, hvis banen har dem -->
                     <span v-if="bane.undertekst" class="undertekst">{{ bane.undertekst }}</span>
                     <div v-if="bane.svaerhed || bane.hojdekrav" class="ekstra-info">
                       <span v-if="bane.svaerhed" class="badge-info">Sværhed: {{ bane.svaerhed }}</span>
@@ -245,6 +284,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
           </div>
 
           <!-- BLÅ HOVEDGRUPPE -->
+          <!-- Bygget som den grønne gruppe ovenfor, bare med blå data -->
           <div v-if="blaaHovedgruppe" class="gruppe-dropdown-container" :class="{ 'er-aaben': aabneGrupper.bla }">
             <div class="gruppe-hoved-linie" @click="togglerGruppe('bla')">
               <div class="filter-item hovedgruppe-overskrift">
@@ -293,6 +333,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
           </div>
 
           <!-- SVÆRE BANER HOVEDGRUPPE -->
+          <!-- Bygget som den grønne gruppe ovenfor, med rød og sort -->
           <div v-if="svaerHovedgruppe" class="gruppe-dropdown-container" :class="{ 'er-aaben': aabneGrupper.svaer }">
             <div class="gruppe-hoved-linie" @click="togglerGruppe('svaer')">
               <div class="filter-item hovedgruppe-overskrift">
@@ -343,6 +384,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
         </div>
       </div>
 
+      <!-- Først når man trykker her, sendes filteret til kortet -->
       <div class="filter-footer">
         <button type="button" class="anvend-knap" @click="anvendFiltre">
           Anvend filtre
@@ -353,10 +395,12 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
 </template>
 
 <style scoped>
+/* Ramme om hele filteret. position: relative gør, at Filtre-knappen placeres i forhold til den */
 .filter-wrapper {
   position: relative;
 }
 
+/* "Filtre"-knappen på mobil, øverst til venstre oven på kortet (z-index: 10) */
 .mobil-filter-knap {
   display: flex;
   align-items: center;
@@ -375,6 +419,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   cursor: pointer;
 }
 
+/* Den lille runde boble med antal valgte baner */
 .filter-badge {
   background: #CED0C0;
   color: #102b1b;
@@ -383,6 +428,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   border-radius: 50%;
 }
 
+/* Halvgennemsigtig sort baggrund bag filteret på mobil. position: fixed = dækker hele skærmen */
 .mobil-overlay {
   display: block;
   position: fixed;
@@ -394,6 +440,9 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   z-index: 99;
 }
 
+/* MOBIL (standard): filteret ligger uden for skærmen (left: -100%) og fylder hele skærmen.
+   transition gør, at det glider ind. På desktop ændres det i @media længere nede.
+   env(safe-area-inset-bottom) giver plads til iPhones hjem-streg */
 .filter-sidebar {
   position: fixed;
   top: 0;
@@ -416,15 +465,18 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+/* Listen fylder den ledige plads (flex: 1) og kan scrolles, hvis den er for lang */
 .filter-sektion {
   flex: 1;
   overflow-y: auto;
 }
 
+/* Når filteret er åbent, glider det ind på skærmen */
 .filter-sidebar.er-aaben {
   left: 0;
 }
 
+/* Krydset, der lukker filteret på mobil */
 .luk-knap {
   display: block;
   background: none;
@@ -435,6 +487,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   line-height: 1;
 }
 
+/* Overskriften "Filtre" og knapperne ved siden af */
 .filter-header {
   display: flex;
   justify-content: space-between;
@@ -449,6 +502,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   color: #000F02;
 }
 
+/* "Ryd filtre"-knappen */
 .nulstil-link {
   background: #CED0C0;
   border: none;
@@ -466,12 +520,14 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   padding: 0.5rem 0;
 }
 
+/* Grupperne under hinanden med 25px mellemrum */
 .filter-liste {
   display: flex;
   flex-direction: column;
   gap: 25px;
 }
 
+/* Boksen om en hel gruppe (fx grøn). overflow: hidden klipper hjørnerne runde */
 .gruppe-dropdown-container {
   display: flex;
   flex-direction: column;
@@ -484,11 +540,13 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   transition: border-color 0.3s ease, background 0.3s ease;
 }
 
+/* Åben gruppe får grå baggrund */
 .gruppe-dropdown-container.er-aaben {
   background: #CED0C0; 
   border: 1px solid #CED0C0;
 }
 
+/* Linjen med gruppens navn og pilen */
 .gruppe-hoved-linie {
   display: flex;
   align-items: center;
@@ -497,6 +555,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   padding: 0.25rem 0.5rem;
 }
 
+/* pointer-events: none: klikket går videre til hele linjen, som folder gruppen ud */
 .hovedgruppe-overskrift {
   display: flex;
   align-items: center;
@@ -507,6 +566,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   pointer-events: none;
 }
 
+/* Knappen med pilen */
 .fold-knap {
   background: none;
   border: none;
@@ -518,6 +578,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   justify-content: center;
 }
 
+/* Pilen drejer blødt (transition), når klassen roteret sættes på */
 .pil-ikon {
   width: 16px;
   height: 16px;
@@ -528,6 +589,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   transform: rotate(180deg);
 }
 
+/* Lukket gruppe: højde 0 og usynlig. Animationen sker ved at ændre max-height */
 .underpunkter-liste {
   max-height: 0;
   opacity: 0;
@@ -535,6 +597,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease-in-out;
 }
 
+/* Åben gruppe. max-height skal bare være større end listen kan blive */
 .underpunkter-liste.aaben {
   max-height: 500px;
   opacity: 1;
@@ -546,6 +609,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   flex-direction: column;
 }
 
+/* Én række i filteret (fx en bane) */
 .filter-item {
   display: flex;
   align-items: center;
@@ -555,6 +619,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   color: #000F02;
 }
 
+/* "Vis alle"-rækken */
 .vis-alle-item {
   border-radius: 8px;
   background: #CED0C0;
@@ -564,6 +629,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   padding-left: 0.75rem;
 }
 
+/* Valgt række: mørk baggrund. !important vinder over andre regler */
 .filter-item.aktiv {
   background: #0B1C0E !important;
   font-weight: 700;
@@ -574,6 +640,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   color: #EFE9E5 !important;
 }
 
+/* Egen tjekboks: appearance: none fjerner browserens standard-tjekboks */
 .filter-item input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
@@ -595,6 +662,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   border-color: #CED0C0;
 }
 
+/* ::after indsætter et ✓ i tjekboksen, når den er afkrydset */
 .filter-item input[type="checkbox"]:checked::after {
   content: "✓";
   color: #0B1C0E;
@@ -603,24 +671,28 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   line-height: 1;
 }
 
+/* Titel og undertekst under hinanden */
 .filter-tekst {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
+/* Titel og blad-ikon på samme linje */
 .titel-linie {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
+/* Blad-ikonet. flex-shrink: 0 forhindrer, at det bliver klemt */
 .bane-ikon {
   width: 12px;
   height: 16px;
   flex-shrink: 0;
 }
 
+/* Ikonets farve pr. bane. Ikonet bruger currentColor, altså color herunder */
 .bane-ikon.gron { color: #14c053; }
 .bane-ikon.bla { color: #46a9e2; }
 .bane-ikon.rod { color: #db3434; }
@@ -643,6 +715,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   font-weight: 400;
 }
 
+/* Bunden med "Anvend filtre". margin-top: auto skubber den helt ned */
 .filter-footer {
   margin-top: auto;
   padding-top: 1rem;
@@ -661,6 +734,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   cursor: pointer;
 }
 
+/* Rækken med små mærker (sværhed og højdekrav) */
 .ekstra-info {
   display: flex;
   gap: 0.5rem;
@@ -682,6 +756,8 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   background: #9CA181;
 }
 
+/* DESKTOP (over 800px): filteret står fast til venstre (position: static)
+   med 380px bredde, og mobil-knapperne skjules */
 @media (min-width: 801px) {
   .mobil-filter-knap,
   .luk-knap,
@@ -706,6 +782,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
   }
 }
 
+/* Hover-effekter kun på enheder med mus. På touch ville de "hænge fast" efter et tryk */
 @media (hover: hover) {
   .nulstil-link:hover {
     background: #0B1C0E;

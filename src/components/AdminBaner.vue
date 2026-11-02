@@ -23,14 +23,19 @@ const BANE_FIELDS = [
   { key: 'class', label: 'Layout', type: 'select', options: ['img-right', 'img-left'] }
 ]
 
+// Alle baner fra databasen
 const baner = ref([])
+
+// Id på banen, der er valgt i dropdown ('' = ingen)
 const valgtBaneId = ref('')
 
 // En kopi af den valgte bane. Man retter i kopien, til man trykker "Gem"
 const baneForm = ref({})
 
+// Besked til brugeren, fx "Banen er gemt."
 const baneBesked = ref('')
 
+// Henter alle baner fra Firebase (GET-kald, kræver ikke login)
 async function hentBaner() {
   try {
     const res = await fetch(`${BANER_URL}.json`)
@@ -60,6 +65,9 @@ watch(valgtBaneId, (id) => {
   }
 })
 
+// Gemmer rettelserne i Firebase. Kræver login.
+// Tokenet (loginbeviset) sendes med i adressen (?auth=...), så databasen ved,
+// at det er en admin. encodeURIComponent gør teksten sikker at bruge i en adresse
 async function gemBane() {
   baneBesked.value = ''
 
@@ -97,6 +105,8 @@ onMounted(hentBaner)
   <section class="admin-kort">
     <h2>Rediger baner</h2>
 
+    <!-- Dropdown med alle baner. v-model gemmer den valgte banes id i valgtBaneId,
+         og så fylder watch i scriptet formularen ud -->
     <label for="bane">Vælg bane</label>
     <select id="bane" v-model="valgtBaneId">
       <option value="" disabled>Vælg...</option>
@@ -109,8 +119,11 @@ onMounted(hentBaner)
     <form v-if="valgtBaneId" class="felter" @submit.prevent="gemBane">
       <!-- Ét felt pr. post i BANE_FIELDS -->
       <div v-for="field in BANE_FIELDS" :key="field.key" class="felt">
+        <!-- :for og :id hænger sammen, så et klik på teksten går til feltet -->
         <label :for="'bane-' + field.key">{{ field.label }}</label>
 
+        <!-- Feltets type bestemmer, hvad der vises:
+             textarea = stort tekstfelt, select = dropdown, ellers et almindeligt tekstfelt -->
         <textarea
           v-if="field.type === 'textarea'"
           :id="'bane-' + field.key"
@@ -137,6 +150,7 @@ onMounted(hentBaner)
       </div>
     </form>
 
+    <!-- role="status" gør, at skærmlæsere læser beskeden højt -->
     <p v-if="baneBesked" role="status">{{ baneBesked }}</p>
   </section>
 </template>

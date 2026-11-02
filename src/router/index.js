@@ -6,6 +6,12 @@ import KortView from '@/views/KortView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  // Bestemmer scroll-positionen ved sideskift.
+  // Bruger man browserens tilbage/frem, huskes den gamle position (savedPosition).
+  // Ellers starter den nye side altid i toppen
+  scrollBehavior(to, from, savedPosition) {
+    return savedPosition || { top: 0 }
+  },
   routes: [
     {
       path: '/',

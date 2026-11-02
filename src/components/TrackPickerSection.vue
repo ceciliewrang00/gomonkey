@@ -25,14 +25,18 @@ import BaseButton from './BaseButton.vue'
 #baner {
   @include m.section-green100;
   @include f.flex-row-reverse;
+  // Billedet flugter med venstre kant og teksten med højre kant (samme kanter som hero og banner)
+  justify-content: space-between;
 
   #baner-content{
-    max-width: 40rem;
+    min-width: 20rem;
+    max-width: s.$tekst-bredde;
   }
 
   .baner-img {
-    margin: auto;
-    width: clamp(20rem, 40vw, 35rem);
+    // Kun auto op/ned, så billedet stadig centreres lodret ud for teksten
+    margin: auto 0;
+    width: s.$billede-bredde;
     border-radius: 1rem;
   }
 }

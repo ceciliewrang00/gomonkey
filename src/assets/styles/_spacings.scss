@@ -9,4 +9,12 @@ $spacing-xxxl: clamp(4rem, 7vw, 4rem);
 $spacing-xxxxl: clamp(5rem, 8vw, 4.5rem);
 
 /* --- margin --- */
-$margin: clamp(1.5rem, 3vw, 50rem)
+$margin: clamp(1.5rem, 3vw, 50rem);
+
+/* --- Indholdsbredde ---
+   Bredderne på tekst og billede i forsidens sektioner.
+   Indholdsbredden er præcis tekst + mellemrum + billede, så der ikke kommer
+   ekstra luft imellem dem. Ændres tekst- eller billedbredden, følger alt med */
+$tekst-bredde: 40rem;
+$billede-bredde: clamp(20rem, 30vw, 35rem);
+$indhold-bredde: calc(#{$tekst-bredde} + #{$spacing-xl} + #{$billede-bredde});

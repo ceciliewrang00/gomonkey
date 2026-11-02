@@ -1,6 +1,24 @@
 <script setup>
+// QUIZSIDE (BANEVÆLGEREN)
+// Gæsten svarer på spørgsmål ét ad gangen og får til sidst en anbefalet startbane.
+//
+// Overblik:
+// 1. onMounted (nederst i scriptet) henter spørgsmål og pointgrænser fra Firebase.
+// 2. Brugerens svar gemmes i valgteSvar som { spørgsmåls-id: valgt svar }.
+// 3. Nogle spørgsmål vises kun ved bestemte svar (visHvis), fx frit fald.
+//    synligeSpoergsmaal er listen over de spørgsmål, der skal vises lige nu.
+// 4. anbefaletBane regner banen ud fra højde, tryghed, erfaring og point.
+//    Pointgrænserne (blaaFra og roedFra) kan ændres af admin i AdminQuiz.vue.
+// 5. Templaten viser enten indlæsning, fejl, ét spørgsmål eller resultatet.
+
 // Importerer værktøjer til data, beregninger og opstart.
 import { ref, computed, onMounted } from 'vue'
+
+// Databaseadresserne står samlet i api.js
+import { SPOERGSMAAL_URL, GRAENSER_URL } from '@/services/api.js'
+
+// Knappen, der går tilbage til forrige side
+import TilbageKnap from '@/components/TilbageKnap.vue'
 
 // Gemmer svarene under hvert spørgsmåls id.
 const valgteSvar = ref({})
@@ -248,9 +266,7 @@ const fritfaldBesked = computed(() => {
 async function hentBaneGraenser() {
   try {
     // Sender et GET-kald til pointgrænserne i Firebase.
-    const response = await fetch(
-      'https://gomonkey-quiz-default-rtdb.europe-west1.firebasedatabase.app/baneGraenser.json'
-    )
+    const response = await fetch(`${GRAENSER_URL}.json`)
 
     // Stopper, hvis Firebase ikke svarer med succes.
     if (!response.ok) {
@@ -292,9 +308,7 @@ async function hentBaneGraenser() {
 async function hentSpoergsmaal() {
   try {
     // 1. HENT: Ber Firebase hente spørgsmålene med fetch - gir adresse.
-    const response = await fetch(
-      'https://gomonkey-quiz-default-rtdb.europe-west1.firebasedatabase.app/spoergsmaal.json'
-    )
+    const response = await fetch(`${SPOERGSMAAL_URL}.json`)
 
     // 2. TJEK: Lykkedes kaldet? Hvis ikke, send til catch - fanger fejlen.
     if (!response.ok) { 
@@ -419,6 +433,9 @@ onMounted(async () => {
   <main class="quiz-side">
 
     <section>
+        <!-- Går tilbage til siden, man kom fra (eller forsiden). -->
+        <TilbageKnap />
+
         <!-- Introducerer banevælgeren. -->
         <h1>Find den rette bane for dig</h1>
         <p>

@@ -10,10 +10,13 @@ import { SPOERGSMAAL_URL, GRAENSER_URL, hentToken } from '@/services/api.js'
 
 // ---------- Spørgsmål ----------
 
+// Alle spørgsmål fra databasen, true mens de hentes, og en evt. fejlbesked
 const spoergsmaal = ref([])
 const indlaeser = ref(true)
 const fejlbesked = ref('')
 
+// Henter alle spørgsmål fra Firebase (GET, kræver ikke login).
+// Kaldes også efter opret, rediger og slet, så listen altid passer med databasen
 async function hentSpoergsmaal() {
   try {
     const response = await fetch(`${SPOERGSMAAL_URL}.json`)
@@ -39,6 +42,7 @@ async function hentSpoergsmaal() {
 
 // ---------- Opret spørgsmål ----------
 
+// Det nye spørgsmål, mens man skriver det i formularen
 const nytSpoergsmaal = ref({
   tekst: '',
   // Starter med to svarmuligheder. Flere kan tilføjes
@@ -48,9 +52,11 @@ const nytSpoergsmaal = ref({
   ]
 })
 
+// true mens der gemmes (knapperne bliver grå), og beskeden efter gemning
 const gemmer = ref(false)
 const gemBesked = ref('')
 
+// Tilføjer et tomt svar. crypto.randomUUID() laver et unikt id, så Vue kan holde svarene adskilt
 function tilfoejSvarmulighed() {
   nytSpoergsmaal.value.svar.push({
     id: crypto.randomUUID(),
@@ -59,6 +65,7 @@ function tilfoejSvarmulighed() {
   })
 }
 
+// Fjerner et svar ved at beholde alle de andre (filter)
 function fjernSvarmulighed(svarId) {
   // Beholder mindst to svarmuligheder
   if (nytSpoergsmaal.value.svar.length <= 2) {
@@ -68,6 +75,8 @@ function fjernSvarmulighed(svarId) {
   nytSpoergsmaal.value.svar = nytSpoergsmaal.value.svar.filter((svar) => svar.id !== svarId)
 }
 
+// Gemmer det nye spørgsmål i Firebase.
+// Først tjekkes login og at alt er udfyldt (return stopper funktionen tidligt)
 async function opretSpoergsmaal() {
   gemBesked.value = ''
 
@@ -152,17 +161,21 @@ const redigerer = ref(null)
 const gemmerRedigering = ref(false)
 const redigerBesked = ref('')
 
+// Åbner redigering af et spørgsmål.
+// JSON.parse(JSON.stringify(...)) laver en helt ny kopi, også af listen med svar
 function startRedigering(sp) {
   // Selvstændig kopi inkl. svarmuligheder, så oversigten ikke ændres før "Gem"
   redigerer.value = JSON.parse(JSON.stringify(sp))
   redigerBesked.value = ''
 }
 
+// Lukker redigeringen uden at gemme
 function annullerRedigering() {
   redigerer.value = null
   redigerBesked.value = ''
 }
 
+// Gemmer det redigerede spørgsmål. Samme tjek som ved opret, og så PUT til databasen
 async function gemRedigering() {
   redigerBesked.value = ''
 
@@ -221,9 +234,12 @@ async function gemRedigering() {
 
 // ---------- Slet spørgsmål ----------
 
+// Id på det spørgsmål, der slettes lige nu ('' = intet), og beskeden bagefter
 const sletterId = ref('')
 const sletBesked = ref('')
 
+// Sletter et spørgsmål. Først tjekkes, at det ikke bruges af quizlogikken,
+// og så spørges brugeren, om de er sikre (window.confirm)
 async function sletSpoergsmaal(sp) {
   sletBesked.value = ''
 
@@ -283,9 +299,11 @@ const baneGraenser = ref({
   roedFra: 9
 })
 
+// true mens grænserne gemmes, og beskeden bagefter
 const gemmerGraenser = ref(false)
 const graenseBesked = ref('')
 
+// Henter de gemte pointgrænser. Fejler det, beholdes startværdierne 5 og 9
 async function hentBaneGraenser() {
   try {
     const response = await fetch(`${GRAENSER_URL}.json`)
@@ -314,6 +332,8 @@ async function hentBaneGraenser() {
   }
 }
 
+// Gemmer pointgrænserne. QuizSide.vue bruger dem til at vælge mellem grøn, blå og rød.
+// const { blaaFra, roedFra } = ... henter de to værdier ud af objektet på én gang
 async function gemBaneGraenser() {
   graenseBesked.value = ''
 
@@ -369,6 +389,7 @@ onMounted(() => {
 
 <template>
   <!-- Pointgrænser -->
+  <!-- v-model.number laver det indtastede om til et tal i stedet for tekst -->
   <section class="admin-kort">
     <h2>Pointgrænser for baner</h2>
 
@@ -396,6 +417,7 @@ onMounted(() => {
     <label for="nyt-spoergsmaal">Spørgsmålstekst</label>
     <input id="nyt-spoergsmaal" v-model="nytSpoergsmaal.tekst" type="text" required />
 
+    <!-- Ét sæt felter pr. svarmulighed. indeks starter ved 0, derfor indeks + 1 -->
     <div v-for="(svar, indeks) in nytSpoergsmaal.svar" :key="svar.id">
       <label :for="'nyt-svar-' + svar.id">Svarmulighed {{ indeks + 1 }}</label>
       <input :id="'nyt-svar-' + svar.id" v-model="svar.tekst" type="text" required />
@@ -440,11 +462,13 @@ onMounted(() => {
   <p v-if="sletBesked" role="status">{{ sletBesked }}</p>
 
   <!-- Liste med spørgsmål -->
+  <!-- v-if / v-else-if / v-else: kun én af dem vises ad gangen -->
   <p v-if="indlaeser">Henter spørgsmål...</p>
   <p v-else-if="fejlbesked">{{ fejlbesked }}</p>
   <p v-else-if="spoergsmaal.length === 0">Der er ingen spørgsmål endnu.</p>
 
   <div v-else class="admin-liste">
+    <!-- Ét kort pr. spørgsmål med tekst, type og svar -->
     <article v-for="sp in spoergsmaal" :key="sp.id" class="admin-kort">
       <h3>{{ sp.raekkefoelge }}. {{ sp.tekst }}</h3>
 
@@ -508,6 +532,7 @@ onMounted(() => {
         </div>
       </section>
 
+      <!-- Alle slet-knapper er grå, mens et spørgsmål slettes -->
       <div class="knapper">
         <BaseButton
           type="button"

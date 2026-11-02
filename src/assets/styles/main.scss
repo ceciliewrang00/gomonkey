@@ -10,7 +10,7 @@ html {
 }
 
 body {
-    max-width: 90rem;
+    max-width: 100rem;
     margin: 0 auto;
     background-color: c.$primary_light25;
 }
@@ -25,6 +25,14 @@ header {
 section, article {
     padding: s.$spacing-xxl s.$spacing-m;
     scroll-margin-top: 5rem;
+}
+
+// Forsidens sektioner får samme indholdsbredde, så alle kanter flugter.
+// Baggrunden fylder stadig hele bredden, men padding til siderne vokser,
+// når skærmen er bredere end $indhold-bredde. Den bliver aldrig mindre end spacing-m
+.forside > section,
+.forside > article {
+    padding-inline: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
 }
 
 .double-button {

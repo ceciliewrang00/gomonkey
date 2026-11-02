@@ -28,19 +28,24 @@ import BaseButton from './BaseButton.vue'
 #overblik {
   @include m.section-black100;
   @include f.flex-row;
+  // Teksten flugter med venstre kant og kortet med højre kant (samme kanter som hero og banner)
+  justify-content: space-between;
 
   #overblik-tekst {
-    max-width: 40rem;
+    min-width: 20rem;
+    max-width: s.$tekst-bredde;
   }
 
   #kort-wrapper {
     position: relative;
-    width: clamp(20rem, 40vw, 35rem);
+    width: s.$billede-bredde;
     height: fit-content;
-    margin: auto;
+    // Kun auto op/ned, så kortet stadig centreres lodret ud for teksten.
+    // auto til siderne ville skubbe kortet væk fra teksten
+    margin: auto 0;
 
     img {
-      width: clamp(20rem, 40vw, 35rem);
+      width: s.$billede-bredde;
       height: auto;
     }
 

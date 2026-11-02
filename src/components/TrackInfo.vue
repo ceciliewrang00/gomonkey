@@ -93,16 +93,21 @@ onMounted(async () => {
     margin: auto;
 }
 
+// space-between skubber tekst og billede ud til hver sin kant,
+// så de flugter med hero, banner og de andre sektioner
 .img-right {
     @include f.flex-row;
+    justify-content: space-between;
 }
 
 .img-left {
     @include f.flex-row-reverse;
+    justify-content: space-between;
 }
 
 .bane__content {
-    max-width: 40rem;
+    min-width: 20rem;
+    max-width: s.$tekst-bredde;
 
     .bane-icon {
     display: flex;
@@ -129,7 +134,7 @@ onMounted(async () => {
 }
 
 .bane__img__wrapper {
-    width: clamp(20rem, 40vw, 35rem);
+    width: s.$billede-bredde;
     height: fit-content;
 
     .bane__img {

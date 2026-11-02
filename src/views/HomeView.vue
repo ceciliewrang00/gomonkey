@@ -10,7 +10,8 @@
 
 <template>
   <AppHeader />
-  <main>
+  <!-- forside-klassen giver sektionerne samme indholdsbredde (se main.scss) -->
+  <main class="forside">
     <HeroSection />
     <BannerSection />
     <OverviewSection />

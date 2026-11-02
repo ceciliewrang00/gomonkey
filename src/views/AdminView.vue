@@ -1,4 +1,10 @@
 <script setup>
+// ADMIN-SIDEN (adressen /admin)
+// Først skal man logge ind med Firebase. Derefter kan man skifte mellem to faner:
+// - Baner: ret teksterne om banerne (AdminBaner.vue)
+// - Quiz: ret pointgrænser og quizspørgsmål (AdminQuiz.vue)
+// Denne fil styrer kun login og faner. Hver fane henter og gemmer selv sine data.
+
 // ---------- Imports ----------
 
 // Vores egen knap-komponent
@@ -25,6 +31,7 @@ const fane = ref('baner')
 
 // ---------- Login ----------
 
+// Det, der skrives i loginfelterne (forbundet med v-model i templaten)
 const email = ref('')
 const adgangskode = ref('')
 
@@ -34,9 +41,12 @@ const bruger = ref(null)
 // true, mens Firebase undersøger, om der allerede er et gemt login
 const tjekkerLogin = ref(true)
 
+// Fejlbesked til login/logout, og true mens login er i gang (knappen bliver grå)
 const loginFejl = ref('')
 const loggerInd = ref(false)
 
+// Kaldes, når loginformularen sendes. async/await = vent på svar fra Firebase.
+// try/catch fanger fejl, fx forkert adgangskode. finally kører altid til sidst
 async function logInd() {
   loginFejl.value = ''
   loggerInd.value = true
@@ -55,6 +65,7 @@ async function logInd() {
   }
 }
 
+// Logger ud, når man trykker "Log ud"
 async function logUd() {
   loginFejl.value = ''
 
@@ -75,6 +86,7 @@ const stopLoginLytter = onAuthStateChanged(auth, (aktuelBruger) => {
   tjekkerLogin.value = false
 })
 
+// Stop lytteren, når man forlader admin-siden
 onUnmounted(() => {
   stopLoginLytter()
 })
@@ -98,7 +110,9 @@ onUnmounted(() => {
     <!-- Vises, mens Firebase undersøger, om der er et gemt login -->
     <p v-if="tjekkerLogin">Kontrollerer login...</p>
 
-    <!-- Loginformular. Vises, når man ikke er logget ind -->
+    <!-- Loginformular. Vises, når man ikke er logget ind.
+         @submit.prevent kører logInd og stopper browseren i at genindlæse siden.
+         v-model forbinder feltet med variablen, så de altid har samme indhold -->
     <form v-else-if="!bruger" class="admin-kort" @submit.prevent="logInd">
       <h2>Log ind</h2>
 

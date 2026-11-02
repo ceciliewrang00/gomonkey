@@ -10,22 +10,31 @@ const valgtBaneId = ref(null)
 // 'alle' eller en liste af bane-id'er. Filteret sender den, kortet modtager den
 const nuvaerendeFilter = ref('alle')
 
+// Kaldes, når KortFilter sender 'filter-changed'.
+// Gemmer det nye filter, og så sender Vue det automatisk videre til kortet
 function haandterFilterAendring(nytFilter) {
   nuvaerendeFilter.value = nytFilter
 }
 </script>
 
 <template>
+  <!-- Siden er delt i to: filteret til venstre og kortet til højre.
+       Dataflow: KortFilter → (emit) → KortView → (prop) → InteraktivtKort -->
   <main class="kort-app">
+<<<<<<< HEAD
     <!-- Luk-knap (Går til forsiden) -->
     <button class="kort-luk-knap" @click="$router.push('/')" aria-label="Luk kort og gå til forside">
       ✕
     </button>
 
     <!-- Filter -->
+=======
+    <!-- Filter. @filter-changed lytter efter beskeden fra filteret -->
+>>>>>>> d1dfac7 (mange rettelser)
     <KortFilter @filter-changed="haandterFilterAendring" />
 
-    <!-- Kortet -->
+    <!-- Kortet. :filter sender filteret ind som prop.
+         @bane-valgt gemmer den bane, man klikker på ($event = bane-id'et) -->
     <div class="kort-side">
       <InteraktivtKort
         :filter="nuvaerendeFilter"
@@ -39,6 +48,10 @@ function haandterFilterAendring(nytFilter) {
      Alt ligger under .kort-app, så intet rammer resten af sitet (admin, forside osv.).
      Det her er indholdet af den gamle style.css og App.vue, uden de globale regler på body og *. -->
 <style lang="scss">
+// Hele kortsiden: fylder skærmens fulde højde.
+// display: flex lægger filteret og kortet ved siden af hinanden.
+// 100dvh er højden på mobil uden browserens adresselinje. 100vh er en reserve
+// til ældre browsere, der ikke kender dvh
 .kort-app {
   position: fixed;
   top: 0;
@@ -56,11 +69,13 @@ function haandterFilterAendring(nytFilter) {
   background: #f2efeb;
   font-synthesis: none;
 
+  // border-box: padding og kant tælles med i bredden, så elementer ikke bliver for brede
   *,
   *::before,
   *::after {
     box-sizing: border-box;
   }
+<<<<<<< HEAD
   
   .kort-luk-knap {
     position: absolute;
@@ -78,14 +93,38 @@ function haandterFilterAendring(nytFilter) {
     display: flex;
     align-items: center;
     justify-content: center;
+=======
+
+  // Knapper bruger samme skrift som resten af siden.
+  // Tilbageknappen undtages, så den beholder skriften fra button-secondary
+  button:not(.tilbage-knap) {
+    font: inherit;
+  }
+
+  button {
+>>>>>>> d1dfac7 (mange rettelser)
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
     transition: background 0.2s ease, transform 0.1s ease;
 
+<<<<<<< HEAD
     &:hover {
       background: #1f472f;
       transform: scale(1.05);
     }
+=======
+  // Toplinjen lader klik gå igennem til kortet, så knappen skal kunne klikkes igen
+  .tilbage-knap {
+    pointer-events: auto;
+  }
+
+  // Tydelig grøn ramme, når man bruger tastaturet (Tab) til at gå mellem knapper
+  button:focus-visible,
+  .kort-visning:focus-visible {
+    outline: 3px solid #a2d8a2;
+    outline-offset: 3px;
+  }
+>>>>>>> d1dfac7 (mange rettelser)
 
     &:active {
       transform: scale(0.95);
@@ -117,6 +156,9 @@ function haandterFilterAendring(nytFilter) {
     padding: 0;
   }
 
+  // Scenen. position: relative gør, at knapperne med position: absolute
+  // placeres i forhold til scenen og ikke i forhold til hele siden.
+  // isolation: isolate holder z-index for knapperne inde i scenen
   .kort-stage {
     position: relative;
     isolation: isolate;
@@ -128,6 +170,9 @@ function haandterFilterAendring(nytFilter) {
     background: #a9b790;
   }
 
+  // Boksen, som SVG'en sættes ind i.
+  // user-select: none forhindrer, at man markerer tekst, når man trækker.
+  // cursor: grab viser en hånd, og grabbing en lukket hånd, mens man trækker
   .kort-visning {
     width: 100%;
     height: 100%;
@@ -155,6 +200,10 @@ function haandterFilterAendring(nytFilter) {
 
   // ---------- Toplinje ----------
 
+  // Logo og "Vis hele parken" ligger oven på kortet (z-index: 4).
+  // pointer-events: none lader klik gå igennem til kortet – undtagen på knappen,
+  // som får pointer-events: auto igen.
+  // clamp(16px, 3vw, 42px) = afstand fra kanten, der skalerer med skærmen
   .kort-toplinje,
   .kort-tophoejre {
     position: absolute;
@@ -212,6 +261,7 @@ function haandterFilterAendring(nytFilter) {
 
   // ---------- Zoomknapper ----------
 
+  // Den hvide boks med + og − nederst til højre
   .kort-vaerktoejer {
     position: absolute;
     bottom: 29px;
@@ -251,12 +301,14 @@ function haandterFilterAendring(nytFilter) {
     }
   }
 
+  // Den tynde streg mellem + og −
   .kort-vaerktoej-linje {
     height: 1px;
     width: 31px;
     background: #ced6c9;
   }
 
+  // Zoomniveauet (fx "1.3×") lige over zoomknapperne
   .kort-zoom {
     position: absolute;
     right: clamp(17px, 3vw, 42px);
@@ -272,6 +324,9 @@ function haandterFilterAendring(nytFilter) {
 
   // ---------- Valgt bane og vejledning ----------
 
+  // Boksen med den valgte bane nederst til venstre.
+  // Den har z-index 4 og ligger derfor oven på vejledningen (z-index 2).
+  // backdrop-filter: blur slører kortet bag den halvgennemsigtige boks
   .kort-valgt {
     position: absolute;
     left: clamp(16px, 3vw, 42px);
@@ -304,6 +359,7 @@ function haandterFilterAendring(nytFilter) {
     }
   }
 
+  // Den runde prik i banens farve. border-radius: 50% gør firkanten rund
   .bane-prik {
     width: 14px;
     height: 14px;
@@ -311,6 +367,7 @@ function haandterFilterAendring(nytFilter) {
     border: 1px solid #fff6;
   }
 
+  // Hjælpeteksten nederst til venstre
   .kort-vejledning {
     position: absolute;
     bottom: 25px;
@@ -327,6 +384,8 @@ function haandterFilterAendring(nytFilter) {
 
   // ---------- Indlæsning og fejl ----------
 
+  // Boksen med "Kortet indlæses…" eller en fejl, midt på kortet.
+  // top/left 50% + translate(-50%, -50%) er et klassisk trick til at centrere
   .kort-status {
     z-index: 5;
     position: absolute;
@@ -354,6 +413,8 @@ function haandterFilterAendring(nytFilter) {
 
   // ---------- Mobil ----------
 
+  // Gælder kun skærme op til 800px brede.
+  // Her skjules logo, "Vis hele parken" og vejledningen for at give kortet plads
   @media (max-width: 800px) {
     margin: 0;
     padding: 0;
@@ -370,10 +431,18 @@ function haandterFilterAendring(nytFilter) {
       min-height: 460px;
     }
 
-    .kort-toplinje,
+    .kort-brand,
     .kort-tophoejre,
     .kort-vejledning {
       display: none !important;
+    }
+
+    // Tilbageknappen bliver, men flyttes op til højre,
+    // fordi "Filtre"-knappen ligger øverst til venstre på mobil
+    .kort-toplinje {
+      top: 15px;
+      left: auto;
+      right: 15px;
     }
 
     .kort-zoom {
@@ -387,6 +456,7 @@ function haandterFilterAendring(nytFilter) {
   }
 }
 
+// Respektér brugere, der har slået animationer fra i deres styresystem
 @media (prefers-reduced-motion: reduce) {
   .kort-app *,
   .kort-app *::before,

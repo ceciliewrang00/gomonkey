@@ -17,7 +17,7 @@
 }
 
 .button-secondary {
-    background-color: transparent;
+    background-color: c.$primary_light25;
     color: c.$primary_black100;
     padding:0.5rem 1.5rem;
     @include t.button;
