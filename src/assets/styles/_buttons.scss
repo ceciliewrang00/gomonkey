@@ -31,6 +31,43 @@
     }
 }
 
+/* Rund lukkeknap med kryds. Placeringen styres i komponenten.
+   Brug: <RouterLink to="/" class="button-close" aria-label="Luk">
+           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+         </RouterLink> */
+.button-close {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background-color: c.$primary_light25;
+    color: c.$primary_black100;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+
+    svg {
+        width: 1.25rem;
+        height: 1.25rem;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+    }
+
+    &:hover {
+        background-color: c.$secondary_purple100;
+        color: c.$primary_light25;
+    }
+
+    &:focus-visible {
+        outline: 3px solid c.$secondary_purple100;
+        outline-offset: 3px;
+    }
+}
+
 .button-header {
     @include t.button_header;
     color: c.$primary_black100;

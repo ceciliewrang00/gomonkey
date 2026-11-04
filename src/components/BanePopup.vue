@@ -1,7 +1,8 @@
 <script setup>
-import logoUrl from '../assets/images/gomonkey-logo.svg'
+import { computed } from 'vue'
+import logoUrl from '@/assets/images/gomonkey-logo.svg'
 
-defineProps({
+const props = defineProps({
   bane: {
     type: Object,
     required: true
@@ -9,110 +10,108 @@ defineProps({
 })
 
 defineEmits(['luk'])
+
+// De tre skalaer i popuppen. Kun dem, banen har et tal for, bliver vist
+const skalaer = computed(() => [
+  { label: 'Sværhedsgrad', vaerdi: props.bane.svaerhedsgradTal },
+  { label: 'Højde over jorden', vaerdi: props.bane.hoejdekravTal },
+  { label: 'Adrenalin & fart', vaerdi: props.bane.adrenalinTal },
+].filter(s => s.vaerdi))
 </script>
 
 <template>
-  <div class="bane-popup" role="dialog" aria-labelledby="popup-titel">
+  <!-- --bane-farve bruges til farvestregen i toppen og prikken ved navnet -->
+  <div
+    class="bane-popup"
+    role="dialog"
+    aria-labelledby="popup-titel"
+    :style="{ '--bane-farve': bane.farve || '#CED0C0' }"
+  >
     <div class="popup-header">
       <div class="popup-titel-gruppe">
-        <span 
-          class="bane-farve-indikator" 
-          :style="{ backgroundColor: bane.farve || '#CED0C0' }"
-        ></span>
+        <span class="bane-farve-indikator" aria-hidden="true"></span>
         <h3 id="popup-titel">{{ bane.navn }}</h3>
       </div>
-      <button 
-        type="button" 
-        class="popup-luk" 
-        aria-label="Luk information" 
+      <button
+        type="button"
+        class="popup-luk"
+        aria-label="Luk information"
         @click="$emit('luk')"
       >
-        &times;
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
       </button>
     </div>
 
-    <div class="popup-indhold">
-      <p v-if="bane.beskrivelse" class="popup-beskrivelse">
-        {{ bane.beskrivelse }}
-      </p>
+    <p v-if="bane.beskrivelse" class="popup-beskrivelse">
+      {{ bane.beskrivelse }}
+    </p>
 
-      <div class="popup-detaljer">
-        <!-- Sværhedsgrad -->
-        <div v-if="bane.svaerhedsgradTal" class="detalje-tag fuld-bredde">
-          <div class="tag-top">
-            <span class="tag-label">Sværhedsgrad</span>
-            <div class="skala-ikoner">
-              <img 
-                v-for="i in 5" 
-                :key="i"
-                :src="logoUrl" 
-                alt="Logo rating"
-                class="skala-logo"
-                :class="{ aktiv: i <= bane.svaerhedsgradTal }"
-              />
-            </div>
-          </div>
-        </div>
-        
-        <!-- Højdekrav -->
-        <div v-if="bane.hoejdekravTal" class="detalje-tag fuld-bredde">
-          <div class="tag-top">
-            <span class="tag-label">Højde over jorden</span>
-            <div class="skala-ikoner">
-              <img 
-                v-for="i in 5" 
-                :key="i"
-                :src="logoUrl" 
-                alt="Logo rating"
-                class="skala-logo"
-                :class="{ aktiv: i <= bane.hoejdekravTal }"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Adrenalin / Fart -->
-        <div v-if="bane.adrenalinTal" class="detalje-tag fuld-bredde">
-          <div class="tag-top">
-            <span class="tag-label">Adrenalin & Fart</span>
-            <div class="skala-ikoner">
-              <img 
-                v-for="i in 5" 
-                :key="i"
-                :src="logoUrl" 
-                alt="Logo rating"
-                class="skala-logo"
-                :class="{ aktiv: i <= bane.adrenalinTal }"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Skalaer: 5 logoer, de aktive står tydeligt -->
+    <ul v-if="skalaer.length" class="popup-skalaer">
+      <li v-for="s in skalaer" :key="s.label" class="skala">
+        <span class="skala-label">{{ s.label }}</span>
+        <span class="skala-ikoner">
+          <img
+            v-for="i in 5"
+            :key="i"
+            :src="logoUrl"
+            alt=""
+            class="skala-logo"
+            :class="{ aktiv: i <= s.vaerdi }"
+          />
+          <!-- Skærmlæsere får tallet i stedet for 5 billeder -->
+          <span class="sr-only">{{ s.vaerdi }} ud af 5</span>
+        </span>
+      </li>
+    </ul>
   </div>
 </template>
 
+<style lang="scss" scoped>
+@use '@/assets/styles/colors' as c;
+@use '@/assets/styles/spacings' as s;
 
-<style scoped>
 .bane-popup {
   position: absolute;
-  top: 24px;
-  right: 24px;
+  // Under knapperne øverst til højre ("Vis hele parken" og "Luk kort")
+  top: 5.5rem;
+  right: clamp(16px, 3vw, 42px);
   z-index: 10;
-  width: 340px;
-  background-color: #EFE9E5;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(11, 28, 14, 0.15);
-  /* Sat ned til 12px i toppen, så hele indholdet rykker med op */
-  padding: 12px 20px 20px 20px; 
+  width: min(22rem, calc(100% - 2 * #{s.$spacing-s}));
+  overflow: hidden;
+  padding: s.$spacing-s s.$spacing-s s.$spacing-s;
+  border-radius: 1rem;
+  background-color: c.$primary_light25;
+  color: c.$primary_black100;
+  box-shadow: 0 0.75rem 2rem rgba(c.$primary_darkgreen, 0.2);
+  font-family: "Inter", sans-serif; // Samme font som resten af siden
   animation: popup-glid-ind 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  // Farvestreg i toppen i banens farve
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 0.35rem;
+    background-color: var(--bane-farve);
+  }
+
+  // Mobil: popuppen ligger i bunden af kortet i fuld bredde
+  @media (max-width: 600px) {
+    top: auto;
+    left: s.$spacing-xs;
+    right: s.$spacing-xs;
+    bottom: s.$spacing-xs;
+    width: auto;
+  }
 }
 
 @keyframes popup-glid-ind {
   from {
     opacity: 0;
-    transform: translateY(-10px) scale(0.95);
+    transform: translateY(-0.6rem) scale(0.96);
   }
   to {
     opacity: 1;
@@ -120,110 +119,137 @@ defineEmits(['luk'])
   }
 }
 
+/* --- Header --- */
 .popup-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 4px; /* Minimal bund-padding i header */
-  margin-top: 0;
+  gap: s.$spacing-xs;
+  padding-top: 0.25rem;
 }
 
 .popup-titel-gruppe {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.6rem;
+
+  h3 {
+    margin: 0;
+    padding-top: 0; // Nulstiller padding fra h3 i _typography.scss
+    font-size: 1.25rem;
+    font-weight: 900;
+    line-height: 1.2;
+  }
 }
 
 .bane-farve-indikator {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
   flex-shrink: 0;
-  display: inline-block;
-}
-
-.popup-titel-gruppe h3 {
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #000F02;
-  line-height: 1.2;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  background-color: var(--bane-farve);
+  
 }
 
 .popup-luk {
-  background: none;
-  border: none;
-  font-size: 1.8rem;
-  line-height: 1;
-  color: #0B1C0E;
-  cursor: pointer;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
   padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s ease;
+  border: none;
+  border-radius: 50%;
+  background-color: c.$primary_light50;
+  color: c.$primary_darkgreen;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+  }
+
+  &:hover {
+    background-color: c.$primary_darkgreen;
+    color: c.$primary_light25;
+  }
+
+  &:focus-visible {
+    outline: 3px solid c.$secondary_purple100;
+    outline-offset: 2px;
+  }
 }
 
-.popup-luk:hover {
-  color: #3A4303;
-}
-
-.popup-indhold {
-  font-size: 0.92rem;
-  color: #000F02;
-}
-
+/* --- Beskrivelse --- */
 .popup-beskrivelse {
-  /* Helt nulstillet top-margin, så den ligger tæt op ad headeren */
-  margin: 2px 0 12px 0; 
-  line-height: 1.4;
-  color: #000F02;
+  margin: s.$spacing-xs 0 s.$spacing-s;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
-.popup-detaljer {
+/* --- Skalaer --- */
+.popup-skalaer {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0; // Nulstiller padding fra ul i _typography.scss
+  list-style: none;
 }
 
-.detalje-tag {
-  background: #CED0C0;
-  /* Ændret til horisontal flex, så tekst og ikoner står på fuldstændig samme linje */
+.skala {
   display: flex;
-  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
-  border-radius: 6px;
+  gap: s.$spacing-xs;
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.75rem;
+  background-color: c.$forest_green25;
+  font-size: 0.85rem; // Overskriver li-størrelsen fra _typography.scss
+  line-height: 1.3;
 }
 
-.tag-top {
-  display: contents; /* Gør at .tag-top ikke blander sig i flex-layoutet, men lader børnene ligge direkte i .detalje-tag */
+.skala-label {
+  font-weight: 600;
+  color: c.$primary_darkgreen;
 }
 
-.tag-label {
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.03em;
-  color: #0B1C0E;
-}
-
-/* Skala med SVG-ikoner */
 .skala-ikoner {
   display: flex;
-  gap: 4px;
   align-items: center;
+  gap: 0.25rem;
 }
 
 .skala-logo {
-  width: 18px;
-  height: 18px;
+  width: 1.15rem;
+  height: 1.15rem;
   object-fit: contain;
-  opacity: 0.30;
+  opacity: 0.25;
   transition: opacity 0.2s ease;
+
+  &.aktiv {
+    opacity: 1;
+  }
 }
 
-.skala-logo.aktiv {
-  opacity: 1;
+// Skjult tekst til skærmlæsere
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bane-popup {
+    animation: none;
+  }
 }
 </style>

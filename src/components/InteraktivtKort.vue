@@ -584,14 +584,15 @@ onBeforeUnmount(() => {
         @wheel.prevent="vedHjul"
       ></div>
 
-      <div class="kort-toplinje" aria-hidden="true">
-        <span class="kort-brand">GoMonkey <span>Odense</span></span>
-      </div>
-
+      <!-- Øverst til højre: "Vis hele parken" + lukkeknap -->
       <div class="kort-tophoejre">
         <button type="button" class="kort-reset-top" @click="nulstilKort">
           Vis hele parken
         </button>
+        <!-- Kryds: går altid til forsiden. Udseendet kommer fra .button-close i _buttons.scss -->
+        <RouterLink to="/" class="button-close kort-luk" aria-label="Luk kortet og gå til forsiden">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </RouterLink>
       </div>
 
       <div v-if="indlaeser" class="kort-status" role="status">

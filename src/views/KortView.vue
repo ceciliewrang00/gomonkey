@@ -77,9 +77,8 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   }
 
   // Knapper bruger samme skrift som resten af siden.
-  // Tilbageknappen undtages, så den beholder skriften fra button-secondary.
   // :where() gør reglen svag, så knappernes egne klasser (fx font-weight) vinder
-  :where(button:not(.tilbage-knap)) {
+  :where(button) {
     font: inherit;
   }
 
@@ -87,16 +86,13 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     cursor: pointer;
   }
 
-  // Tilbageknappen er button-secondary, men får lys baggrund,
-  // så den kan ses oven på kortet. pointer-events: auto, fordi toplinjen lader klik gå igennem
-  .tilbage-knap {
+  // Lukkekryds øverst til højre. Udseendet kommer fra .button-close i _buttons.scss –
+  // her får det kun skygge, så det kan ses oven på kortet.
+  // pointer-events: auto, fordi .kort-tophoejre lader klik gå igennem
+  .kort-luk {
     pointer-events: auto;
-    background-color: c.$primary_light25;
+    align-self: center;
     box-shadow: $skygge;
-
-    &:hover {
-      background-color: c.$secondary_purple100;
-    }
   }
 
   // Tydelig lilla ramme, når man bruger tastaturet (Tab) til at gå mellem knapper
@@ -176,38 +172,19 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 
   // ---------- Toplinje ----------
 
-  // Tilbageknap, logo og "Vis hele parken" ligger oven på kortet (z-index: 4).
+  // Øverst til højre: "Vis hele parken" og lukkeknappen ligger oven på kortet (z-index: 4).
   // pointer-events: none lader klik gå igennem til kortet – undtagen på knapperne,
   // som får pointer-events: auto igen.
   // clamp(16px, 3vw, 42px) = afstand fra kanten, der skalerer med skærmen
-  .kort-toplinje {
+  .kort-tophoejre {
     position: absolute;
     z-index: 4;
     top: 24px;
-    left: clamp(16px, 3vw, 42px);
+    right: clamp(16px, 3vw, 42px);
     display: flex;
-    // stretch giver alle elementer i toplinjen samme højde
     align-items: stretch;
     gap: 12px;
     pointer-events: none;
-  }
-
-  // Logoet: sort boks med lys tekst, ligesom de sorte sektioner på forsiden
-  .kort-brand {
-    display: inline-flex;
-    gap: 0.45rem;
-    align-items: center;
-    border-radius: 1rem;
-    background: c.$primary_black100;
-    color: c.$primary_light25;
-    font-weight: 900;
-    font-size: 1rem;
-    padding: 0.6rem 1.25rem;
-    box-shadow: $skygge;
-
-    span {
-      font-weight: 300;
-    }
   }
 
   // "Vis hele parken": samme form som button-secondary, men med lys baggrund
@@ -400,7 +377,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   // ---------- Mobil ----------
 
   // Gælder kun skærme op til 800px brede.
-  // Her skjules logo, "Vis hele parken" og vejledningen for at give kortet plads
+  // Her skjules "Vis hele parken" og vejledningen for at give kortet plads
   @media (max-width: 800px) {
     margin: 0;
     padding: 0;
@@ -417,17 +394,14 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
       min-height: 460px;
     }
 
-    .kort-brand,
     .kort-reset-top,
     .kort-vejledning {
       display: none !important;
     }
 
-    // Tilbageknappen bliver, men flyttes op til højre,
-    // fordi "Filtre"-knappen ligger øverst til venstre på mobil
-    .kort-toplinje {
+    // Lukkeknappen bliver øverst til højre, lidt tættere på kanten
+    .kort-tophoejre {
       top: 15px;
-      left: auto;
       right: 15px;
     }
 

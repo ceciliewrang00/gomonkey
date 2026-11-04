@@ -17,9 +17,6 @@ import { ref, computed, onMounted } from 'vue'
 // Databaseadresserne står samlet i api.js
 import { SPOERGSMAAL_URL, GRAENSER_URL } from '@/services/api.js'
 
-// Knappen, der går tilbage til forrige side
-import TilbageKnap from '@/components/TilbageKnap.vue'
-
 // Gemmer svarene under hvert spørgsmåls id.
 const valgteSvar = ref({})
 
@@ -432,10 +429,12 @@ onMounted(async () => {
   <!-- Samler sidens primære indhold. -->
   <main class="quiz-side">
 
-    <section>
-        <!-- Går tilbage til siden, man kom fra (eller forsiden). -->
-        <TilbageKnap />
+    <!-- Kryds øverst til højre: lukker quizzen og går til forsiden -->
+    <RouterLink to="/" class="button-close quiz-luk" aria-label="Luk quizzen og gå til forsiden">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+    </RouterLink>
 
+    <section>
         <!-- Introducerer banevælgeren. -->
         <h1>Find den rette bane for dig</h1>
         <p>
@@ -576,9 +575,18 @@ onMounted(async () => {
 
 /* Giver quizsiden baggrundsfarve */
 .quiz-side {
+  position: relative; // Så krydset placeres i forhold til quizsiden
   background-color: c.$forest_green25;
   min-height: 100vh;
   padding-bottom: 2rem;
+}
+
+/* Lukkekryds øverst til højre. Udseendet kommer fra .button-close i _buttons.scss */
+.quiz-luk {
+  position: absolute;
+  top: s.$spacing-s;
+  right: s.$spacing-m;
+  z-index: 2;
 }
 
 /* Viser spørgsmålet i en centreret, lys boks. */
