@@ -112,18 +112,6 @@ $bane-farver: (
       opacity: 0.03;
     }
 
-    .badge {
-      align-self: flex-start;
-      padding: 0.4rem 0.9rem;
-      border-radius: 2rem;
-      background-color: c.$forest_pink100;
-      color: c.$primary_black100;
-      font-size: 0.85rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-    
-    }
-
     h2 {
       font-size: clamp(2rem, 4vw, 2.75rem);
       font-weight: 800;

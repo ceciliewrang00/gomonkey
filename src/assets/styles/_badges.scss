@@ -1,0 +1,45 @@
+@use 'colors' as c;
+
+/* --- BADGES ---
+   Små etiketter over overskrifter, fx "Udforsk terrænet".
+   Brug: <span class="badge">Tekst</span>
+   Varianter: badge--light, badge--dark, badge--outline
+
+   Egen farve på én badge – sæt variablerne:
+   <span class="badge" style="--badge-bg: #67ACCB; --badge-color: #000F02">Tekst</span>
+   eller i komponentens <style>:  .badge { --badge-bg: #{c.$secondary_blue100}; } */
+
+.badge {
+    display: inline-block;
+    align-self: flex-start; // Bliver ikke strakt ud i flex-kolonner
+    width: fit-content;
+    padding: 0.4rem 0.9rem;
+    border-radius: 2rem;
+    background-color: var(--badge-bg, #{c.$forest_pink100});
+    color: var(--badge-color, #{c.$primary_black100});
+    font-family: "Inter", sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+}
+
+// Lys – til mørke baggrunde
+.badge--light {
+    --badge-bg: #{c.$primary_light25};
+    --badge-color: #{c.$primary_black100};
+}
+
+// Mørk – til lyse eller lyserøde baggrunde
+.badge--dark {
+    --badge-bg: #{c.$primary_black100};
+    --badge-color: #{c.$primary_light25};
+}
+
+// Gennemsigtig med kant – til billeder
+.badge--outline {
+    --badge-bg: transparent;
+    --badge-color: #{c.$primary_light25};
+    border: 1.5px solid rgba(c.$primary_light25, 0.5);
+    backdrop-filter: blur(4px);
+}

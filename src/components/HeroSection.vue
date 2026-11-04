@@ -174,11 +174,9 @@ $form: 62% 38% 46% 54% / 55% 45% 55% 45%;
   bottom: 12%;
   padding: 0.7rem 1.2rem;
   border-radius: 3rem;
-  background-color: c.$secondary_peach100;
-  color: c.$primary_black100;
-  border: 3px solid c.$primary_black100;
+  background-color: c.$secondary_purple100;
+  color: c.$primary_light25;
   box-shadow: 4px 4px 0 c.$primary_black100;
-  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
   transform: rotate(6deg);
 
   strong {
