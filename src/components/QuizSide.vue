@@ -595,16 +595,32 @@ onMounted(async () => {
 
 /* Smal, centreret kolonne, så intro og quizkort har samme bredde og flugter. */
 .quiz-kolonne {
-  max-width: 42rem;
-  margin: 0 auto;
-  padding: s.$spacing-xxl s.$spacing-s 0;
+  padding: s.$spacing-xxl 0 0;
+  // Samme sidepadding som .forside > section i main.scss,
+  // så quizzen flugter med forsidens indhold
+  padding-inline: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
+}
+
+/* Intro og quizboks har samme smalle bredde og står til venstre.
+   margin-inline: 0 overskriver margin: 0 auto fra flex-column, så introen ikke centreres */
+.quiz-intro,
+.quiz-kort,
+.quiz-status {
+  max-width: 48rem;
+  margin-inline: 0;
 }
 
 /* Intro over quizkortet: badge, overskrift og tekst under hinanden. */
 .quiz-intro {
   @include f.flex-column;
   align-items: flex-start;
-  margin-bottom: s.$spacing-m;
+  padding: 0; // Nulstiller section-padding fra main.scss
+  margin-inline: 0; // Overskriver margin: 0 auto fra flex-column, så introen står til venstre
+  margin-bottom: s.$spacing-s;
+
+  p {
+    margin: 0; // Fjerner browserens standard-margin
+  }
 }
 
 /* Statusbeskeder (indlæser, fejl, tom quiz) i samme boks som quizkortet. */
@@ -624,7 +640,7 @@ onMounted(async () => {
 /* Viser spørgsmålet i en lys boks. Bredden kommer fra .quiz-kolonne. */
 .quiz-kort {
   margin: 0;
-  padding: s.$spacing-xxl s.$spacing-m;
+  padding: s.$spacing-l s.$spacing-xl;
   background-color: c.$primary_light25;
   border-radius: 1rem;
 }
@@ -634,9 +650,15 @@ h2 {
   margin-bottom: 1rem;
 }
 
-/* Placerer svarene under hinanden med mellemrum. */
+/* Svarene under hinanden på mobil, i 2 kolonner på større skærme. */
 .quiz-svar {
-    @include f.flex-column;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: s.$spacing-xs;
+
+  @media (min-width: 700px) {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 /* Giver svarknapperne afrundede kanter og venstrestillet tekst. */
@@ -719,7 +741,7 @@ button:disabled {
 /* Giver afstand over navigationen og mellem knapperne. */
 .quiz-navigation {
   @include f.flex-buttons;
-  margin-top: 2rem;
+  margin-top: s.$spacing-m;
 }
 
 /* Fremhæver resultatets overskrift. */
