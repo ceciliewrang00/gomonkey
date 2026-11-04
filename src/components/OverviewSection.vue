@@ -56,13 +56,6 @@ const baneFarver = [
 
 $linje: rgba(239, 233, 229, 0.12);
 
-$bane-farver: (
-  groen: c.$forest_green100,
-  blaa: c.$secondary_blue100,
-  roed: c.$secondary_orange100,
-  sort: c.$primary_black100,
-);
-
 #overblik {
   @include m.section-black100;
   // Kun top/bund – siderne styres af .forside > section i main.scss
@@ -163,7 +156,8 @@ $bane-farver: (
   
     }
 
-    @each $navn, $farve in $bane-farver {
+    // Farverne kommer fra $bane-farver i _colors.scss
+    @each $navn, $farve in c.$bane-farver {
       .prik--#{$navn} {
         background-color: $farve;
       }

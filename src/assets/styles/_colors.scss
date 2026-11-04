@@ -51,3 +51,24 @@ $secondary_purple100: #253A8F;
 $secondary_purple75: #5C6BAB;
 $secondary_purple50: #929CC7;
 $secondary_purple25: #C8CEE3;
+
+/* Bane Rød – farven til den røde bane */
+$bane_roed: #FF2C48;
+
+/* Bane Blå – farven til den blå bane */
+$bane_blaa: #4475EF;
+
+/* Bane Grøn – farven til den grønne bane */
+$bane_groen: #40BB65;
+
+/* --- BANEFARVER ---
+   Fælles farver til banerne (ikke kortets streger).
+   Brug: @each $navn, $farve in c.$bane-farver { ... } */
+$bane-farver: (
+  groen: $bane_groen,
+  blaa: $bane_blaa,
+  roed: $bane_roed,
+  sort: $primary_black100,
+  brun: $primary_light25,
+  default: $primary_black50
+);

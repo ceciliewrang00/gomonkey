@@ -396,6 +396,7 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
 
 <style lang="scss" scoped>
 // Farverne kommer fra _colors.scss, så filteret passer til resten af siderne
+@use 'sass:map';
 @use '@/assets/styles/colors' as c;
 
 // Skygge under knapper, der ligger oven på kortet
@@ -708,12 +709,14 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   flex-shrink: 0;
 }
 
-/* Ikonets farve pr. bane. Ikonet bruger currentColor, altså color herunder.
-   Farverne er de samme som banernes streger på kortet, så man kan genkende dem */
-.bane-ikon.gron { color: #14c053; }
-.bane-ikon.bla { color: #46a9e2; }
-.bane-ikon.rod { color: #db3434; }
-.bane-ikon.sort { color: c.$primary_black75; }
+/* Ikonets farve pr. bane – fra $bane-farver i _colors.scss.
+   Ikonet bruger currentColor, altså color herunder.
+   Dataen bruger gron/bla/rod, så de kobles til mappets navne */
+$ikon-klasser: (gron: groen, bla: blaa, rod: roed, sort: sort, brun: brun);
+
+@each $klasse, $navn in $ikon-klasser {
+  .bane-ikon.#{$klasse} { color: map.get(c.$bane-farver, $navn); }
+}
 .bane-ikon.bounce,
 .bane-ikon.standard { color: c.$secondary_peach100; }
 

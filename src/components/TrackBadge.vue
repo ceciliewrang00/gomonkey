@@ -53,16 +53,6 @@ function opacityFor(n) {
 <style lang="scss" scoped>
 @use '@/assets/styles/colors' as c;
 
-// Kobler klassenavne til farverne fra _colors.scss
-$track-colors: (
-  groen: c.$forest_green100,
-  blaa: c.$secondary_blue100,
-  roed: c.$secondary_orange100,
-  sort: c.$primary_black100,
-  brun: c.$secondary_peach100,
-  default: c.$primary_black50
-);
-
 .badge {
   position: relative;
   height: 40px;
@@ -76,8 +66,8 @@ $track-colors: (
   height: 40px;
 }
 
-// Laver en klasse pr. farve, fx .layer--groen
-@each $name, $value in $track-colors {
+// Laver en klasse pr. farve, fx .layer--groen (farverne kommer fra _colors.scss)
+@each $name, $value in c.$bane-farver {
   .layer--#{$name} {
     fill: $value;
   }

@@ -142,17 +142,8 @@ function faktaFor(bane) {
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
 
-// Banens farve (samme som i TrackBadge)
-$bane-farver: (
-    groen: c.$forest_green100,
-    blaa: c.$secondary_blue100,
-    roed: c.$secondary_orange100,
-    sort: c.$primary_black100,
-    brun: c.$primary_light25,
-    default: c.$primary_black50
-);
-
-@each $navn, $farve in $bane-farver {
+// Banens farve – fra $bane-farver i _colors.scss
+@each $navn, $farve in c.$bane-farver {
     .bane--#{$navn} {
         --bane-farve: #{$farve};
     }
