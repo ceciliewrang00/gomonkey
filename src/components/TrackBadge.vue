@@ -14,7 +14,7 @@ const classMap = {
   blå: 'blaa',
   rød: 'roed',
   sort: 'sort',
-  brun: 'brun'
+  bounce: 'bounce'
 }
 
 // Finder den rigtige CSS-klasse til farven (ukendt farve = default)

@@ -712,12 +712,11 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 /* Ikonets farve pr. bane – fra $bane-farver i _colors.scss.
    Ikonet bruger currentColor, altså color herunder.
    Dataen bruger gron/bla/rod, så de kobles til mappets navne */
-$ikon-klasser: (gron: groen, bla: blaa, rod: roed, sort: sort, brun: brun);
+$ikon-klasser: (gron: groen, bla: blaa, rod: roed, sort: sort, bounce: bounce);
 
 @each $klasse, $navn in $ikon-klasser {
   .bane-ikon.#{$klasse} { color: map.get(c.$bane-farver, $navn); }
 }
-.bane-ikon.bounce,
 .bane-ikon.standard { color: c.$secondary_peach100; }
 
 .filter-tekst .titel {

@@ -9,7 +9,7 @@ import { BANER_URL, hentToken } from '@/services/api.js'
 // Felter i bane-formularen. Vil du kunne rette et nyt felt, så tilføj en linje her
 const BANE_FIELDS = [
   { key: 'name', label: 'Navn', type: 'text' },
-  { key: 'color', label: 'Farve', type: 'select', options: ['grøn', 'blå', 'rød', 'sort', 'brun'] },
+  { key: 'color', label: 'Farve', type: 'select', options: ['grøn', 'blå', 'rød', 'sort', 'bounce'] },
   { key: 'number', label: 'Nummer (antal blade)', type: 'text' },
   { key: 'description', label: 'Beskrivelse', type: 'textarea' },
   { key: 'requirements', label: 'Krav', type: 'text' },

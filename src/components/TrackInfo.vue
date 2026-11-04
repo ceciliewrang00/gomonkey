@@ -47,7 +47,7 @@ const farveKlasse = {
     blå: 'blaa',
     rød: 'roed',
     sort: 'sort',
-    brun: 'brun'
+    bounce: 'bounce'
 }
 
 // Faktaboksene. Kun felter, banen har udfyldt, bliver vist
