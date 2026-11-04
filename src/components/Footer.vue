@@ -135,10 +135,10 @@ $linje: rgba(239, 233, 229, 0.08);
   }
 }
 
+// Samme sidemargin som forsidens sektioner (se .forside > section i main.scss)
 .footer__inner {
-  max-width: 90rem;
-  margin: 0 auto;
-  padding: s.$spacing-xxxxl s.$margin s.$spacing-xxl;
+  padding-block: s.$spacing-xxxxl s.$spacing-xxl;
+  padding-inline: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
 }
 
 /* --- Top --- */
@@ -208,14 +208,14 @@ $linje: rgba(239, 233, 229, 0.08);
 .footer__links {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.6rem s.$spacing-s;
+  gap: 0.8rem s.$spacing-s;
 
   @media (min-width: 600px) {
     grid-template-columns: repeat(3, 1fr);
   }
 
   a {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 500;
     line-height: 1.6;
   }
