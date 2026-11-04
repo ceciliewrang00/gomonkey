@@ -8,11 +8,13 @@ const isOpen = ref(false)
 
 <template>
   <header>
-      <img src="@/assets/images/logo.svg" alt="GoMonkey logo">
+      <a href="https://gomonkey.dk" class="logo-link">
+        <img src="@/assets/images/logo.svg" alt="GoMonkey – se Forest lokationer">
+      </a>
       <div class="menu">
         <nav :class="{ open: isOpen }">
           <BaseButton variant="header" href="#">Cave</BaseButton>
-          <BaseButton variant="header" href="#">Forest</BaseButton>
+          <BaseButton variant="header" href="https://gomonkey.dk/forest-lokationer/">Forest</BaseButton>
           <BaseButton variant="header" href="#">Alt godt</BaseButton>
           <BaseButton variant="header" href="#">EAN</BaseButton>
         </nav>
@@ -40,6 +42,11 @@ header {
   align-items: center;
   justify-content: space-between;
   padding: s.$spacing-xs s.$spacing-m;
+}
+
+// Linket om logoet – display: flex fjerner ekstra luft under billedet
+.logo-link {
+  display: flex;
 }
 
 .menu {

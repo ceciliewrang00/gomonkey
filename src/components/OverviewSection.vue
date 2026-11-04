@@ -20,6 +20,10 @@ const baneFarver = [
         >
         <div class="kort-overlay">
           <span class="kort-knap">
+            <!-- Kort-nål i en lille rund boks -->
+            <span class="kort-knap__ikon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            </span>
             Se det fulde kort
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="arrow-icon"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
           </span>
@@ -187,29 +191,48 @@ $linje: rgba(239, 233, 229, 0.12);
       transition: transform 0.6s ease, filter 0.4s ease;
     }
 
-    // Mørk gradient i bunden, så knappen altid kan læses
+    // Let mørk tone over hele kortet, knappen står i midten
     .kort-overlay {
       position: absolute;
       inset: 0;
-      display: flex;
-      align-items: flex-end;
+      display: grid;
+      place-items: center;
       padding: s.$spacing-m;
-      background:
-        linear-gradient(to top, rgba(c.$primary_black100, 0.75) 0%, rgba(c.$primary_black100, 0) 50%),
-        rgba(c.$primary_black100, 0.15);
+      background-color: rgba(c.$primary_black100, 0.25);
+      transition: background-color 0.4s ease;
     }
 
     .kort-knap {
       display: inline-flex;
       align-items: center;
-      gap: 0.6rem;
-      padding: 0.85rem 1.6rem;
-      border-radius: 3rem;
+      gap: 0.75rem;
+      padding: 0.5rem 1.25rem 0.5rem 0.5rem;
+      border-radius: 1rem;
       background-color: c.$primary_light25;
       color: c.$primary_black100;
+      // Samme skrift som .button-primary (t.button i _typography.scss)
       font-family: "Inter", sans-serif;
-      font-weight: 800;
+      font-weight: 900;
+      font-size: 1rem;
+      box-shadow: 0 0.75rem 2rem rgba(c.$primary_black100, 0.35);
+      transition: background-color 0.2s, color 0.2s, transform 0.2s ease;
+    }
+
+    // Kort-nålen i en lille rund boks
+    .kort-knap__ikon {
+      display: grid;
+      place-items: center;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 0.75rem;
+      background-color: c.$primary_black100;
+      color: c.$primary_light25;
       transition: background-color 0.2s, color 0.2s;
+
+      svg {
+        width: 1.1rem;
+        height: 1.1rem;
+      }
     }
 
     .arrow-icon {
@@ -224,9 +247,19 @@ $linje: rgba(239, 233, 229, 0.12);
         transform: scale(1.08);
       }
 
+      .kort-overlay {
+        background-color: rgba(c.$primary_black100, 0.1);
+      }
+
       .kort-knap {
         background-color: c.$secondary_purple100;
         color: c.$primary_light25;
+        transform: translateY(-2px);
+      }
+
+      .kort-knap__ikon {
+        background-color: c.$primary_light25;
+        color: c.$secondary_purple100;
       }
 
       .arrow-icon {

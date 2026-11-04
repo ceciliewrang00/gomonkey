@@ -68,7 +68,7 @@ function faktaFor(bane) {
     <!-- Intro over banerne. id="bane-info", så "Se banerne"-knapperne linker hertil.
          Det er en div og ikke en <header>, fordi header har sit eget layout i main.scss -->
     <div id="bane-info" class="baner-intro">
-        <span class="badge badge--dark">Vores baner</span>
+        <span class="badge badge--dark">Baner i Forrest Odense</span>
         <h2><span class="light">Find den bane</span> - der passer til dig</h2>
         <p>
             Banerne står i rækkefølge efter sværhedsgrad – fra de letteste, hvor alle kan være med,
