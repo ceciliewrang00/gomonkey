@@ -91,7 +91,7 @@ $form: 62% 38% 46% 54% / 55% 45% 55% 45%;
   display: flex;
   flex-direction: row;
   gap: 1.5rem;
-  align-items: flex-end;
+  align-items: center; // Teksten står i midten ud for ikonet
 }
 
 .icon {
