@@ -470,9 +470,6 @@ onMounted(async () => {
       <!-- Viser en ekstra besked om frit fald, hvis den findes. -->
       <p v-if="fritfaldBesked">{{ fritfaldBesked }}</p>
 
-      <!-- Viser den samlede pointsum. -->
-      <p class="quiz-meta">Samlede point: {{ samledePoint }}</p>
-
       <!-- Samler resultatets knapper med afstand mellem dem. -->
       <div class="quiz-navigation">
         <!-- Åbner det sidste spørgsmål uden at slette svarene. -->
