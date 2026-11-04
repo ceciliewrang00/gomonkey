@@ -5,7 +5,8 @@
   import OverviewSection from '@/components/OverviewSection.vue'
   import TrackPickerSection from '@/components/TrackPickerSection.vue'
   import TrackInfo from '@/components/TrackInfo.vue'
- 
+  import Footer from '@/components/Footer.vue'
+
 </script>
 
 <template>
@@ -18,5 +19,6 @@
     <TrackPickerSection />
     <TrackInfo />
   </main>
+  <Footer />
 </template>
 
