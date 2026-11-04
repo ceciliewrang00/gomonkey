@@ -58,8 +58,9 @@ $linje: rgba(239, 233, 229, 0.12);
 
 #overblik {
   @include m.section-black100;
-  // Kun top/bund – siderne styres af .forside > section i main.scss
-  padding-block: s.$spacing-xxl;
+  // Kun top – siderne styres af .forside > section i main.scss
+  padding-top: s.$spacing-xxl;
+  padding-bottom: 0;
 
   // Tekst 2/5 til venstre, kort 3/5 til højre
   .overblik-container {
@@ -142,8 +143,8 @@ $linje: rgba(239, 233, 229, 0.12);
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.35rem 0.9rem 0.35rem 0.5rem;
-      border: 1px solid $linje;
+      padding-right: 1rem;
+
       border-radius: 2rem;
       font-size: 0.9rem;
       font-weight: 500;
