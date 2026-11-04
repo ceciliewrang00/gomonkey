@@ -13,6 +13,8 @@ body {
     max-width: 100rem;
     margin: 0 auto;
     background-color: c.$primary_light25;
+    // Standardfont for hele siden, så fx span og a også bruger Inter
+    font-family: "Inter", sans-serif;
 }
 
 header {

@@ -11,7 +11,7 @@
 @use '@/assets/styles/colors' as c;
 
 #banner {
-  background-image: url('@/assets/images/banner.webp');
+  background-image: url('@/assets/images/gomonkey_bane.webp');
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;

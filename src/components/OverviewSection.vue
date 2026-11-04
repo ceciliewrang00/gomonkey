@@ -1,38 +1,49 @@
 <script setup>
-import BaseButton from './BaseButton.vue'
+// Banefarverne – samme farver som i TrackBadge
+const baneFarver = [
+  { navn: 'Grøn', klasse: 'groen' },
+  { navn: 'Blå', klasse: 'blaa' },
+  { navn: 'Rød', klasse: 'roed' },
+  { navn: 'Sort', klasse: 'sort' },
+]
 </script>
 
 <template>
   <section id="overblik" class="overblik-section">
     <div class="overblik-container">
-      <!-- Tekstindhold -->
+      <!-- Kortet er ét stort link til kortsiden -->
+      <RouterLink to="/kort" class="kort-kort" aria-label="Se det fulde kort">
+        <img
+          src="@/assets/images/gomonkeykort.webp"
+          alt="Kort over GoMonkey Odense"
+          class="overblik-kort"
+        >
+        <div class="kort-overlay">
+          <span class="kort-knap">
+            Se det fulde kort
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="arrow-icon"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </span>
+        </div>
+      </RouterLink>
+
+      <!-- Tekstindhold i mørkt kort -->
       <div id="overblik-tekst" class="tekst-indhold">
         <span class="badge">Udforsk terrænet</span>
         <h2>Overblik over parken</h2>
-        <p>
+        <p class="lead">
           Før du kaster dig ud i eventyret, så få styr på terrænet. Vores interaktive kort viser dig alle baner, startpunkter og højdekurver.
         </p>
         <p class="sub-tekst">
           Hver bane har sin egen unikke farve og sværhedsgrad, så du nemt kan finde den perfekte udfordring for dig.
         </p>
-      </div>
 
-      <!-- Kort & Call to Action -->
-      <div id="kort-wrapper" class="kort-wrapper">
-        <div class="billede-ramme">
-          <img 
-            src="@/assets/images/gomonkeykort.webp" 
-            alt="Kort over GoMonkey Odense" 
-            class="overblik-kort"
-          >
-          
-          <div class="action-wrapper">
-            <RouterLink class="button-primary" to="/kort">
-              <span>Se det fulde kort</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="arrow-icon"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-            </RouterLink>
-          </div>
-        </div>
+        <!-- Farveforklaring -->
+        <ul class="farve-liste" aria-label="Banefarver">
+          <li v-for="f in baneFarver" :key="f.klasse">
+            <span class="prik" :class="`prik--${f.klasse}`"></span>
+            {{ f.navn }}
+          </li>
+        </ul>
       </div>
     </div>
   </section>
@@ -42,105 +53,215 @@ import BaseButton from './BaseButton.vue'
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/mixins' as m;
 @use '@/assets/styles/spacings' as s;
-@use '@/assets/styles/flex' as f;
+
+$linje: rgba(239, 233, 229, 0.12);
+
+$bane-farver: (
+  groen: c.$forest_green100,
+  blaa: c.$secondary_blue100,
+  roed: c.$secondary_orange100,
+  sort: c.$primary_black100,
+);
 
 #overblik {
   @include m.section-black100;
-  padding: 5rem 1.5rem;
-  
+  // Kun top/bund – siderne styres af .forside > section i main.scss
+  padding-block: s.$spacing-xxl;
+
+  // Tekst 2/5 til venstre, kort 3/5 til højre
   .overblik-container {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: stretch; /* Gør at kort-wrapper tager samme højde som teksten */
-    gap: 3.5rem;
-    max-width: 1200px;
-    margin: 0 auto;
+    grid-template-columns: 1fr;
+    align-items: stretch; // Kort og tekstkort får samme højde
+    gap: s.$spacing-m;
 
-    @media (max-width: 900px) {
-      grid-template-columns: 1fr;
+    @media (min-width: 901px) {
+      grid-template-columns: 2fr 3fr;
+
+      // Kortet står først i HTML'en (så det ligger øverst på mobil),
+      // men flyttes til højre kolonne på større skærme
+      .kort-kort {
+        order: 2;
+      }
     }
   }
 
+  /* --- Tekst i mørkt kort --- */
   .tekst-indhold {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 1.25rem;
+    gap: s.$spacing-s;
+    padding: s.$spacing-xl;
+    border-radius: 1.5rem;
+    background-color: #0f1a10;
+
+    // Svagt blad-mønster i baggrunden
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background-image: url('@/assets/images/leaves.svg');
+      background-size: 150px;
+      background-repeat: repeat;
+      filter: invert(1);
+      opacity: 0.03;
+    }
 
     .badge {
       align-self: flex-start;
-      padding: 0.40rem 0.90rem;
+      padding: 0.4rem 0.9rem;
       border-radius: 2rem;
-      background-color: rgba(c.$primary_light50, 0.15);
-      color: c.$primary_light50;
+      background-color: c.$forest_pink100;
+      color: c.$primary_black100;
       font-size: 0.85rem;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 0.05em;
+    
     }
 
     h2 {
       font-size: clamp(2rem, 4vw, 2.75rem);
       font-weight: 800;
       line-height: 1.15;
+      padding-top: 0;
+      color: c.$forest_pink100;
     }
 
     p {
-      font-size: 1.1rem;
-      line-height: 1.6;
-      opacity: 0.9;
+      margin: 0;
+    }
 
-      &.sub-tekst {
-        font-size: 0.95rem;
-        opacity: 0.75;
+    .lead {
+      font-size: clamp(1.05rem, 1.5vw, 1.2rem);
+    }
+
+    .sub-tekst {
+      font-size: 1rem;
+      color: c.$primary_light25;
+      padding-left: s.$spacing-s;
+      border-left: 2px solid c.$forest_pink100;
+    }
+  }
+
+  /* --- Farveforklaring --- */
+  .farve-liste {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    list-style: none;
+    margin: 0;
+    padding: s.$spacing-xs 0 0;
+
+    li {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.9rem 0.35rem 0.5rem;
+      border: 1px solid $linje;
+      border-radius: 2rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .prik {
+      width: 0.9rem;
+      height: 0.9rem;
+      border-radius: 50%;
+  
+    }
+
+    @each $navn, $farve in $bane-farver {
+      .prik--#{$navn} {
+        background-color: $farve;
       }
     }
   }
 
-  .kort-wrapper {
+  /* --- Kort --- */
+  .kort-kort {
     position: relative;
-    width: 100%;
-    height: 100%;
-    min-height: 320px;
+    display: block;
+    min-height: 20rem;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    color: inherit;
+    text-decoration: none;
 
-    .billede-ramme {
-      position: relative;
+    .overblik-kort {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
-      border-radius: 1rem;
-      overflow: hidden;
-
-      .overblik-kort {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
+      object-fit: cover;
+      // Let sløring – scale skjuler de bløde kanter, som blur giver
+      filter: blur(3px) brightness(0.85);
+      transform: scale(1.05);
+      transition: transform 0.6s ease, filter 0.4s ease;
     }
 
-    .action-wrapper {
+    // Mørk gradient i bunden, så knappen altid kan læses
+    .kort-overlay {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 2;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      padding: s.$spacing-m;
+      background:
+        linear-gradient(to top, rgba(c.$primary_black100, 0.75) 0%, rgba(c.$primary_black100, 0) 50%),
+        rgba(c.$primary_black100, 0.15);
+    }
 
-      .button-primary {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.6rem;
-        padding: 0.9rem 1.8rem;
-        border-radius: 3rem;
-        font-weight: 700;
-        text-decoration: none;
+    .kort-knap {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.85rem 1.6rem;
+      border-radius: 3rem;
+      background-color: c.$primary_light25;
+      color: c.$primary_black100;
+      font-family: "Inter", sans-serif;
+      font-weight: 800;
+      transition: background-color 0.2s, color 0.2s;
+    }
 
-        .arrow-icon {
-          transition: transform 0.2s ease;
-        }
+    .arrow-icon {
+      transition: transform 0.2s ease;
+    }
 
-        &:hover .arrow-icon {
-          transform: translateX(4px);
-        }
+    &:hover,
+    &:focus-visible {
+      // Kortet bliver skarpt ved hover
+      .overblik-kort {
+        filter: blur(0) brightness(1);
+        transform: scale(1.08);
+      }
+
+      .kort-knap {
+        background-color: c.$secondary_purple100;
+        color: c.$primary_light25;
+      }
+
+      .arrow-icon {
+        transform: translateX(4px);
       }
     }
+
+    &:focus-visible {
+      outline: 3px solid c.$secondary_peach100;
+      outline-offset: 4px;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #overblik .kort-kort .overblik-kort,
+  #overblik .kort-kort .arrow-icon {
+    transition: none;
   }
 }
 </style>
