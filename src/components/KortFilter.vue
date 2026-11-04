@@ -274,8 +274,8 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
                     <!-- Undertekst og små mærker vises kun, hvis banen har dem -->
                     <span v-if="bane.undertekst" class="undertekst">{{ bane.undertekst }}</span>
                     <div v-if="bane.svaerhed || bane.hojdekrav" class="ekstra-info">
-                      <span v-if="bane.svaerhed" class="badge-info">Sværhed: {{ bane.svaerhed }}</span>
-                      <span v-if="bane.hojdekrav" class="badge-info">{{ bane.hojdekrav }}</span>
+                      <span v-if="bane.svaerhed" class="badge">Sværhed: {{ bane.svaerhed }}</span>
+                      <span v-if="bane.hojdekrav" class="badge">{{ bane.hojdekrav }}</span>
                     </div>
                   </div>
                 </label>
@@ -323,8 +323,8 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
                     </div>
                     <span v-if="bane.undertekst" class="undertekst">{{ bane.undertekst }}</span>
                     <div v-if="bane.svaerhed || bane.hojdekrav" class="ekstra-info">
-                      <span v-if="bane.svaerhed" class="badge-info">Sværhed: {{ bane.svaerhed }}</span>
-                      <span v-if="bane.hojdekrav" class="badge-info">{{ bane.hojdekrav }}</span>
+                      <span v-if="bane.svaerhed" class="badge">Sværhed: {{ bane.svaerhed }}</span>
+                      <span v-if="bane.hojdekrav" class="badge">{{ bane.hojdekrav }}</span>
                     </div>
                   </div>
                 </label>
@@ -372,8 +372,8 @@ const svaerUnderliggende = computed(() => banerListe.value.filter(b => b.underpu
                     </div>
                     <span v-if="bane.undertekst" class="undertekst">{{ bane.undertekst }}</span>
                     <div v-if="bane.svaerhed || bane.hojdekrav" class="ekstra-info">
-                      <span v-if="bane.svaerhed" class="badge-info">Sværhed: {{ bane.svaerhed }}</span>
-                      <span v-if="bane.hojdekrav" class="badge-info">{{ bane.hojdekrav }}</span>
+                      <span v-if="bane.svaerhed" class="badge">Sværhed: {{ bane.svaerhed }}</span>
+                      <span v-if="bane.hojdekrav" class="badge">{{ bane.hojdekrav }}</span>
                     </div>
                   </div>
                 </label>
@@ -757,18 +757,17 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   flex-wrap: wrap;
 }
 
-.badge-info {
-  font-size: 0.7rem;
-  background: c.$forest_green100;
-  padding: 2px 8px;
-  border-radius: 1rem;
-  color: c.$primary_light50;
+/* Bruger .badge fra _badges.scss – her sættes kun farverne */
+.ekstra-info .badge {
+  --badge-bg: #{c.$forest_green100};
+  --badge-color: #{c.$primary_light50};
+  font-size: 0.65rem; // 14px
   font-weight: 400;
 }
 
-.filter-item.aktiv .badge-info {
-  color: c.$primary_black100;
-  background: c.$forest_green50;
+.filter-item.aktiv .ekstra-info .badge {
+  --badge-bg: #{c.$forest_green50};
+  --badge-color: #{c.$primary_black100};
 }
 
 /* DESKTOP (over 800px): filteret står fast til venstre (position: static)

@@ -426,16 +426,20 @@ onMounted(async () => {
 </script>
 
 <template>
-  <!-- Samler sidens primære indhold. -->
-  <main class="quiz-side">
+  <!-- Samler sidens indhold. En div og ikke <main>, for QuizView har allerede <main> -->
+  <div class="quiz-side">
 
     <!-- Kryds øverst til højre: lukker quizzen og går til forsiden -->
     <RouterLink to="/" class="button-close quiz-luk" aria-label="Luk quizzen og gå til forsiden">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
     </RouterLink>
 
-    <section>
+    <!-- Smal kolonne, så intro og quizkort flugter og ikke fylder hele skærmen -->
+    <div class="quiz-kolonne">
+
+    <section class="quiz-intro">
         <!-- Introducerer banevælgeren. -->
+        <span class="badge badge--dark">Banevælger</span>
         <h1>Find den rette bane for dig</h1>
         <p>
         Svar på fem korte spørgsmål, så hjælper vi dig med at finde en startbane.
@@ -444,21 +448,21 @@ onMounted(async () => {
     </section>
 
     <!-- Vises, mens spørgsmål og pointgrænser hentes. -->
-    <p v-if="indlaeser">Henter spørgsmål...</p>
+    <p v-if="indlaeser" class="quiz-status">Henter spørgsmål...</p>
 
     <!-- Vises, hvis et API-kald mislykkes. -->
-    <p v-else-if="fejlbesked">{{ fejlbesked }}</p>
+    <p v-else-if="fejlbesked" class="quiz-status">{{ fejlbesked }}</p>
 
     <!-- Vises, hvis databasen er tom. -->
-    <p v-else-if="spoergsmaal.length === 0">
+    <p v-else-if="spoergsmaal.length === 0" class="quiz-status">
       Der er endnu ingen spørgsmål i quizzen.
     </p>
 
     <!-- Viser resultatet i en lys boks. -->
     <section v-else-if="visResultat" class="quiz-kort quiz-resultat">
       <!-- Viser den anbefalede startbane. -->
-      <h2>Dit resultat</h2>
-      <p>{{ anbefaletBane }}</p>
+      <span class="quiz-meta">Dit resultat</span>
+      <h2>{{ anbefaletBane }}</h2>
 
       <!-- Viser begrundelsen for anbefalingen. -->
       <p v-if="resultatBeskrivelse">{{ resultatBeskrivelse }}</p>
@@ -467,7 +471,7 @@ onMounted(async () => {
       <p v-if="fritfaldBesked">{{ fritfaldBesked }}</p>
 
       <!-- Viser den samlede pointsum. -->
-      <p>Samlede point: {{ samledePoint }}</p>
+      <p class="quiz-meta">Samlede point: {{ samledePoint }}</p>
 
       <!-- Samler resultatets knapper med afstand mellem dem. -->
       <div class="quiz-navigation">
@@ -493,23 +497,24 @@ onMounted(async () => {
 
     <!-- Viser kun det aktuelle spørgsmål. -->
     <section v-else-if="aktivtSpoergsmaal" class="quiz-kort">
-      <!-- Samler fremdriftsbjælken og procenttallet. -->
+      <!-- Spørgsmålsnummer og procent på én linje over fremdriftsbjælken. -->
       <div class="quiz-fremdrift">
+        <div class="quiz-fremdrift__tekst">
+          <!-- Viser spørgsmålets nummer og antal synlige spørgsmål. -->
+          <span class="quiz-meta">
+            Spørgsmål {{ aktivtIndeks + 1 }} af {{ synligeSpoergsmaal.length }}
+          </span>
+          <!-- Viser fremdriften som procent. -->
+          <span class="quiz-meta">{{ fremdrift }}%</span>
+        </div>
+
         <!-- Viser fremdriften med 100 som maksimum. -->
         <progress
           :value="fremdrift"
           max="100"
           aria-label="Fremdrift gennem quizzen"
         ></progress>
-
-        <!-- Viser fremdriften som procent. -->
-        <span class="text">{{ fremdrift }}%</span>
       </div>
-
-      <!-- Viser spørgsmålets nummer og antal synlige spørgsmål. -->
-      <p>
-        Spørgsmål {{ aktivtIndeks + 1 }} af {{ synligeSpoergsmaal.length }}
-      </p>
 
       <!-- Viser teksten til det aktive spørgsmål. -->
       <h2>{{ aktivtSpoergsmaal.tekst }}</h2>
@@ -564,7 +569,9 @@ onMounted(async () => {
         </button>
       </div>
     </section>
-  </main>
+
+    </div>
+  </div>
 </template>
 
 <style scoped lang="scss">
@@ -589,10 +596,37 @@ onMounted(async () => {
   z-index: 2;
 }
 
-/* Viser spørgsmålet i en centreret, lys boks. */
-.quiz-kort {
+/* Smal, centreret kolonne, så intro og quizkort har samme bredde og flugter. */
+.quiz-kolonne {
   max-width: 42rem;
-  margin: 0rem auto;
+  margin: 0 auto;
+  padding: s.$spacing-xxl s.$spacing-s 0;
+}
+
+/* Intro over quizkortet: badge, overskrift og tekst under hinanden. */
+.quiz-intro {
+  @include f.flex-column;
+  align-items: flex-start;
+  margin-bottom: s.$spacing-m;
+}
+
+/* Statusbeskeder (indlæser, fejl, tom quiz) i samme boks som quizkortet. */
+.quiz-status {
+  padding: s.$spacing-m;
+  background-color: c.$primary_light25;
+  border-radius: 1rem;
+}
+
+/* Lille, dæmpet hjælpetekst, fx "Spørgsmål 1 af 5" og "Dit resultat". */
+.quiz-meta {
+  display: block;
+  font-size: 0.875rem;
+  color: c.$primary_black75;
+}
+
+/* Viser spørgsmålet i en lys boks. Bredden kommer fra .quiz-kolonne. */
+.quiz-kort {
+  margin: 0;
   padding: s.$spacing-xxl s.$spacing-m;
   background-color: c.$primary_light25;
   border-radius: 1rem;
@@ -636,18 +670,24 @@ h2 {
   }
 }
 
-/* Placerer fremdriftsbjælken og procenttallet ved siden af hinanden. */
+/* Placerer teksten over fremdriftsbjælken. */
 .quiz-fremdrift {
-    display: flex;
-    flex-direction: row;
-    gap: s.$spacing-xs;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: s.$spacing-xs;
+  margin-bottom: s.$spacing-m;
+}
+
+/* Spørgsmålsnummer til venstre og procent til højre på samme linje. */
+.quiz-fremdrift__tekst {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 /* Bestemmer fremdriftsbjælkens størrelse og grundfarve. */
 .quiz-fremdrift progress {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
   height: 0.75rem;
   border: 0;
   border-radius: 1rem;
