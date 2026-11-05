@@ -20,7 +20,7 @@ import BaseButton from './BaseButton.vue'
       </div>
     </div>
 
-    <!-- Billede med organisk form, skygge-form bagved og klistermærker -->
+    <!-- Billede med organisk form, skygge-form bagved og badge -->
     <div class="hero__visual">
       <div class="hero__shape" aria-hidden="true"></div>
       <img
@@ -28,23 +28,6 @@ import BaseButton from './BaseButton.vue'
         alt="Pige på svævebanen mellem træerne i GoMonkey Forest Odense"
         class="hero__img"
       >
-
-      <!-- Roterende rundt klistermærke med tekst -->
-      <svg class="hero__sticker" viewBox="0 0 200 200" aria-hidden="true">
-        <defs>
-          <path id="cirkel" d="M100,100 m-72,0 a72,72 0 1,1 144,0 a72,72 0 1,1 -144,0" />
-        </defs>
-        <circle cx="100" cy="100" r="98" class="sticker__bg" />
-        <text class="sticker__tekst">
-          <textPath href="#cirkel">Nervepirrende frihed • GoMonkey Forest •</textPath>
-        </text>
-        <!-- Lille blad i midten -->
-        <path
-          class="sticker__blad"
-          transform="translate(78 70) scale(0.8)"
-          d="M23.0276 59.6511C22.875 59.9555 22.06 60.2471 21.7352 60.2097C21.3571 60.1646 20.6443 59.4991 20.6461 59.096L20.5995 53.9768C14.4015 50.052 13.1281 42.9775 13.9766 36.008C14.6373 30.5236 16.3876 25.4719 18.9178 20.4895C22.3177 13.7807 25.1533 7.06931 27.5489 0C32.1661 4.88277 35.5376 10.1433 37.8317 16.1097C40.4021 22.9977 41.277 30.1423 40.0676 37.3769C38.3534 46.3061 34.3657 52.1329 25.5339 54.4701L23.0276 59.6511Z"
-        />
-      </svg>
 
       <!-- Lille badge -->
       <span class="hero__badge">
@@ -135,38 +118,6 @@ $form: 62% 38% 46% 54% / 55% 45% 55% 45%;
   border-radius: 48% 52% 58% 42% / 45% 55% 45% 55%;
 }
 
-/* --- Roterende klistermærke --- */
-.hero__sticker {
-  position: absolute;
-  top: -1.5rem;
-  left: -1.5rem;
-  width: clamp(6.5rem, 12vw, 9rem);
-  animation: roter 18s linear infinite;
-
-  .sticker__bg {
-    fill: c.$primary_black100;
-  }
-
-  .sticker__tekst {
-    fill: c.$primary_light25;
-    font-family: "Inter", sans-serif;
-    font-size: 17px;
-    font-weight: 800;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-  }
-
-  .sticker__blad {
-    fill: c.$forest_pink100;
-  }
-}
-
-@keyframes roter {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* --- Badge --- */
 .hero__badge {
   position: absolute;
@@ -185,10 +136,6 @@ $form: 62% 38% 46% 54% / 55% 45% 55% 45%;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero__sticker {
-    animation: none;
-  }
-
   .hero__img {
     transition: none;
   }
