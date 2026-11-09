@@ -597,7 +597,8 @@ onBeforeUnmount(() => {
 
       <!-- Øverst til højre: "Vis hele parken" + lukkeknap -->
       <div class="kort-tophoejre">
-        <button type="button" class="kort-reset-top" @click="nulstilKort">
+        <!-- Udseendet kommer fra .button-primary i _buttons.scss -->
+        <button type="button" class="button-primary kort-reset-top" @click="nulstilKort">
           Vis hele parken
         </button>
         <!-- Kryds: går altid til forsiden. Udseendet kommer fra .button-close i _buttons.scss -->

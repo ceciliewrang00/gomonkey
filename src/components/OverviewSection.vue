@@ -19,14 +19,9 @@ const baneFarver = [
           class="overblik-kort"
         >
         <div class="kort-overlay">
-          <span class="kort-knap">
-            <!-- Kort-nål i en lille rund boks -->
-            <span class="kort-knap__ikon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-            </span>
-            Se det fulde kort
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="arrow-icon"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-          </span>
+          <!-- Knappen er .button-primary fra _buttons.scss.
+               Kun farverne overskrives i .kort-knap nedenfor, så knappen er lys på kortet -->
+          <span class="button-primary kort-knap">Se det fulde kort</span>
         </div>
       </RouterLink>
 
@@ -202,41 +197,11 @@ $linje: rgba(239, 233, 229, 0.12);
       transition: background-color 0.4s ease;
     }
 
+    // Knappen er .button-primary fra _buttons.scss.
+    // Her overskrives kun farverne: lys baggrund og sort tekst
     .kort-knap {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.5rem 1.25rem 0.5rem 0.5rem;
-      border-radius: 1rem;
       background-color: c.$primary_light25;
       color: c.$primary_black100;
-      // Samme skrift som .button-primary (t.button i _typography.scss)
-      font-family: "Inter", sans-serif;
-      font-weight: 900;
-      font-size: 1rem;
-      box-shadow: 0 0.75rem 2rem rgba(c.$primary_black100, 0.35);
-      transition: background-color 0.2s, color 0.2s, transform 0.2s ease;
-    }
-
-    // Kort-nålen i en lille rund boks
-    .kort-knap__ikon {
-      display: grid;
-      place-items: center;
-      width: 2.25rem;
-      height: 2.25rem;
-      border-radius: 0.75rem;
-      background-color: c.$primary_black100;
-      color: c.$primary_light25;
-      transition: background-color 0.2s, color 0.2s;
-
-      svg {
-        width: 1.1rem;
-        height: 1.1rem;
-      }
-    }
-
-    .arrow-icon {
-      transition: transform 0.2s ease;
     }
 
     &:hover,
@@ -251,19 +216,10 @@ $linje: rgba(239, 233, 229, 0.12);
         background-color: rgba(c.$primary_black100, 0.1);
       }
 
+      // Samme hover som .button-primary: lilla baggrund, her med lys tekst
       .kort-knap {
         background-color: c.$secondary_purple100;
         color: c.$primary_light25;
-        transform: translateY(-2px);
-      }
-
-      .kort-knap__ikon {
-        background-color: c.$primary_light25;
-        color: c.$secondary_purple100;
-      }
-
-      .arrow-icon {
-        transform: translateX(4px);
       }
     }
 
@@ -275,8 +231,7 @@ $linje: rgba(239, 233, 229, 0.12);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #overblik .kort-kort .overblik-kort,
-  #overblik .kort-kort .arrow-icon {
+  #overblik .kort-kort .overblik-kort {
     transition: none;
   }
 }

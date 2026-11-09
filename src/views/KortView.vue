@@ -76,12 +76,6 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     box-sizing: border-box;
   }
 
-  // Knapper bruger samme skrift som resten af siden.
-  // :where() gør reglen svag, så knappernes egne klasser (fx font-weight) vinder
-  :where(button) {
-    font: inherit;
-  }
-
   button {
     cursor: pointer;
   }
@@ -187,28 +181,10 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     pointer-events: none;
   }
 
-  // "Vis hele parken": samme form som button-secondary, men med lys baggrund
+  // "Vis hele parken": udseendet kommer fra .button-primary i _buttons.scss.
+  // pointer-events: auto, fordi .kort-tophoejre lader klik gå igennem
   .kort-reset-top {
     pointer-events: auto;
-    border: solid 2px c.$primary_black100;
-    border-radius: 1rem;
-    background: c.$primary_light25;
-    color: c.$primary_black100;
-    font-weight: 900;
-    // Samme skriftstørrelse som knapperne på resten af sitet (button-mixin i _typography.scss)
-    font-size: clamp(1rem, 1.5vw, 1.25rem);
-    padding: 0.5rem 1.5rem;
-    box-shadow: $skygge;
-
-    &:hover {
-      background: c.$secondary_purple100;
-      border-color: c.$secondary_purple100;
-      color: c.$primary_light25;
-    }
-
-    &:active {
-      transform: translateY(1px);
-    }
   }
 
   // ---------- Zoomknapper ----------
@@ -430,6 +406,14 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
       max-width: calc(100% - 108px);
     }
   }
+}
+
+// Knapper på kortsiden bruger samme skrift som resten af siden.
+// Hele selektoren står i :where(), så reglen har styrke 0 og ALLE klasser vinder over den
+// – også globale klasser som .button-primary fra _buttons.scss.
+// (Stod den som .kort-app :where(button), talte .kort-app med, og så tabte .button-primary)
+:where(.kort-app button) {
+  font: inherit;
 }
 
 // Respektér brugere, der har slået animationer fra i deres styresystem
