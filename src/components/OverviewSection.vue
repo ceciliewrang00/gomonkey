@@ -20,7 +20,7 @@ const baneFarver = [
         >
         <div class="kort-overlay">
           <!-- Knappen er .button-primary fra _buttons.scss.
-               Kun farverne overskrives i .kort-knap nedenfor, så knappen er lys på kortet -->
+               Kun farverne overskrives i .kort-knap nedenfor, så knappen er lyserød på kortet -->
           <span class="button-primary kort-knap">Se det fulde kort</span>
         </div>
       </RouterLink>
@@ -198,9 +198,9 @@ $linje: rgba(239, 233, 229, 0.12);
     }
 
     // Knappen er .button-primary fra _buttons.scss.
-    // Her overskrives kun farverne: lys baggrund og sort tekst
+    // Her overskrives kun farverne: lyserød baggrund og sort tekst
     .kort-knap {
-      background-color: c.$primary_light25;
+      background-color: c.$forest_pink100;
       color: c.$primary_black100;
     }
 
