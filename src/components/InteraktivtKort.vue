@@ -74,6 +74,15 @@ watch(() => props.filter, opdaterFiltrering)
 // 2. ZOOM OG KORTETS POSITION
 // ==========================================
 
+// Hvor mange pixels i venstre side, der er dækket af filteret.
+// Værdien står som CSS-variablen --kort-daekket-venstre i KortView.vue
+// (0px på mobil, hvor filteret er skjult bag en knap)
+function daekketVenstre() {
+  if (!kortHolder.value) return 0
+  const vaerdi = getComputedStyle(kortHolder.value).getPropertyValue('--kort-daekket-venstre')
+  return parseFloat(vaerdi) || 0
+}
+
 function opdaterKort() {
   if (!svg || !kortHolder.value) return
 
@@ -83,7 +92,8 @@ function opdaterKort() {
     center,
     zoom: zoom.value,
     viewportWidth: width,
-    viewportHeight: height
+    viewportHeight: height,
+    venstreDaekket: daekketVenstre()
   })
 
   center = view.center
@@ -109,7 +119,8 @@ function saetZoom(nyZoom, anker = { x: 0.5, y: 0.5 }) {
     center,
     zoom: nytNiveau,
     viewportWidth: width,
-    viewportHeight: height
+    viewportHeight: height,
+    venstreDaekket: daekketVenstre()
   })
 
   center = {

@@ -162,7 +162,7 @@ function togglerFilter() {
     <!-- Selve filteret. Klassen er-aaben får det til at glide ind på mobil -->
     <aside class="filter-sidebar" :class="{ 'er-aaben': erAaben }" aria-label="Filtrér baner på kortet">
       <div class="filter-header">
-        <h2>Filtre</h2>
+        <h3>Filtre</h3>
 
         <!-- "Ryd filtre" vises kun, når der er valgt noget -->
         <button
@@ -220,11 +220,6 @@ function togglerFilter() {
               <div class="filter-tekst">
                 <div class="titel-linie">
                   <span class="titel">{{ bane.titel }}</span>
-                  <!-- Blad-ikon. bane.farve bliver en klasse (fx "gron"), som giver
-                       ikonet farven. Uden farve bruges klassen 'standard' -->
-                  <svg class="bane-ikon" :class="bane.farve || 'standard'" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31.27 55.1">
-                    <path fill="currentColor" d="M5.36,53.92c-.02.34.54,1,.84,1.13.35.15,1.3-.07,1.5-.42l2.6-4.41c7.33-.3,11.97-5.79,14.72-12.25,2.17-5.08,3.18-10.33,3.48-15.91C28.91,14.55,29.81,7.32,31.27,0c-6.44,1.92-11.99,4.79-16.96,8.81C8.64,13.49,4.31,19.24,1.74,26.11c-2.98,8.59-2.44,15.63,4.04,22.07,0,0-.42,5.74-.42,5.74Z"/>
-                  </svg>
                 </div>
                 <!-- Undertekst til venstre og sværhed til højre på samme linje.
                      Begge vises kun, hvis banen har dem -->
@@ -254,7 +249,6 @@ function togglerFilter() {
 
 <style lang="scss" scoped>
 // Farverne kommer fra _colors.scss, så filteret passer til resten af siderne
-@use 'sass:map';
 @use '@/assets/styles/colors' as c;
 
 // Skygge under knapper, der ligger oven på kortet
@@ -380,10 +374,9 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 }
 
 /* Fed overskrift ligesom h1 på resten af sitet, bare mindre */
-.filter-header h2 {
+.filter-header h3 {
   margin: 0;
   padding: 0;
-  font-size: clamp(1.5rem, 3vw, 2rem);
   font-weight: 900;
   color: c.$primary_black100;
 }
@@ -506,29 +499,12 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   min-width: 0;
 }
 
-/* Titel og blad-ikon på samme linje */
+/* Linjen med banens navn */
 .titel-linie {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
-
-/* Blad-ikonet. flex-shrink: 0 forhindrer, at det bliver klemt */
-.bane-ikon {
-  width: 12px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
-/* Ikonets farve pr. bane – fra $bane-farver i _colors.scss.
-   Ikonet bruger currentColor, altså color herunder.
-   Dataen bruger gron/bla/rod, så de kobles til mappets navne */
-$ikon-klasser: (gron: groen, bla: blaa, rod: roed, sort: sort, bounce: bounce);
-
-@each $klasse, $navn in $ikon-klasser {
-  .bane-ikon.#{$klasse} { color: map.get(c.$bane-farver, $navn); }
-}
-.bane-ikon.standard { color: c.$secondary_peach100; }
 
 .filter-tekst .titel {
   font-size: 0.95rem;
@@ -573,7 +549,7 @@ $ikon-klasser: (gron: groen, bla: blaa, rod: roed, sort: sort, bounce: bounce);
 /* Sværheds-mærket: bruger .badge fra _badges.scss – her sættes farverne og en mindre størrelse.
    Står lige efter underteksten og brydes aldrig over to linjer */
 .ekstra-info {
-  --badge-bg: #{c.$forest_green100};
+  --badge-bg: #{c.$primary_darkgreen};
   --badge-color: #{c.$primary_light50};
   align-self: center;
   flex-shrink: 0;
@@ -590,8 +566,10 @@ $ikon-klasser: (gron: groen, bla: blaa, rod: roed, sort: sort, bounce: bounce);
   --badge-bg: #{c.$secondary_purple100};
 }
 
-/* DESKTOP (over 800px): filteret står fast til venstre (position: static)
-   med 380px bredde. Mobil-knapperne og bunden skjules, da kortet opdateres live */
+/* DESKTOP (over 800px): filteret svæver oven på kortet med luft rundt om,
+   så kortet fylder hele skærmen bag det. Mobil-knapperne og bunden skjules,
+   da kortet opdateres live.
+   Afstanden (24px) og bredden (360px) bruges også i KortView.vue – ret begge steder */
 @media (min-width: 801px) {
   .mobil-filter-knap,
   .luk-knap,
@@ -600,16 +578,34 @@ $ikon-klasser: (gron: groen, bla: blaa, rod: roed, sort: sort, bounce: bounce);
     display: none;
   }
 
+  /* Rammen ligger oven på kortet og går fra top til bund med 24px luft.
+     pointer-events: none lader klik og træk gå igennem til kortet under filteret */
+  .filter-wrapper {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    bottom: 24px;
+    z-index: 5;
+    display: flex;
+    align-items: flex-start;
+    pointer-events: none;
+  }
+
+  /* Selve filteret: et lyst kort med runde hjørner og skygge.
+     Det er kun så højt som indholdet, men aldrig højere end skærmen (max-height) */
   .filter-sidebar {
     position: static;
     left: auto;
-    width: 380px;
-    height: 100%;
-    min-height: 100%;
+    width: 360px;
+    height: auto;
+    min-height: 0;
+    max-height: 100%;
     background-color: c.$primary_light25;
-    border-radius: 0;
+    border-radius: 1rem;
+    box-shadow: $skygge;
     padding: 1.25rem;
     z-index: 1;
+    pointer-events: auto;
   }
 }
 

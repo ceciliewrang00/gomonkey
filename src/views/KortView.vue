@@ -374,6 +374,22 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     }
   }
 
+  // ---------- Desktop ----------
+
+  // Filteret svæver oven på kortet til venstre (24px luft + 360px bredde, se KortFilter.vue).
+  // Vejledningen og "valgt bane" nederst til venstre rykkes til højre for filteret,
+  // så de ikke bliver gemt bag det
+  @media (min-width: 801px) {
+    // Fortæller kortet (InteraktivtKort.vue), at de første 384px (24px + 360px)
+    // i venstre side er dækket af filteret, så kortet rykkes til højre for det
+    --kort-daekket-venstre: 384px;
+
+    .kort-valgt,
+    .kort-vejledning {
+      left: calc(24px + 360px + 24px);
+    }
+  }
+
   // ---------- Mobil ----------
 
   // Gælder kun skærme op til 800px brede.

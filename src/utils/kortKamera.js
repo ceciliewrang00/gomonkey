@@ -31,7 +31,8 @@ export const begraens = (værdi, minimum, maksimum) =>
 // Regner ud, hvor stort udsnittet af kortet skal være ved zoom 1.
 // Udsnittet får samme form (forhold mellem bredde og højde) som boksen på skærmen,
 // ellers ville kortet blive strakt.
-export function grundUdsnit(viewportWidth, viewportHeight) {
+// tilladFyld = false slår telefon-reglen fra (bruges, når filteret dækker en del af kortet)
+export function grundUdsnit(viewportWidth, viewportHeight, tilladFyld = true) {
   // Math.max(1, ...) sikrer, at vi aldrig dividerer med 0
   const bredde = Math.max(1, viewportWidth)
   const højde = Math.max(1, viewportHeight)
@@ -39,7 +40,7 @@ export function grundUdsnit(viewportWidth, viewportHeight) {
 
   // På små, smalle telefoner må kortet fylde skærmen og panoreres sideværts.
   // Math.min = "cover": kortet fylder hele boksen, og noget skæres af i siderne
-  if (bredde < 700 && forhold < 0.85) {
+  if (tilladFyld && bredde < 700 && forhold < 0.85) {
     const skalering = Math.min(KORT_BREDDE / bredde, KORT_HOEJDE / højde)
     return { width: bredde * skalering, height: højde * skalering }
   }
@@ -58,16 +59,21 @@ export function grundUdsnit(viewportWidth, viewportHeight) {
  */
 // Sørger for, at man ikke kan trække kortet helt væk fra skærmen.
 // center er det punkt på kortet, som skal stå midt i boksen.
-export function begraensCenter(center, synligBredde, synligHoejde) {
-  // Gør det samme for én akse ad gangen (først x, så y)
-  function akse(c, synlig, hel) {
-    // Kan hele kortet ses på denne akse, står det bare i midten
-    if (synlig >= hel) return hel / 2
+// daekketVenstre er den del af boksen (i kortets enheder), som filteret dækker i venstre side.
+// Kortet centreres i den frie del til højre for filteret, og man kan trække
+// kortets venstre kant helt frem til filteret
+export function begraensCenter(center, synligBredde, synligHoejde, daekketVenstre = 0) {
+  // Gør det samme for én akse ad gangen (først x, så y).
+  // daekket = hvor meget der er dækket i starten af aksen
+  function akse(c, synlig, hel, daekket = 0) {
+    // Kan hele kortet ses i den frie del, står det i midten af den frie del
+    if (synlig - daekket >= hel) return hel / 2 - daekket / 2
     // Ingen luft: når man har zoomet ind, stopper kortet præcis ved SVG'ens kant
-    return begraens(c, synlig / 2, hel - synlig / 2)
+    // (i venstre side ved filterets kant)
+    return begraens(c, synlig / 2 - daekket, hel - synlig / 2)
   }
   return {
-    x: akse(center.x, synligBredde, KORT_BREDDE),
+    x: akse(center.x, synligBredde, KORT_BREDDE, daekketVenstre),
     y: akse(center.y, synligHoejde, KORT_HOEJDE)
   }
 }
@@ -75,17 +81,34 @@ export function begraensCenter(center, synligBredde, synligHoejde) {
 /** Responsiv viewBox; bevar forholdet mellem X og Y og undgå stræk. */
 // Hovedfunktionen: ud fra center, zoom og boksens størrelse regnes den viewBox ud,
 // som SVG'en skal have. InteraktivtKort.vue kalder den, hver gang noget ændrer sig.
-export function beregnViewBox({ center, zoom, viewportWidth, viewportHeight }) {
-  // 1. Udsnittet ved zoom 1
-  const basis = grundUdsnit(viewportWidth, viewportHeight)
+// venstreDaekket = antal pixels i venstre side, som er dækket af noget oven på kortet
+// (filteret på desktop). Kortet tilpasses så den frie del til højre, men tegnes
+// stadig bag filteret, så baggrunden går helt ud til kanten
+export function beregnViewBox({ center, zoom, viewportWidth, viewportHeight, venstreDaekket = 0 }) {
+  // Den frie bredde – mindst halvdelen af boksen, så kortet aldrig bliver alt for lille
+  const friBredde = Math.max(viewportWidth - venstreDaekket, viewportWidth / 2)
+  const daekketPx = viewportWidth - friBredde
+
+  // 1. Udsnittet ved zoom 1, regnet ud for den frie del.
+  // Bagefter gøres det bredere, så det dækker hele boksen (også bag filteret)
+  // Er en del dækket (desktop), skal hele kortet altid kunne ses i den frie del
+  const fri = grundUdsnit(friBredde, viewportHeight, daekketPx === 0)
+  const enhederPrPixel = fri.width / Math.max(1, friBredde)
+  const basis = {
+    width: fri.width + daekketPx * enhederPrPixel,
+    height: fri.height
+  }
 
   // 2. Zoom deler udsnittet: zoom 2 = halvt så stort udsnit = dobbelt så stort kort
   const faktor = begraens(zoom, MIN_ZOOM, MAKS_ZOOM)
   const width = basis.width / faktor
   const height = basis.height / faktor
 
+  // Den dækkede del omregnet til kortets enheder ved den aktuelle zoom
+  const daekketEnheder = daekketPx * enhederPrPixel / faktor
+
   // 3. Flyt centeret, hvis det er trukket for langt ud mod en kant
-  const korrigeretCenter = begraensCenter(center, width, height)
+  const korrigeretCenter = begraensCenter(center, width, height, daekketEnheder)
 
   // 4. viewBox angives fra øverste venstre hjørne, så vi trækker halvdelen fra centeret
   return {
