@@ -226,11 +226,12 @@ function togglerFilter() {
                     <path fill="currentColor" d="M5.36,53.92c-.02.34.54,1,.84,1.13.35.15,1.3-.07,1.5-.42l2.6-4.41c7.33-.3,11.97-5.79,14.72-12.25,2.17-5.08,3.18-10.33,3.48-15.91C28.91,14.55,29.81,7.32,31.27,0c-6.44,1.92-11.99,4.79-16.96,8.81C8.64,13.49,4.31,19.24,1.74,26.11c-2.98,8.59-2.44,15.63,4.04,22.07,0,0-.42,5.74-.42,5.74Z"/>
                   </svg>
                 </div>
-                <!-- Undertekst og små mærker vises kun, hvis banen har dem -->
-                <span v-if="bane.undertekst" class="undertekst">{{ bane.undertekst }}</span>
-                <div v-if="bane.svaerhed || bane.hojdekrav" class="ekstra-info">
-                  <span v-if="bane.svaerhed" class="badge">Sværhed: {{ bane.svaerhed }}</span>
-                  <span v-if="bane.hojdekrav" class="badge">{{ bane.hojdekrav }}</span>
+                <!-- Undertekst til venstre og sværhed til højre på samme linje.
+                     Begge vises kun, hvis banen har dem -->
+                <div v-if="bane.undertekst || bane.svaerhed" class="under-linie">
+                  <span v-if="bane.undertekst" class="undertekst">{{ bane.undertekst }}</span>
+                  <!-- Sværheds-mærke. Bruger .badge fra _badges.scss -->
+                  <span v-if="bane.svaerhed" class="badge ekstra-info">Sværhed: {{ bane.svaerhed }}</span>
                 </div>
               </div>
             </label>
@@ -415,11 +416,11 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   padding: 0.5rem 0;
 }
 
-/* Grupperne under hinanden med mellemrum */
+/* Alle rækker i én sammenhængende liste – ingen ekstra luft mellem grupperne */
 .filter-liste {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0;
 }
 
 /* En gruppe (fx grøn) er bare en del af listen – ingen boks omkring.
@@ -438,7 +439,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.85rem 1rem;
+  padding-bottom: 25px;
   cursor: pointer;
   color: c.$primary_black100;
   transition: background-color 0.2s ease;
@@ -449,20 +450,10 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   font-weight: 900;
 }
 
-/* Tynd streg mellem banerne i en gruppe */
-.filter-item.underpunkt + .filter-item.underpunkt {
-  border-top: 1px solid rgba(c.$primary_black100, 0.12);
-}
-
-/* Valgt række: sort baggrund og lys tekst. !important vinder over andre regler */
-.filter-item.aktiv {
-  background: c.$primary_black100 !important;
-  font-weight: 700;
-}
-
+/* Valgt række: ingen baggrundsfarve – teksten bliver blå/lilla i stedet */
 .filter-item.aktiv .titel,
 .filter-item.aktiv .undertekst {
-  color: c.$primary_light25 !important;
+  color: c.$secondary_purple100;
 }
 
 /* Egen tjekboks: appearance: none fjerner browserens standard-tjekboks.
@@ -484,16 +475,16 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
-/* Afkrydset på en sort (valgt) række: lys boks med mørkt flueben */
+/* Afkrydset: blå/lilla boks med lyst flueben, så den passer til den farvede tekst */
 .filter-item input[type="checkbox"]:checked {
-  background: c.$primary_light25;
-  border-color: c.$primary_light25;
+  background: c.$secondary_purple100;
+  border-color: c.$secondary_purple100;
 }
 
 /* ::after indsætter et ✓ i tjekboksen, når den er afkrydset */
 .filter-item input[type="checkbox"]:checked::after {
   content: "✓";
-  color: c.$primary_black100;
+  color: c.$primary_light25;
   font-size: 13px;
   font-weight: bold;
   line-height: 1;
@@ -510,6 +501,9 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   display: flex;
   flex-direction: column;
   gap: 2px;
+  // Fylder resten af rækken, så sværheden kan stå helt ude til højre
+  flex: 1;
+  min-width: 0;
 }
 
 /* Titel og blad-ikon på samme linje */
@@ -568,25 +562,32 @@ $ikon-klasser: (gron: groen, bla: blaa, rod: roed, sort: sort, bounce: bounce);
   cursor: pointer;
 }
 
-/* Rækken med små mærker (sværhed og højdekrav) */
-.ekstra-info {
+/* Undertekst og sværheds-mærke på samme linje.
+   gap giver en lille luft, så mærket står lige efter teksten */
+.under-linie {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 4px;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
 }
 
-/* Bruger .badge fra _badges.scss – her sættes kun farverne */
-.ekstra-info .badge {
+/* Sværheds-mærket: bruger .badge fra _badges.scss – her sættes farverne og en mindre størrelse.
+   Står lige efter underteksten og brydes aldrig over to linjer */
+.ekstra-info {
   --badge-bg: #{c.$forest_green100};
   --badge-color: #{c.$primary_light50};
-  font-size: 0.65rem; // 14px
-  font-weight: 400;
+  align-self: center;
+  flex-shrink: 0;
+  padding: 0.25rem 0.6rem;
+  white-space: nowrap;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: background-color 0.2s ease;
 }
 
-.filter-item.aktiv .ekstra-info .badge {
-  --badge-bg: #{c.$forest_green50};
-  --badge-color: #{c.$primary_black100};
+/* Valgt bane: mærket får samme blå/lilla farve som teksten */
+.filter-item.aktiv .ekstra-info {
+  --badge-bg: #{c.$secondary_purple100};
 }
 
 /* DESKTOP (over 800px): filteret står fast til venstre (position: static)
@@ -620,18 +621,19 @@ $ikon-klasser: (gron: groen, bla: blaa, rod: roed, sort: sort, bounce: bounce);
     color: c.$primary_light25;
   }
 
-  .filter-item:not(.aktiv):hover {
-    background: c.$primary_black100;
+  /* Hover: ingen baggrundsfarve – teksten og tjekboksens kant bliver blå/lilla */
+  .filter-item:hover .titel,
+  .filter-item:hover .undertekst {
+    color: c.$secondary_purple100;
   }
 
-  .filter-item:not(.aktiv):hover .titel,
-  .filter-item:not(.aktiv):hover .undertekst {
-    color: c.$primary_light25;
+  /* Hover: mærket får samme blå/lilla farve som teksten */
+  .filter-item:hover .ekstra-info {
+    --badge-bg: #{c.$secondary_purple100};
   }
 
-  /* Tjekboksen får lys kant, så den kan ses på den sorte baggrund */
-  .filter-item:not(.aktiv):hover input[type="checkbox"] {
-    border-color: c.$primary_light25;
+  .filter-item:hover input[type="checkbox"] {
+    border-color: c.$secondary_purple100;
   }
 
 
