@@ -20,12 +20,14 @@ const skalaer = computed(() => [
 </script>
 
 <template>
-  <!-- --bane-farve bruges til farvestregen i toppen og prikken ved navnet -->
+  <!-- --bane-farve bruges til farvestregen i toppen og prikken ved navnet.
+       Farven kommer fra $kort-bane-farver i _colors.scss (via --kort-bane-<id> i KortView.vue).
+       Findes den ikke, bruges farven fra popup.json, og ellers en grå -->
   <div
     class="bane-popup"
     role="dialog"
     aria-labelledby="popup-titel"
-    :style="{ '--bane-farve': bane.farve || '#CED0C0' }"
+    :style="{ '--bane-farve': `var(--kort-bane-${bane.id}, ${bane.farve || '#CED0C0'})` }"
   >
     <div class="popup-header">
       <div class="popup-titel-gruppe">

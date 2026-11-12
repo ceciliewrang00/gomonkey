@@ -1,8 +1,8 @@
 [
   {
     "id": "gron-1",
-    "navn": "Grøn Level 1",
-    "farve": "#88d656",
+    "navn": "Gul bane",
+    "farve": "#F8E250",
     "type": "bane",
     "beskrivelse": "En sjov og overkommelig bane tæt på jorden, perfekt til begyndere og opvarmning.",
     "svaerhedsgradTal": 2,
@@ -85,8 +85,8 @@
   },
   {
     "id": "gron-2",
-    "navn": "Grøn Level 2",
-    "farve": "#4fb20f",
+    "navn": "Grøn bane",
+    "farve": "#40BB65",
     "type": "bane",
     "beskrivelse": "Bygger videre på grøn 1 med lidt flere sjove udfordringer i lavere højde.",
     "svaerhedsgradTal": 2,
@@ -145,8 +145,8 @@
   },
   {
     "id": "bla-1",
-    "navn": "Blå Level 1",
-    "farve": "#61acc9",
+    "navn": "Turkis bane",
+    "farve": "#16DBDF",
     "type": "bane",
     "beskrivelse": "Kommer længere op i trætoppene med sjove svævebaner og balancemomenter.",
     "svaerhedsgradTal": 3,
@@ -289,8 +289,8 @@
   },
   {
     "id": "bla-2",
-    "navn": "Blå Level 2",
-    "farve": "#1f7697",
+    "navn": "Blå bane",
+    "farve": "#1B66DF",
     "type": "bane",
     "beskrivelse": "En populær bane med masser af fart og spændende udfordringer i mellemstor højde.",
     "svaerhedsgradTal": 3,
@@ -397,8 +397,8 @@
   },
   {
     "id": "bla-3",
-    "navn": "Blå Level 3",
-    "farve": "#13617f",
+    "navn": "Lilla bane",
+    "farve": "#6556EA",
     "type": "bane",
     "beskrivelse": "En ekstra blå bane med fantastisk udsigt og sjove svæv.",
     "svaerhedsgradTal": 3,
@@ -542,7 +542,7 @@
   {
     "id": "rod",
     "navn": "Rød bane",
-    "farve": "#b8433f",
+    "farve": "#FF2C48",
     "type": "bane",
     "beskrivelse": "Udfordrende bane for de mere erfarne. Kræver god styrke og mod i højden.",
     "svaerhedsgradTal": 4,
@@ -746,7 +746,7 @@
  {
     "id": "sort",
     "navn": "Sort bane",
-    "farve": "#313e31",
+    "farve": "#151515",
     "type": "aktivitet",
     "beskrivelse": "Vores vildeste bane! Slutter af med et nervepirrende frit fald fra toppen.",
     "svaerhedsgradTal": 5,

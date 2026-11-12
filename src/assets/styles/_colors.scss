@@ -72,3 +72,31 @@ $bane-farver: (
   bounce: $primary_light25,
   default: $primary_black50
 );
+
+/* --- KORTETS BANEFARVER ---
+   Én farve pr. bane på det interaktive kort. Bruges BÅDE til banens streg på kortet
+   og til popup'en (stregen i toppen og prikken ved navnet).
+   Ret farven her, så skifter den begge steder. */
+$kortbane_orange: #715631;  // Bounce
+$kortbane_gul: #F8E250;     // tidligere Grøn 1
+$kortbane_groen: #40BB65;   // tidligere Grøn 2
+$kortbane_turkis: #16DBDF;  // tidligere Blå 1
+$kortbane_blaa: #1B66DF;    // tidligere Blå 2
+$kortbane_lilla: #6556EA;   // tidligere Blå 3
+$kortbane_roed: #FF2C48;    // Rød
+$kortbane_sort: #151515;    // Sort
+
+/* Kobler farverne til banerne.
+   Navnene til venstre er banernes id fra public/popup.json – dem må du ikke ændre.
+   Sort og bounce er tegnede figurer på kortet, så deres farve bruges kun i popup'en.
+   Bruges i KortView.vue */
+$kort-bane-farver: (
+  bounce: $kortbane_orange,
+  gron-1: $kortbane_gul,
+  gron-2: $kortbane_groen,
+  bla-1: $kortbane_turkis,
+  bla-2: $kortbane_blaa,
+  bla-3: $kortbane_lilla,
+  rod: $kortbane_roed,
+  sort: $kortbane_sort
+);

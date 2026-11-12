@@ -96,6 +96,22 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     outline-offset: 3px;
   }
 
+  // ---------- Banefarver ----------
+
+  // Farverne kommer fra $kort-bane-farver i _colors.scss.
+  // 1) Hver farve bliver en CSS-variabel, fx --kort-bane-gron-1.
+  //    BanePopup.vue bruger dem til stregen og prikken i popup'en.
+  // 2) Banens farvede streg på kortet får samme farve.
+  //    Hvert stykke bane har tre streger: lys kant, farve (nr. 2) og skygge.
+  //    Reglen her er stærkere end SVG'ens egne klasser (fx .st27), så den vinder
+  @each $id, $farve in c.$kort-bane-farver {
+    --kort-bane-#{$id}: #{$farve};
+
+    .bane-segment[data-bane="#{$id}"] > path:nth-child(2) {
+      stroke: var(--kort-bane-#{$id});
+    }
+  }
+
   // ---------- Kortets område ----------
 
   // Kortets område fylder alt ved siden af filteret

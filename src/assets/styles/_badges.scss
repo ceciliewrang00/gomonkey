@@ -13,7 +13,7 @@
     display: inline-block;
     align-self: flex-start; // Bliver ikke strakt ud i flex-kolonner
     width: fit-content;
-    padding: 0.4rem 0.9rem;
+    padding: 0.6rem 1rem;
     border-radius: 2rem;
     background-color: var(--badge-bg, #{c.$forest_pink100});
     color: var(--badge-color, #{c.$primary_black100});

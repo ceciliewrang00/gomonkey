@@ -33,6 +33,66 @@
     }
 }
 
+/* Tekst-link med pil, der rykker til højre ved hover. Lyserød som standard.
+   Brug: <a class="button-arrow" href="#bane-info">
+           Se banerne
+           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+         </a>
+   Anden farve: sæt color på knappen i komponenten – pilen følger med (currentColor)
+
+   Tilbage-variant (pil mod venstre, før teksten): tilføj klassen button-arrow--tilbage
+   <button type="button" class="button-arrow button-arrow--tilbage">
+     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
+     Tilbage
+   </button> */
+.button-arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: fit-content;
+    // Nulstiller browserens standard, så den også ser rigtig ud som <button>
+    background: none;
+    border: none;
+    padding: 0;
+    color: c.$forest_pink100;
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    font-size: 1rem;
+    text-decoration: none;
+    cursor: pointer;
+
+    svg {
+        width: 1.1rem;
+        height: 1.1rem;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        transition: transform 0.2s ease;
+    }
+
+    &:hover svg {
+        transform: translateX(4px);
+    }
+
+    // Tilbage: pilen rykker mod venstre i stedet
+    &.button-arrow--tilbage:hover svg {
+        transform: translateX(-4px);
+    }
+
+    &:focus-visible {
+        outline: 3px solid currentColor;
+        outline-offset: 4px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        svg {
+            transition: none;
+        }
+    }
+}
+
 /* Rund lukkeknap med kryds. Placeringen styres i komponenten.
    Brug: <RouterLink to="/" class="button-close" aria-label="Luk">
            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>

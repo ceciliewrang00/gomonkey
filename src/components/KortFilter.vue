@@ -168,7 +168,7 @@ function togglerFilter() {
         <button
           v-if="valgteFiltre.length > 0"
           type="button"
-          class="nulstil-link"
+          class="button-primary nulstil-link"
           @click="nulstilFilter">
           Ryd filtre
         </button>
@@ -226,7 +226,7 @@ function togglerFilter() {
                 <div v-if="bane.undertekst || bane.svaerhed" class="under-linie">
                   <span v-if="bane.undertekst" class="undertekst">{{ bane.undertekst }}</span>
                   <!-- Sværheds-mærke. Bruger .badge fra _badges.scss -->
-                  <span v-if="bane.svaerhed" class="badge ekstra-info">Sværhed: {{ bane.svaerhed }}</span>
+                  <span v-if="bane.svaerhed" class="badge ekstra-info">Niveau: {{ bane.svaerhed }}</span>
                 </div>
               </div>
             </label>
@@ -389,17 +389,11 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   color: c.$primary_black100;
 }
 
-/* "Ryd filtre"-knappen: en lille button-secondary */
+/* "Ryd filtre"-knappen: udseendet kommer fra .button-primary i _buttons.scss.
+   margin-left: auto skubber den ud til højre i overskriftslinjen */
 .nulstil-link {
   margin-left: auto;
-  background: transparent;
-  border: solid 2px c.$primary_black100;
-  color: c.$primary_black100;
-  font-size: 0.85rem;
-  font-weight: 900;
   cursor: pointer;
-  padding: 0.35rem 1rem;
-  border-radius: 1rem;
 }
 
 .indlaeser-tekst {
@@ -611,12 +605,6 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 
 /* Hover-effekter kun på enheder med mus. På touch ville de "hænge fast" efter et tryk */
 @media (hover: hover) {
-  .nulstil-link:hover {
-    background: c.$primary_black100;
-    border-color:c.$primary_black100;
-    color: c.$primary_light25;
-  }
-
   /* Hover: ingen baggrundsfarve – teksten og tjekboksens kant bliver blå/lilla */
   .filter-item:hover .titel,
   .filter-item:hover .undertekst {

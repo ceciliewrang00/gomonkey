@@ -41,12 +41,16 @@ onMounted(async () => {
     }
 })
 
-// Oversætter farven fra databasen til et klassenavn uden æ/ø/å (samme som TrackBadge)
-const farveKlasse = {
-    grøn: 'groen',
-    blå: 'blaa',
-    rød: 'roed',
-    sort: 'sort',
+// Kobler banens id i databasen (fx 'green1') til samme bane i $kort-bane-farver
+// i _colors.scss (fx 'gron-1'). Så får banen samme farve her som på kortet
+const farveId = {
+    green1: 'gron-1',
+    green2: 'gron-2',
+    blue1: 'bla-1',
+    blue2: 'bla-2',
+    blue3: 'bla-3',
+    red: 'rod',
+    black: 'sort',
     bounce: 'bounce'
 }
 
@@ -84,7 +88,7 @@ function faktaFor(bane) {
         v-else
         v-for="(bane, index) in baner"
         :key="bane.id"
-        :class="[bane.class, `bane--${farveKlasse[bane.color] ?? 'default'}`]"
+        :class="[bane.class, `bane--${farveId[bane.id] ?? 'default'}`]"
         class="bane"
     >
         <div class="bane__kort">
@@ -142,11 +146,16 @@ function faktaFor(bane) {
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
 
-// Banens farve – fra $bane-farver i _colors.scss
-@each $navn, $farve in c.$bane-farver {
-    .bane--#{$navn} {
+// Banens farve – fra $kort-bane-farver i _colors.scss (samme farver som på kortet).
+// Ukendte baner får en grå farve
+@each $id, $farve in c.$kort-bane-farver {
+    .bane--#{$id} {
         --bane-farve: #{$farve};
     }
+}
+
+.bane--default {
+    --bane-farve: #{c.$primary_black50};
 }
 
 /* --- Intro --- */

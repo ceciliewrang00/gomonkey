@@ -7,7 +7,7 @@
 // 2. Brugerens svar gemmes i valgteSvar som { spørgsmåls-id: valgt svar }.
 // 3. Nogle spørgsmål vises kun ved bestemte svar (visHvis), fx frit fald.
 //    synligeSpoergsmaal er listen over de spørgsmål, der skal vises lige nu.
-// 4. anbefaletBane regner banen ud fra højde, tryghed, erfaring og point.
+// 4. Selve reglerne for anbefalingen ligger i services/quizLogik.js.
 //    Pointgrænserne (blaaFra og roedFra) kan ændres af admin i AdminQuiz.vue.
 // 5. Templaten viser enten indlæsning, fejl, ét spørgsmål eller resultatet.
 
@@ -16,6 +16,23 @@ import { ref, computed, onMounted } from 'vue'
 
 // Databaseadresserne står samlet i api.js
 import { SPOERGSMAAL_URL, GRAENSER_URL } from '@/services/api.js'
+
+// Reglerne for anbefalingen står samlet i quizLogik.js
+import {
+  RESULTATER,
+  skalVises,
+  visTekst,
+  visHjaelp,
+  beregnBane,
+  lavBegrundelse,
+  lavVidere,
+  lavGruppeBesked,
+  lavFritfaldBesked,
+  lavGodtAtVide,
+} from '@/services/quizLogik.js'
+
+// Link til booking. RET til jeres egen bookingside.
+const BOOK_URL = 'https://gomonkey.dk'
 
 // Gemmer svarene under hvert spørgsmåls id.
 const valgteSvar = ref({})
@@ -35,42 +52,40 @@ const aktivtIndeks = ref(0)
 const visResultat = ref(false)
 
 // Beregner, hvilke spørgsmål der skal vises ud fra brugerens svar.
+// skalVises tjekker visHvis (se quizLogik.js).
 const synligeSpoergsmaal = computed(() => {
-  // filter beholder kun de spørgsmål, hvor betingelsen nedenfor er true.
-  return spoergsmaal.value.filter((sp) => {
-    // Spørgsmål uden en visHvis-betingelse vises altid.
-    if (!sp.visHvis) {
-      return true
-    }
-
-    // Finder brugerens svar på det spørgsmål, betingelsen handler om.
-    const svar = valgteSvar.value[sp.visHvis.spoergsmaalId]
-
-    // Viser kun spørgsmålet, hvis det valgte svar har det krævede id.
-    return svar?.id === sp.visHvis.svarId
-  })
+  return spoergsmaal.value.filter((sp) => skalVises(sp, valgteSvar.value))
 })
 
 // Finder det spørgsmål, der skal vises lige nu.
 const aktivtSpoergsmaal = computed(() => {
-  // Henter spørgsmålet på den aktuelle placering i den synlige liste.
   return synligeSpoergsmaal.value[aktivtIndeks.value]
+})
+
+// Spørgsmålsteksten tilpasset "mig", "mit barn" eller "gruppe".
+const aktivTekst = computed(() => {
+  if (!aktivtSpoergsmaal.value) {
+    return ''
+  }
+  return visTekst(aktivtSpoergsmaal.value, valgteSvar.value)
+})
+
+// Lille hjælpetekst under spørgsmålet, fx "Svar for den, der er mest nervøs."
+const aktivHjaelp = computed(() => {
+  if (!aktivtSpoergsmaal.value) {
+    return ''
+  }
+  return visHjaelp(aktivtSpoergsmaal.value, valgteSvar.value)
 })
 
 // Beregner, hvor langt brugeren er nået gennem spørgsmålene.
 const fremdrift = computed(() => {
-  // Returnerer 0, hvis der endnu ikke er nogen synlige spørgsmål.
   if (synligeSpoergsmaal.value.length === 0) {
     return 0
   }
-
-  // Resultatsiden betyder, at quizzen er afsluttet.
   if (visResultat.value) {
     return 100
   }
-
-  // Beregner procentdelen ud fra det aktuelle spørgsmåls placering.
-  // Math.round afrunder til et helt tal.
   return Math.round(
     ((aktivtIndeks.value + 1) / synligeSpoergsmaal.value.length) * 100
   )
@@ -83,194 +98,79 @@ const indlaeser = ref(true)
 const fejlbesked = ref('')
 
 // Beregner kun point fra synlige pointspørgsmål.
+// Hvem, højde, vægt og frit fald tæller derfor ikke med.
 const samledePoint = computed(() => {
-  // Beholder spørgsmål med typen point.
-  // Højde, vægt og frit fald tæller derfor ikke med.
   const pointSpoergsmaal = synligeSpoergsmaal.value.filter(
     (sp) => sp.type === 'point'
   )
-
-  // Gennemgår pointspørgsmålene og lægger deres svarpoint sammen.
   return pointSpoergsmaal.reduce((total, sp) => {
-    // Finder brugerens svar til dette spørgsmål.
     const svar = valgteSvar.value[sp.id]
-
-    // Bruger 0, hvis spørgsmålet endnu ikke er besvaret.
     return total + (svar?.point ?? 0)
   }, 0)
 })
 
-// Tæller kun besvarede spørgsmål, som aktuelt er synlige.
-const antalBesvarede = computed(() => {
-  // Finder de synlige spørgsmål, som har et gemt svar.
-  const besvarede = synligeSpoergsmaal.value.filter(
-    (sp) => valgteSvar.value[sp.id]
-  )
-
-  // Returnerer antallet af besvarede, synlige spørgsmål.
-  return besvarede.length
-})
-
 // Kontrollerer, om alle synlige spørgsmål er besvaret.
 const alleBesvaret = computed(() => {
-  // Kræver mindst ét synligt spørgsmål og et svar på hvert.
   return (
     synligeSpoergsmaal.value.length > 0 &&
-    antalBesvarede.value === synligeSpoergsmaal.value.length
+    synligeSpoergsmaal.value.every((sp) => valgteSvar.value[sp.id])
   )
 })
 
-// Beregner anbefalingen ud fra højde, forudsætninger og point.
-// Pointgrænserne og begrænsningerne er vores foreløbige quizmodel.
+// Beregner den anbefalede bane, fx 'blaa1'. Reglerne står i quizLogik.js.
 const anbefaletBane = computed(() => {
-
-// Venter, indtil alle spørgsmål er besvaret og pointgrænserne er hentet.
-if (!alleBesvaret.value || !baneGraenser.value) {
-  return ''
-}
-
-  // Henter højden fra brugerens valgte højdeinterval.
-  const hoejde = valgteSvar.value.hoejde?.minimumHoejde
-
-  // Henter pointene fra svaret om højdetryghed.
-  const tryghed = valgteSvar.value.tryghed?.point
-
-  // Henter pointene fra svaret om erfaring.
-  const erfaring = valgteSvar.value.erfaring?.point
-
-  // Kontrollerer, om de nye spørgsmål er tilgængelige og besvaret.
-  // ?. ovenfor giver undefined, hvis et svar mangler.
-  if (
-    hoejde === undefined ||
-    tryghed === undefined ||
-    erfaring === undefined
-  ) {
-    // Vises midlertidigt, mens databasen stadig har de gamle spørgsmål.
-    return 'Afventer de nye quizspørgsmål'
+  if (!alleBesvaret.value || !baneGraenser.value) {
+    return null
   }
-
-  // Giver ingen baneanbefaling under minimumshøjden i jeres udkast.
-  if (hoejde < 110) {
-    return 'Ingen baneanbefaling – undersøg mulighederne med Go Monkey'
-  }
-
-  // Begrænser anbefalingen til grøn ved højde under 140 cm.
-  if (hoejde < 140) {
-    return 'Grøn bane'
-  }
-
-  // Anbefaler grøn som startbane til gæster, der er utrygge ved højder.
-  if (tryghed <= 1) {
-    return 'Grøn bane'
-  }
-
-// Anbefaler grøn, hvis pointene er under administratorens grænse for blå.
-if (samledePoint.value < baneGraenser.value.blaaFra) {
-  return 'Grøn bane'
-}
-
-// Rød kræver mindst 160 cm, tryghed, erfaring og administratorens pointgrænse.
-// && betyder, at alle betingelser skal være opfyldt.
-  if (
-    hoejde >= 160 &&
-    tryghed >= 2 &&
-    erfaring >= 2 &&
-    samledePoint.value >= baneGraenser.value.roedFra
-  ) {
-    return 'Rød bane'
-  }
-
-  // De øvrige besvarelser, som når hertil, anbefales blå.
-  return 'Blå bane'
+  return beregnBane(valgteSvar.value, samledePoint.value, baneGraenser.value)
 })
 
-// Vælger en forklaring, som passer til den beregnede startbane.
-const resultatBeskrivelse = computed(() => {
-  // Forklarer, hvorfor grøn er et passende sted at begynde.
-  if (anbefaletBane.value === 'Grøn bane') {
-    return 'Vi anbefaler, at du starter på grøn. Dine svar eller dit højdeinterval peger på dette som et passende udgangspunkt. Her kan du begynde roligt og lære udstyret at kende.'
-  }
-
-  // Forklarer, hvorfor blå er blevet valgt.
-  if (anbefaletBane.value === 'Blå bane') {
-    return 'Vi anbefaler, at du starter på blå. Dine svar viser, at du er tryg ved højder, og quizmodellen peger på blå som et passende startniveau frem for rød.'
-  }
-
-  // Forklarer anbefalingen og opfordrer til at mærke efter.
-  if (anbefaletBane.value === 'Rød bane') {
-    return 'Dine svar viser erfaring, tryghed ved højder og ønske om udfordring. Quizzen peger derfor på rød. Er det dit første besøg, anbefaler vi, at du først mærker efter på en lettere bane.'
-  }
-
-  // Viser ingen ekstra forklaring, hvis der ikke anbefales en bane.
-  return ''
+// Henter titel og tekst til den anbefalede bane.
+const resultat = computed(() => {
+  return RESULTATER[anbefaletBane.value] ?? null
 })
 
-// Beregner en særskilt besked om frit fald.
+// Kort liste med grundene til anbefalingen.
+const begrundelse = computed(() => {
+  if (!anbefaletBane.value) {
+    return []
+  }
+  return lavBegrundelse(
+    anbefaletBane.value,
+    valgteSvar.value,
+    samledePoint.value,
+    baneGraenser.value
+  )
+})
+
+// Næste skridt efter startbanen.
+const videre = computed(() => lavVidere(anbefaletBane.value, valgteSvar.value))
+
+// Ekstra beskeder til grupper (en liste, som kan være tom).
+const gruppeBesked = computed(() =>
+  lavGruppeBesked(anbefaletBane.value, valgteSvar.value)
+)
+
+// Ekstra besked om Sort bane / frit fald.
 const fritfaldBesked = computed(() => {
-  // Venter, til alle synlige spørgsmål er besvaret.
   if (!alleBesvaret.value) {
     return ''
   }
-
-  // Viser kun en ekstra besked, hvis gæsten har valgt adrenalinsus.
-  if (valgteSvar.value.oplevelse?.id !== 'o4') {
-    return ''
-  }
-
-  // Finder gæstens svar om frit fald.
-  const fritfaldSvar = valgteSvar.value.fritfald?.id
-
-  // Giver ingen ekstra besked, hvis gæsten har svaret nej.
-  if (fritfaldSvar === 'ff1') {
-    return ''
-  }
-
-  // Henviser til en instruktør, hvis gæsten vil vide mere.
-  if (fritfaldSvar === 'ff2') {
-    return 'Du vil gerne vide mere om frit fald. Spørg en instruktør om aktiviteten og dens krav.'
-  }
-
-  // Finder højden fra det valgte højdeinterval.
-  const hoejde = valgteSvar.value.hoejde?.minimumHoejde
-
-  // Kontrollerer, om gæsten har bekræftet minimumsvægten.
-  const opfylderVaegt =
-    valgteSvar.value.vaegt?.opfylderMinimum === true
-
-  // Undlader at foreslå aktiviteten, hvis højdekravet i udkastet ikke er opfyldt.
-  if (hoejde === undefined || hoejde < 160) {
-    return 'Du har vist interesse for frit fald, men opfylder ikke højdekravet i quizzen.'
-  }
-
-  // Undlader at foreslå aktiviteten, hvis minimumsvægten ikke er bekræftet.
-  if (!opfylderVaegt) {
-    return 'Quizzen kan ikke foreslå frit fald, fordi minimumsvægten ikke er bekræftet. Spørg en instruktør.'
-  }
-
-  // Finder pointene for højdetryghed.
-  const tryghed = valgteSvar.value.tryghed?.point
-
-  // Vores foreløbige quizregel kræver, at gæsten er tryg ved højder.
-  if (tryghed === undefined || tryghed < 2) {
-    return 'Du har vist interesse for frit fald, men er utryg ved højder. Tal med en instruktør, før du overvejer aktiviteten.'
-  }
-
-  // Beskriver en mulig ekstra aktivitet uden at erstatte startbanen.
-  return 'Du har også vist interesse for sort/frit fald og opfylder de højde- og minimumsvægtkrav, quizzen kontrollerer. Tal med en instruktør om de øvrige krav, før du beslutter dig.'
+  return lavFritfaldBesked(anbefaletBane.value, valgteSvar.value)
 })
+
+// Regler, som er gode at kende før besøget (fx voksne med børn og max. vægt).
+const godtAtVide = computed(() => lavGodtAtVide(valgteSvar.value))
 
 // Henter pointgrænserne, som administratoren har gemt.
 async function hentBaneGraenser() {
   try {
-    // Sender et GET-kald til pointgrænserne i Firebase.
     const response = await fetch(`${GRAENSER_URL}.json`)
 
-    // Stopper, hvis Firebase ikke svarer med succes.
     if (!response.ok) {
       throw new Error('Hentning fejlede med status ' + response.status)
     }
 
-    // Omdanner JSON-svaret til JavaScript-data.
     const data = await response.json()
 
     // Kontrollerer, at grænserne er hele tal og står i rigtig rækkefølge.
@@ -284,42 +184,29 @@ async function hentBaneGraenser() {
       throw new Error('Pointgrænserne mangler eller er ugyldige')
     }
 
-    // Gemmer de kontrollerede pointgrænser.
     baneGraenser.value = data
   } catch (fejl) {
-    // Viser en fejlbesked i stedet for at bruge ukendte grænser.
     fejlbesked.value =
       'Quizindstillingerne kunne ikke hentes. Prøv at genindlæse siden.'
-
-    // Viser den tekniske fejl i konsollen.
     console.error('Fejl ved hentning af pointgrænser:', fejl)
   }
 }
 
-
-
-
-
-
 // Henter spørgsmålene til quizzen.
 async function hentSpoergsmaal() {
   try {
-    // 1. HENT: Ber Firebase hente spørgsmålene med fetch - gir adresse.
+    // 1. HENT: Ber Firebase hente spørgsmålene med fetch.
     const response = await fetch(`${SPOERGSMAAL_URL}.json`)
 
-    // 2. TJEK: Lykkedes kaldet? Hvis ikke, send til catch - fanger fejlen.
-    if (!response.ok) { 
+    // 2. TJEK: Lykkedes kaldet? Hvis ikke, send til catch.
+    if (!response.ok) {
       throw new Error('Firebase svarede med status ' + response.status)
     }
 
     // 3. LÆS: Læs indholdet som JavaScript-data.
-    // FB semder spg i formatet JSON - .json læser og omdanner til JS-data
-    // Gør spørgsmålene fra Firebase klar til brug i JavaScript.
     const data = await response.json()
 
-    // 4. LISTE: Saml spørgsmålene og lav det om til en liste.
-    // Hvis databasen er tom (data ?? {}), bruger den en tomt objekt - tom liste.
-    // -> Så den ikke giver fejl
+    // 4. LISTE: Lav spørgsmålene om til en liste (tom liste, hvis databasen er tom).
     const liste = Object.values(data ?? {})
 
     // 5. SORTÉR: Brug spørgsmålenes rækkefølge fra databasen.
@@ -328,101 +215,61 @@ async function hentSpoergsmaal() {
     // 6. GEM: Læg listen i den variabel, Vue viser spørgsmålene fra.
     spoergsmaal.value = liste
   } catch (fejl) {
-    // 7. FEJL: Fortæl brugeren, at spørgsmålene ikke kunne hentes.
     fejlbesked.value =
       'Spørgsmålene kunne ikke hentes. Prøv at genindlæse siden.'
-
-    // Vis den tekniske fejl i konsollen til fejlfinding.
     console.error('Fejl ved hentning af spørgsmål:', fejl)
   }
 }
-
-
-
-
-
 
 // Modtager spørgsmålets id og hele den valgte svarmulighed.
 function vaelgSvar(spoergsmaalId, svar) {
   // Gemmer en kopi af det valgte svar.
   valgteSvar.value[spoergsmaalId] = { ...svar }
 
-  // Gennemgår spørgsmålene i deres sorterede rækkefølge.
+  // Fjerner svar på spørgsmål, som ikke længere skal vises.
+  // Fx hvis brugeren går tilbage og ændrer "Mest muligt adrenalin" til "En rolig tur".
   for (const sp of spoergsmaal.value) {
-    // Kontrollerer kun spørgsmål med en visHvis-betingelse.
-    if (sp.visHvis) {
-      // Finder svaret på det spørgsmål, som styrer synligheden.
-      const styrendeSvar = valgteSvar.value[sp.visHvis.spoergsmaalId]
-
-      // Kontrollerer, om det nødvendige svar stadig er valgt.
-      const skalVises = styrendeSvar?.id === sp.visHvis.svarId
-
-      // Hvis spørgsmålet skal skjules, fjernes et eventuelt gemt svar.
-      if (!skalVises) {
-        // delete fjerner spørgsmålets svar fra objektet.
-        delete valgteSvar.value[sp.id]
-      }
+    if (!skalVises(sp, valgteSvar.value)) {
+      delete valgteSvar.value[sp.id]
     }
   }
 }
 
 // Går videre, når det aktuelle spørgsmål er besvaret.
 function naesteSpoergsmaal() {
-  // Finder spørgsmålet, som brugeren ser lige nu.
   const sp = aktivtSpoergsmaal.value
 
-  // Stopper, hvis spørgsmålet mangler eller ikke er besvaret.
   if (!sp || !valgteSvar.value[sp.id]) {
     return
   }
 
-  // Kontrollerer, om der er flere synlige spørgsmål efter dette.
   if (aktivtIndeks.value < synligeSpoergsmaal.value.length - 1) {
-    // Flytter én plads frem i listen.
     aktivtIndeks.value += 1
   } else if (alleBesvaret.value) {
-    // Viser resultatet efter sidste spørgsmål, når alle er besvaret.
     visResultat.value = true
   }
 }
 
 // Går tilbage til det forrige spørgsmål.
 function forrigeSpoergsmaal() {
-  // Sikrer, at vi ikke går længere tilbage end første spørgsmål.
   if (aktivtIndeks.value > 0) {
-    // Flytter én plads tilbage i listen.
     aktivtIndeks.value -= 1
   }
 }
 
 // Starter en ny quiz med de spørgsmål, der allerede er hentet.
 function startForfra() {
-  // Fjerner alle brugerens tidligere svar.
   valgteSvar.value = {}
-
-  // Går tilbage til første spørgsmål.
   aktivtIndeks.value = 0
-
-  // Skjuler resultatet og viser quizzen igen.
   visResultat.value = false
 }
 
 // Starter hentningen, når quizsiden er klar.
 onMounted(async () => {
-  // Viser indlæsningsbeskeden.
   indlaeser.value = true
-
-  // Starter begge API-kald og venter, til begge er afsluttet.
-  // Funktionerne håndterer selv eventuelle fejl.
-  await Promise.all([
-    hentSpoergsmaal(),
-    hentBaneGraenser(),
-  ])
-
-  // Skjuler først indlæsningsbeskeden, når begge kald er færdige.
+  await Promise.all([hentSpoergsmaal(), hentBaneGraenser()])
   indlaeser.value = false
 })
-
 </script>
 
 <template>
@@ -442,8 +289,8 @@ onMounted(async () => {
         <span class="badge badge--dark">Banevælger</span>
         <h1>Find den rette bane for dig</h1>
         <p>
-        Svar på fem korte spørgsmål, så hjælper vi dig med at finde en startbane.
-        Der kan komme ekstra spørgsmål om frit fald.
+        Svar på fem korte spørgsmål, så finder vi den bane, I skal starte på.
+        Det tager under et minut.
         </p>
     </section>
 
@@ -459,34 +306,73 @@ onMounted(async () => {
     </p>
 
     <!-- Viser resultatet i en lys boks. -->
+    <!-- Opbygning: top (titel + tekst) → næste skridt → beskeder → to lister → knapper -->
     <section v-else-if="visResultat" class="quiz-kort quiz-resultat">
-      <!-- Viser den anbefalede startbane. -->
-      <span class="quiz-meta">Dit resultat</span>
-      <h2>{{ anbefaletBane }}</h2>
 
-      <!-- Viser begrundelsen for anbefalingen. -->
-      <p v-if="resultatBeskrivelse">{{ resultatBeskrivelse }}</p>
+      <!-- Hvis databasen mangler de nye spørgsmål, kan vi ikke beregne en bane. -->
+      <div v-if="!resultat" class="resultat-top">
+        <span class="badge">Dit resultat</span>
+        <h2>Vi kunne ikke finde en bane</h2>
+        <p>Quizzen er ved at blive opdateret. Prøv igen senere, eller kontakt os.</p>
+      </div>
 
-      <!-- Viser en ekstra besked om frit fald, hvis den findes. -->
-      <p v-if="fritfaldBesked">{{ fritfaldBesked }}</p>
+      <template v-else>
+        <!-- 1. Den anbefalede startbane og en kort beskrivelse af den. -->
+        <div class="resultat-top">
+          <span class="badge">Dit resultat</span>
+          <h2>{{ resultat.titel }}</h2>
+          <p class="resultat-tekst">{{ resultat.tekst }}</p>
+        </div>
 
-      <!-- Samler resultatets knapper med afstand mellem dem. -->
-      <div class="quiz-navigation">
-        <!-- Åbner det sidste spørgsmål uden at slette svarene. -->
+        <!-- 2. Næste skridt efter startbanen, fremhævet med en pil. -->
+        <p v-if="videre" class="resultat-videre">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+          <span>{{ videre }}</span>
+        </p>
+
+        <!-- 3. Ekstra beskeder til grupper og om frit fald, samlet i lyserøde bokse. -->
+        <div v-if="gruppeBesked.length || fritfaldBesked" class="resultat-beskeder">
+          <p v-for="linje in gruppeBesked" :key="linje" class="resultat-besked">{{ linje }}</p>
+          <p v-if="fritfaldBesked" class="resultat-besked">{{ fritfaldBesked }}</p>
+        </div>
+
+        <!-- 4. To korte lister: hvorfor denne bane, og praktiske regler.
+                Ved siden af hinanden på store skærme, under hinanden på mobil. -->
+        <div class="resultat-info">
+          <div v-if="begrundelse.length">
+            <h3 class="resultat-overskrift">Derfor anbefaler vi den</h3>
+            <ul class="resultat-liste resultat-liste--tjek">
+              <li v-for="grund in begrundelse" :key="grund">{{ grund }}</li>
+            </ul>
+          </div>
+
+          <!-- Praktiske regler fra gomonkey.dk/praktisk-info. -->
+          <div>
+            <h3 class="resultat-overskrift">Godt at vide</h3>
+            <ul class="resultat-liste">
+              <li v-for="linje in godtAtVide" :key="linje">{{ linje }}</li>
+            </ul>
+          </div>
+        </div>
+      </template>
+
+      <!-- 5. Hovedhandlingerne: book eller se banerne. -->
+      <div class="resultat-handlinger">
+        <a :href="BOOK_URL" class="button-primary">Book</a>
+        <RouterLink to="/" class="button-secondary">Se banerne</RouterLink>
+      </div>
+
+      <!-- Mindre vigtige handlinger nederst: ret svarene eller start forfra. -->
+      <div class="resultat-bund">
         <button
           type="button"
-          class="button-secondary"
+          class="button-arrow button-arrow--tilbage quiz-tilbage"
           @click="visResultat = false"
         >
-          Tilbage til mine svar
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
+          Ret mine svar
         </button>
-
-        <!-- Nulstiller svarene og åbner første spørgsmål. -->
-        <button
-          type="button"
-          class="button-primary"
-          @click="startForfra"
-        >
+        <button type="button" class="button-arrow quiz-tilbage" @click="startForfra">
           Start forfra
         </button>
       </div>
@@ -513,8 +399,11 @@ onMounted(async () => {
         ></progress>
       </div>
 
-      <!-- Viser teksten til det aktive spørgsmål. -->
-      <h2>{{ aktivtSpoergsmaal.tekst }}</h2>
+      <!-- Viser teksten til det aktive spørgsmål, tilpasset hvem der skal klatre. -->
+      <h3>{{ aktivTekst }}</h3>
+
+      <!-- Kort forklaring under spørgsmålet, hvis der er en. -->
+      <p v-if="aktivHjaelp" class="quiz-hjaelp">{{ aktivHjaelp }}</p>
 
       <!-- Placerer svarmulighederne i en lodret liste. -->
       <div class="quiz-svar">
@@ -541,19 +430,21 @@ onMounted(async () => {
       <!-- Samler navigationsknapperne med afstand mellem dem. -->
       <div class="quiz-navigation">
         <!-- Viser Tilbage efter første spørgsmål. -->
+        <!-- .button-arrow fra _buttons.scss med pilen mod venstre -->
         <button
           v-if="aktivtIndeks > 0"
           type="button"
-          class="button-secondary"
+          class="button-arrow button-arrow--tilbage quiz-tilbage"
           @click="forrigeSpoergsmaal"
         >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
           Tilbage
         </button>
 
         <!-- Kræver et svar, før brugeren kan gå videre. -->
         <button
           type="button"
-          class="button-primary"
+          class="button-primary quiz-naeste"
           :disabled="!valgteSvar[aktivtSpoergsmaal.id]"
           @click="naesteSpoergsmaal"
         >
@@ -601,25 +492,31 @@ onMounted(async () => {
   padding-inline: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
 }
 
-/* Intro og quizboks har samme smalle bredde og står til venstre.
-   margin-inline: 0 overskriver margin: 0 auto fra flex-column, så introen ikke centreres */
+/* Intro og quizboks har samme smalle bredde og står i midten af siden.
+   margin-inline: auto fordeler den ledige plads ligeligt på begge sider */
 .quiz-intro,
 .quiz-kort,
 .quiz-status {
   max-width: 48rem;
-  margin-inline: 0;
+  margin-inline: auto;
 }
 
-/* Intro over quizkortet: badge, overskrift og tekst under hinanden. */
+/* Intro over quizkortet: badge, overskrift og tekst under hinanden, centreret. */
 .quiz-intro {
   @include f.flex-column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
   padding: 0; // Nulstiller section-padding fra main.scss
-  margin-inline: 0; // Overskriver margin: 0 auto fra flex-column, så introen står til venstre
+  margin-inline: auto;
   margin-bottom: s.$spacing-s;
 
   p {
     margin: 0; // Fjerner browserens standard-margin
+  }
+
+  // .badge har align-self: flex-start i _badges.scss – her skal den stå i midten
+  .badge {
+    align-self: center;
   }
 }
 
@@ -637,18 +534,14 @@ onMounted(async () => {
   color: c.$primary_black75;
 }
 
-/* Viser spørgsmålet i en lys boks. Bredden kommer fra .quiz-kolonne. */
+/* Viser spørgsmålet i en lys boks. Bredden og centreringen står længere oppe */
 .quiz-kort {
-  margin: 0;
+  margin-block: 0;
   padding: s.$spacing-l s.$spacing-xl;
   background-color: c.$primary_light25;
   border-radius: 1rem;
 }
 
-/* Giver afstand mellem spørgsmålet og svarmulighederne. */
-h2 {
-  margin-bottom: 1rem;
-}
 
 /* Svarene under hinanden på mobil, i 2 kolonner på større skærme. */
 .quiz-svar {
@@ -661,25 +554,75 @@ h2 {
   }
 }
 
+/* Spørgsmålet (h3 fra _typography.scss): 25px luft ned til svarene */
+.quiz-kort h3 {
+  padding-bottom: 25px;
+}
+
 /* Giver svarknapperne afrundede kanter og venstrestillet tekst. */
 .quiz-svarknap {
   width: 100%;
   padding: 0.85rem 1rem;
-  border: 1px solid c.$forest_green75;
+  // Samme farve som det valgte svar (sort)
+  border: 1px solid c.$primary_black100;
   border-radius: 1rem;
   background-color: transparent;
   color: c.$primary_black100;
   text-align: left;
+  // Teksten til venstre og den runde tjek-boks (::after) ude til højre
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 
-  /* Fremhæver knappen, når musen er over den. */
-  &:hover {
-    background-color: c.$forest_pink25;
+  /* Rund tjek-boks: tom cirkel, når svaret ikke er valgt.
+     Samme størrelse og flueben som tjekboksene i KortFilter.vue */
+  &::after {
+    content: '';
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 2px solid c.$primary_black100;
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: bold;
+    line-height: 1;
+    // Systemets skrift – samme som tjekboksen i filteret (et <input> arver ikke sidens skrift),
+    // så fluebenet ser ens ud begge steder. Inter tegner ✓ anderledes
+    font-family: system-ui, -apple-system, sans-serif;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+
+  transition: border-color 0.2s ease, color 0.2s ease;
+
+  /* Hover (kun med mus, og kun på svar, der ikke er valgt):
+     kant, tekst og cirkel bliver blå/lilla – samme hover som i filteret og på knapperne */
+  @media (hover: hover) {
+    &:not([aria-pressed='true']):hover {
+      border-color: c.$secondary_purple100;
+      color: c.$secondary_purple100;
+
+      &::after {
+        border-color: c.$secondary_purple100;
+      }
+    }
   }
 
   /* Fremhæver det svar, brugeren har valgt. */
   &[aria-pressed='true'] {
     background-color: c.$primary_black100;
     color: c.$primary_light25;
+    font-weight: 700; // Det valgte svar står med fed tekst
+
+    // Tjek-boksen bliver blå/lilla med et lyst flueben – som i filteret
+    &::after {
+      content: '✓';
+      background-color: c.$secondary_purple100;
+      border-color: c.$secondary_purple100;
+      color: c.$primary_light25;
+    }
   }
 
   /* Viser tydeligt fokus ved brug af tastaturet. */
@@ -744,8 +687,176 @@ button:disabled {
   margin-top: s.$spacing-m;
 }
 
-/* Fremhæver resultatets overskrift. */
-.quiz-resultat h2 {
+/* Næste står altid ude til højre – også på første spørgsmål, hvor Tilbage ikke vises.
+   margin-left: auto skubber den så langt til højre, som der er plads */
+.quiz-naeste {
+  margin-left: auto;
+}
+
+/* Tilbage-knappen (.button-arrow) er sort her, da lyserød er svær at læse på den lyse quizboks */
+.quiz-tilbage {
+  color: c.$primary_black100;
+}
+
+/* ---------- RESULTATKORTET ---------- */
+
+/* Delene står under hinanden med samme luft imellem */
+.quiz-resultat {
+  display: flex;
+  flex-direction: column;
+  gap: s.$spacing-m;
+
+  p {
+    margin: 0;
+  }
+}
+
+/* 1. Toppen: badge, titel og tekst tæt sammen */
+.resultat-top {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: s.$spacing-xs;
+
+  h2 {
+    margin: 0;
+    padding: 0;
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+    font-weight: 900;
+    line-height: 1.1;
+  }
+}
+
+.resultat-tekst {
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+/* 2. Næste skridt: mørk boks med pil, så den skiller sig ud */
+.resultat-videre {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: s.$spacing-s s.$spacing-m;
+  border-radius: 0.75rem;
+  background-color: c.$primary_black100;
+  color: c.$primary_light25;
+  font-weight: 700;
+  line-height: 1.5;
+
+  svg {
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.5em; // Samme højde som første tekstlinje, så pilen flugter med den
+    fill: none;
+    stroke: c.$forest_pink100;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+/* 3. Beskeder til grupper og om frit fald: lyserøde bokse */
+.resultat-beskeder {
+  display: flex;
+  flex-direction: column;
+  gap: s.$spacing-xs;
+}
+
+.resultat-besked {
+  padding: s.$spacing-s s.$spacing-m;
+  border-left: 4px solid c.$forest_pink100;
+  border-radius: 0.5rem;
+  background-color: c.$forest_pink25;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* 4. De to lister – ved siden af hinanden på store skærme, adskilt af en tynd streg foroven */
+.resultat-info {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: s.$spacing-m;
+  padding-top: s.$spacing-m;
+  border-top: 1px solid rgba(c.$primary_black100, 0.12);
+
+  @media (min-width: 700px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Små overskrifter over listerne */
+.resultat-overskrift {
+  margin: 0 0 s.$spacing-xs;
+  padding: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: c.$primary_black75;
+}
+
+/* Listerne: egen punkt-tegning i stedet for browserens prikker.
+   Nulstiller den globale ul/li-styling fra _typography.scss */
+.resultat-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    gap: 0.6rem;
+    font-size: 0.95rem;
+    font-weight: 400;
+    line-height: 1.5;
+
+    // Lille prik foran hvert punkt
+    &::before {
+      content: '';
+      flex-shrink: 0;
+      width: 0.4rem;
+      height: 0.4rem;
+      margin-top: 0.55em;
+      border-radius: 50%;
+      background-color: c.$primary_black50;
+    }
+  }
+}
+
+/* "Derfor"-listen får et lyserødt flueben i stedet for en prik */
+.resultat-liste--tjek li::before {
+  content: '✓';
+  width: auto;
+  height: auto;
+  margin-top: 0;
+  background: none;
+  color: c.$forest_pink100;
   font-weight: 900;
 }
+
+/* 5. Knapperne: book og se banerne ved siden af hinanden */
+.resultat-handlinger {
+  @include f.flex-buttons;
+  gap: s.$spacing-s;
+}
+
+/* Nederst: ret svar til venstre, start forfra til højre, adskilt af en tynd streg */
+.resultat-bund {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: s.$spacing-s;
+  padding-top: s.$spacing-s;
+  border-top: 1px solid rgba(c.$primary_black100, 0.12);
+}
+
+/* Hjælpeteksten under spørgsmålet. Negativ margin trækker den tæt op under overskriften. */
+.quiz-hjaelp {
+  margin: -0.5rem 0 1rem;
+  color: c.$primary_black75;
+}
+
 </style>
