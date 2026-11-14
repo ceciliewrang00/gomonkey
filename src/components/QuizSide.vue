@@ -117,7 +117,7 @@ const alleBesvaret = computed(() => {
   )
 })
 
-// Beregner den anbefalede bane, fx 'blaa1'. Reglerne står i quizLogik.js.
+// Beregner den anbefalede bane, fx 'bane-3'. Reglerne står i quizLogik.js.
 const anbefaletBane = computed(() => {
   if (!alleBesvaret.value || !baneGraenser.value) {
     return null

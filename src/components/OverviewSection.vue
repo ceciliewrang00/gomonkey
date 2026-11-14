@@ -1,10 +1,15 @@
 <script setup>
-// Banefarverne – samme farver som i TrackBadge
+// Banefarverne – samme farver som på kortet.
+// klasse er banens id fra $kort-bane-farver i _colors.scss
 const baneFarver = [
-  { navn: 'Grøn', klasse: 'groen' },
-  { navn: 'Blå', klasse: 'blaa' },
-  { navn: 'Rød', klasse: 'roed' },
-  { navn: 'Sort', klasse: 'sort' },
+  { navn: 'Bounce', klasse: 'bounce' },
+  { navn: 'Gul', klasse: 'bane-1' },
+  { navn: 'Grøn', klasse: 'bane-2' },
+  { navn: 'Turkis', klasse: 'bane-3' },
+  { navn: 'Blå', klasse: 'bane-4' },
+  { navn: 'Lilla', klasse: 'bane-5' },
+  { navn: 'Rød', klasse: 'bane-6' },
+  { navn: 'Sort', klasse: 'bane-7' },
 ]
 </script>
 
@@ -153,11 +158,14 @@ $linje: rgba(239, 233, 229, 0.12);
       width: 0.9rem;
       height: 0.9rem;
       border-radius: 50%;
-  
+      // Tynd lys kant, så den sorte prik kan ses på den sorte baggrund.
+      // box-sizing: border-box holder prikken i samme størrelse
+      box-sizing: border-box;
+      border: 1px solid rgba(c.$primary_light25, 0.6);
     }
 
-    // Farverne kommer fra $bane-farver i _colors.scss
-    @each $navn, $farve in c.$bane-farver {
+    // Farverne kommer fra $kort-bane-farver i _colors.scss (samme som på kortet)
+    @each $navn, $farve in c.$kort-bane-farver {
       .prik--#{$navn} {
         background-color: $farve;
       }

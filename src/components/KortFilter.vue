@@ -14,7 +14,7 @@ import { KORTFILTER_URL } from '@/services/api.js'
 // Beskeden, der sendes op til KortView.vue med det nye filter
 const emit = defineEmits(['filter-changed'])
 
-// Id'erne på de baner, der er sat flueben ved, fx ['gron-1', 'rod']
+// Id'erne på de baner, der er sat flueben ved, fx ['bane-1', 'bane-6']
 const valgteFiltre = ref([])
 
 // Er filteret åbent på mobil?

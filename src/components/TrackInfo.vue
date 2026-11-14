@@ -41,19 +41,6 @@ onMounted(async () => {
     }
 })
 
-// Kobler banens id i databasen (fx 'green1') til samme bane i $kort-bane-farver
-// i _colors.scss (fx 'gron-1'). Så får banen samme farve her som på kortet
-const farveId = {
-    green1: 'gron-1',
-    green2: 'gron-2',
-    blue1: 'bla-1',
-    blue2: 'bla-2',
-    blue3: 'bla-3',
-    red: 'rod',
-    black: 'sort',
-    bounce: 'bounce'
-}
-
 // Faktaboksene. Kun felter, banen har udfyldt, bliver vist
 const FAKTA = [
     { key: 'trackHeight', label: 'Banehøjde' },
@@ -88,7 +75,7 @@ function faktaFor(bane) {
         v-else
         v-for="(bane, index) in baner"
         :key="bane.id"
-        :class="[bane.class, `bane--${farveId[bane.id] ?? 'default'}`]"
+        :class="[bane.class, `bane--${bane.id}`]"
         class="bane"
     >
         <div class="bane__kort">
@@ -147,15 +134,16 @@ function faktaFor(bane) {
 @use '@/assets/styles/spacings' as s;
 
 // Banens farve – fra $kort-bane-farver i _colors.scss (samme farver som på kortet).
-// Ukendte baner får en grå farve
+// Klassen er banens id fra Firebase, fx .bane--bane-1.
+// Ukendte baner får en grå farve (står først, så banefarverne vinder)
+.bane {
+    --bane-farve: #{c.$primary_black50};
+}
+
 @each $id, $farve in c.$kort-bane-farver {
     .bane--#{$id} {
         --bane-farve: #{$farve};
     }
-}
-
-.bane--default {
-    --bane-farve: #{c.$primary_black50};
 }
 
 /* --- Intro --- */

@@ -99,7 +99,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   // ---------- Banefarver ----------
 
   // Farverne kommer fra $kort-bane-farver i _colors.scss.
-  // 1) Hver farve bliver en CSS-variabel, fx --kort-bane-gron-1.
+  // 1) Hver farve bliver en CSS-variabel, fx --kort-bane-bane-1.
   //    BanePopup.vue bruger dem til stregen og prikken i popup'en.
   // 2) Banens farvede streg på kortet får samme farve.
   //    Hvert stykke bane har tre streger: lys kant, farve (nr. 2) og skygge.

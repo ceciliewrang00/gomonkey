@@ -52,51 +52,33 @@ $secondary_purple75: #5C6BAB;
 $secondary_purple50: #929CC7;
 $secondary_purple25: #C8CEE3;
 
-/* Bane Rød – farven til den røde bane */
-$bane_roed: #FF2C48;
-
-/* Bane Blå – farven til den blå bane */
-$bane_blaa: #4475EF;
-
-/* Bane Grøn – farven til den grønne bane */
-$bane_groen: #40BB65;
-
 /* --- BANEFARVER ---
-   Fælles farver til banerne (ikke kortets streger).
-   Brug: @each $navn, $farve in c.$bane-farver { ... } */
-$bane-farver: (
-  groen: $bane_groen,
-  blaa: $bane_blaa,
-  roed: $bane_roed,
-  sort: $primary_black100,
-  bounce: $primary_light25,
-  default: $primary_black50
-);
-
-/* --- KORTETS BANEFARVER ---
-   Én farve pr. bane på det interaktive kort. Bruges BÅDE til banens streg på kortet
-   og til popup'en (stregen i toppen og prikken ved navnet).
-   Ret farven her, så skifter den begge steder. */
+   Én farve pr. bane – det eneste sted, banefarverne står.
+   Bruges til banens streg på kortet, popup'en, baneoversigten (TrackInfo)
+   og farveforklaringen på forsiden (OverviewSection).
+   Ret farven her, så skifter den alle steder. */
 $kortbane_orange: #715631;  // Bounce
-$kortbane_gul: #F8E250;     // tidligere Grøn 1
-$kortbane_groen: #40BB65;   // tidligere Grøn 2
-$kortbane_turkis: #16DBDF;  // tidligere Blå 1
-$kortbane_blaa: #1B66DF;    // tidligere Blå 2
-$kortbane_lilla: #6556EA;   // tidligere Blå 3
+$kortbane_gul: #F8E250;     // Gul
+$kortbane_groen: #40BB65;   // Grøn
+$kortbane_turkis: #16DBDF;  // Turkis
+$kortbane_blaa: #1B66DF;    // Blå
+$kortbane_lilla: #6556EA;   // Lilla
 $kortbane_roed: #FF2C48;    // Rød
 $kortbane_sort: #151515;    // Sort
 
 /* Kobler farverne til banerne.
-   Navnene til venstre er banernes id fra public/popup.json – dem må du ikke ændre.
+   Navnene til venstre er banernes id – de er ens i Firebase (baner og mapfilter),
+   public/popup.json og koden. Dem må du ikke ændre.
+   Banerne er nummereret efter sværhedsgrad. Skifter en bane farve, rettes kun farven her.
    Sort og bounce er tegnede figurer på kortet, så deres farve bruges kun i popup'en.
-   Bruges i KortView.vue */
+   Brug: @each $id, $farve in c.$kort-bane-farver { ... } */
 $kort-bane-farver: (
   bounce: $kortbane_orange,
-  gron-1: $kortbane_gul,
-  gron-2: $kortbane_groen,
-  bla-1: $kortbane_turkis,
-  bla-2: $kortbane_blaa,
-  bla-3: $kortbane_lilla,
-  rod: $kortbane_roed,
-  sort: $kortbane_sort
+  bane-1: $kortbane_gul,
+  bane-2: $kortbane_groen,
+  bane-3: $kortbane_turkis,
+  bane-4: $kortbane_blaa,
+  bane-5: $kortbane_lilla,
+  bane-6: $kortbane_roed,
+  bane-7: $kortbane_sort
 );

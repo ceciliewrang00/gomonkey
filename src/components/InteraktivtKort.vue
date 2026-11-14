@@ -421,14 +421,14 @@ async function indlaesKort() {
     }
 
     const labelIds = [
-      'gron-1',
-      'gron-2',
-      'bla-1',
-      'bla-2',
-      'rod',
-      'sort',
+      'bane-1',
+      'bane-2',
+      'bane-3',
+      'bane-4',
+      'bane-6',
+      'bane-7',
       'bounce',
-      'bla-3'
+      'bane-5'
     ]
 
     svg.querySelectorAll('#Banner > g').forEach((gruppe, i) => {
@@ -440,7 +440,7 @@ async function indlaesKort() {
     })
 
     for (const [id, gruppeId] of [
-      ['sort', 'Free-Fall'],
+      ['bane-7', 'Free-Fall'],
       ['bounce', 'Bounce']
     ]) {
       const gruppe = svg.querySelector(`[id="${gruppeId}"]`)
@@ -533,7 +533,7 @@ async function indlaesKort() {
     sortKontur.setAttribute('height', boks.height + 20)
     sortKontur.setAttribute('rx', '18')
     sortKontur.setAttribute('class', 'aktivitet-kontur')
-    sortKontur.dataset.bane = 'sort'
+    sortKontur.dataset.bane = 'bane-7'
     svg.appendChild(sortKontur)
 
     nulstilKort()

@@ -1,6 +1,6 @@
 [
   {
-    "id": "gron-1",
+    "id": "bane-1",
     "navn": "Gul bane",
     "farve": "#F8E250",
     "type": "bane",
@@ -84,11 +84,11 @@
     ]
   },
   {
-    "id": "gron-2",
+    "id": "bane-2",
     "navn": "Grøn bane",
     "farve": "#40BB65",
     "type": "bane",
-    "beskrivelse": "Bygger videre på grøn 1 med lidt flere sjove udfordringer i lavere højde.",
+    "beskrivelse": "Bygger videre på den gule bane med lidt flere sjove udfordringer i lavere højde.",
     "svaerhedsgradTal": 2,
     "hoejdekravTal": 2,
     "adrenalinTal": 2,
@@ -144,7 +144,7 @@
     ]
   },
   {
-    "id": "bla-1",
+    "id": "bane-3",
     "navn": "Turkis bane",
     "farve": "#16DBDF",
     "type": "bane",
@@ -288,7 +288,7 @@
     ]
   },
   {
-    "id": "bla-2",
+    "id": "bane-4",
     "navn": "Blå bane",
     "farve": "#1B66DF",
     "type": "bane",
@@ -396,7 +396,7 @@
     ]
   },
   {
-    "id": "bla-3",
+    "id": "bane-5",
     "navn": "Lilla bane",
     "farve": "#6556EA",
     "type": "bane",
@@ -540,7 +540,7 @@
     ]
   },
   {
-    "id": "rod",
+    "id": "bane-6",
     "navn": "Rød bane",
     "farve": "#FF2C48",
     "type": "bane",
@@ -744,7 +744,7 @@
     ]
   },
  {
-    "id": "sort",
+    "id": "bane-7",
     "navn": "Sort bane",
     "farve": "#151515",
     "type": "aktivitet",

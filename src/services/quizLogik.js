@@ -6,11 +6,11 @@
 // 2. Inden for de tilladte baner afgør tryghed, erfaring og point, hvor man skal starte.
 //
 // Krav fra gomonkey.dk/praktisk-info og gomonkey.dk/forest-odense (grafikken "Højdekrav"):
-//   Bounce:  ingen krav
-//   Grøn:    min. 110 cm
-//   Blå:     min. 140 cm
-//   Rød:     min. 160 cm
-//   Sort:    min. 30 kg (frit fald, kun med instruktør)
+//   Bounce:                 ingen krav
+//   Gul og Grøn:            min. 110 cm
+//   Turkis, Blå og Lilla:   min. 140 cm
+//   Rød:                    min. 160 cm
+//   Sort:                   min. 30 kg (frit fald, kun med instruktør)
 //   Alle:    ingen klatring over 120 kg
 // Der er ingen alderskrav til banerne i Odense – alder har kun betydning for,
 // hvor mange voksne der skal være med (se GODT_AT_VIDE nedenfor).
@@ -29,37 +29,37 @@ export const RESULTATER = {
     titel: 'Start på Bounce',
     tekst:
       'Bounce er trampolinen mellem træerne, og her er der ingen krav til højde. Klatrebanerne kræver, at man er mindst 110 cm.',
-    videre: 'Når man er 110 cm, er Grøn 1 det første skridt op i træerne.',
+    videre: 'Når man er 110 cm, er Gul det første skridt op i træerne.',
   },
-  groen1: {
-    titel: 'Start på Grøn 1',
+  'bane-1': {
+    titel: 'Start på Gul',
     tekst:
-      'Grøn 1 er parkens laveste bane: 1,5 meter oppe, 30 meter lang, med 4 forhindringer og et kort svæv. Her kan man lære udstyret at kende i trygge rammer.',
-    videre: 'Går det godt, er Grøn 2 næste skridt.',
+      'Gul er parkens laveste bane: 1,5 meter oppe, 30 meter lang, med 4 forhindringer og et kort svæv. Her kan man lære udstyret at kende i trygge rammer.',
+    videre: 'Går det godt, er Grøn næste skridt.',
   },
-  groen2: {
-    titel: 'Start på Grøn 2',
+  'bane-2': {
+    titel: 'Start på Grøn',
     tekst:
-      'Grøn 2 går fra 1,5 op til 8 meters højde og har 8 forhindringer. Den er god, når man er klar til at komme lidt højere op i træerne.',
-    videre: 'Tag gerne en tur på Grøn 1 først som opvarmning.',
+      'Grøn går fra 1,5 op til 8 meters højde og har 8 forhindringer. Den er god, når man er klar til at komme lidt højere op i træerne.',
+    videre: 'Tag gerne en tur på Gul først som opvarmning.',
   },
-  blaa1: {
-    titel: 'Start på Blå 1',
+  'bane-3': {
+    titel: 'Start på Turkis',
     tekst:
-      'Blå 1 er 4–7 meter oppe, har 13 forhindringer og en svævebane på 96 meter. Der er sus i maven, mens man lærer udstyret at kende.',
-    videre: 'Går det godt, er Blå 2 og Blå 3 næste skridt.',
+      'Turkis er 4–7 meter oppe, har 13 forhindringer og en svævebane på 96 meter. Der er sus i maven, mens man lærer udstyret at kende.',
+    videre: 'Går det godt, er Blå og Lilla næste skridt.',
   },
-  blaa2: {
-    titel: 'Start på Blå 2',
+  'bane-4': {
+    titel: 'Start på Blå',
     tekst:
-      'Blå 2 kræver både styrke og balance: 11 forhindringer og tre svævebaner på op til 110 meter, 5–8 meter oppe.',
-    videre: 'Har du mod på mere bagefter, venter Blå 3 og Rød.',
+      'Blå kræver både styrke og balance: 11 forhindringer og tre svævebaner på op til 110 meter, 5–8 meter oppe.',
+    videre: 'Har du mod på mere bagefter, venter Lilla og Rød.',
   },
-  roed: {
+  'bane-6': {
     titel: 'Start på Rød',
     tekst:
       'Rød går helt op i 16 meters højde og har 18 forhindringer og et svæv på 126 meter. Her får du både høj puls og flot udsigt.',
-    videre: 'Er det første gang hos GoMonkey, så varm gerne op på en blå bane først.',
+    videre: 'Er det første gang hos GoMonkey, så varm gerne op på Turkis, Blå eller Lilla først.',
   },
 }
 
@@ -129,7 +129,7 @@ export function skalVises(sp, svar) {
 
 // Beregner den anbefalede startbane.
 // svar = brugerens svar, point = samlede point, graenser = { blaaFra, roedFra } fra admin.
-// Returnerer en nøgle fra RESULTATER, fx 'blaa1', eller null hvis svar mangler.
+// Returnerer en nøgle fra RESULTATER, fx 'bane-3', eller null hvis svar mangler.
 export function beregnBane(svar, point, graenser) {
   // Højden på den laveste, der skal klatre (se klatreHoejde ovenfor).
   const hoejde = klatreHoejde(svar)
@@ -152,24 +152,24 @@ export function beregnBane(svar, point, graenser) {
     return null
   }
 
-  // TRIN 2: 110–139 cm – kun de grønne baner.
+  // TRIN 2: 110–139 cm – kun Gul og Grøn.
   if (hoejde < KRAV.blaa) {
     // Første gang eller utryg: start på den laveste bane.
     if (erfaring === 0 || tryghed <= 1) {
-      return 'groen1'
+      return 'bane-1'
     }
-    return 'groen2'
+    return 'bane-2'
   }
 
-  // TRIN 3: 140 cm og derover – de blå baner er mulige.
-  // Et barn, der er meget utrygt ved højder, starter på Grøn 2.
+  // TRIN 3: 140 cm og derover – Turkis, Blå og Lilla er mulige.
+  // Et barn, der er meget utrygt ved højder, starter på Grøn.
   if (boernMed(svar) && tryghed === 0) {
-    return 'groen2'
+    return 'bane-2'
   }
 
-  // Utryg ved højder eller få point: rolig start på Blå 1.
+  // Utryg ved højder eller få point: rolig start på Turkis.
   if (tryghed <= 1 || point < graenser.blaaFra) {
-    return 'blaa1'
+    return 'bane-3'
   }
 
   // Rød kræver 160 cm, mange point, tryghed og at man har klatret flere gange.
@@ -179,10 +179,10 @@ export function beregnBane(svar, point, graenser) {
     tryghed >= 2 &&
     erfaring >= 2
   ) {
-    return 'roed'
+    return 'bane-6'
   }
 
-  return 'blaa2'
+  return 'bane-4'
 }
 
 // Finder, hvem en begrundelse handler om, så sætningen passer til svaret på "Hvem skal klatre?".
@@ -209,34 +209,34 @@ export function lavBegrundelse(bane, svar, point, graenser) {
     grunde.push(`${subjekt(svar, 'hoejde')} er under 110 cm, som klatrebanerne kræver.`)
     return grunde
   }
-  if ((bane === 'groen1' || bane === 'groen2') && hoejde < KRAV.blaa) {
-    grunde.push(`${subjekt(svar, 'hoejde')} er under 140 cm, så de blå baner er ikke mulige endnu.`)
+  if ((bane === 'bane-1' || bane === 'bane-2') && hoejde < KRAV.blaa) {
+    grunde.push(`${subjekt(svar, 'hoejde')} er under 140 cm, så Turkis, Blå og Lilla er ikke mulige endnu.`)
   }
-  if ((bane === 'blaa1' || bane === 'blaa2') && hoejde < KRAV.roed) {
+  if ((bane === 'bane-3' || bane === 'bane-4') && hoejde < KRAV.roed) {
     grunde.push(`${subjekt(svar, 'hoejde')} er under 160 cm, så Rød er ikke mulig endnu.`)
   }
 
   // Forklarer, hvorfor vi anbefaler en rolig start.
-  if (bane === 'groen1' || bane === 'groen2' || bane === 'blaa1') {
+  if (bane === 'bane-1' || bane === 'bane-2' || bane === 'bane-3') {
     if (erfaring === 0) {
       grunde.push(`${subjekt(svar, 'andet')} har ikke prøvet en klatrepark før.`)
     }
     if (tryghed <= 1) {
       grunde.push(`${subjekt(svar, 'andet')} har det ikke helt godt med højder.`)
     }
-    if (bane === 'blaa1' && tryghed > 1 && erfaring > 0 && point < graenser.blaaFra) {
+    if (bane === 'bane-3' && tryghed > 1 && erfaring > 0 && point < graenser.blaaFra) {
       grunde.push('Svarene peger på en rolig start frem for de sværeste baner.')
     }
   }
 
-  if (bane === 'blaa2') {
+  if (bane === 'bane-4') {
     grunde.push('Svarene viser, at man er tryg ved højder og gerne vil udfordres.')
     if (erfaring < 2 && hoejde >= KRAV.roed) {
       grunde.push('Rød anbefaler vi først, når man har klatret flere gange.')
     }
   }
 
-  if (bane === 'roed') {
+  if (bane === 'bane-6') {
     grunde.push('Svarene viser erfaring, tryghed ved højder og lyst til en stor udfordring.')
   }
 
@@ -245,8 +245,8 @@ export function lavBegrundelse(bane, svar, point, graenser) {
 
 // Næste skridt efter startbanen. Rød nævnes kun, hvis man er høj nok til den.
 export function lavVidere(bane, svar) {
-  if (bane === 'blaa2' && (klatreHoejde(svar) ?? 0) < KRAV.roed) {
-    return 'Har du mod på mere bagefter, venter Blå 3.'
+  if (bane === 'bane-4' && (klatreHoejde(svar) ?? 0) < KRAV.roed) {
+    return 'Har du mod på mere bagefter, venter Lilla.'
   }
   return RESULTATER[bane]?.videre ?? ''
 }
@@ -265,10 +265,10 @@ export function lavGruppeBesked(bane, svar) {
 
   if (
     svar.hvem?.hvem === 'gruppeBoern' &&
-    (bane === 'groen1' || bane === 'groen2' || bane === 'blaa1')
+    (bane === 'bane-1' || bane === 'bane-2' || bane === 'bane-3')
   ) {
     linjer.push(
-      'Anbefalingen passer til den laveste og mest utrygge, der skal klatre. De større i gruppen kan fortsætte på Blå (fra 140 cm) og Rød (fra 160 cm).'
+      'Anbefalingen passer til den laveste og mest utrygge, der skal klatre. De større i gruppen kan fortsætte på Turkis, Blå og Lilla (fra 140 cm) og Rød (fra 160 cm).'
     )
   }
 
@@ -303,7 +303,7 @@ export function lavFritfaldBesked(bane, svar) {
     return `${hvem} har lyst til frit fald, men har det ikke helt godt med højder. Tag en snak med en instruktør først.`
   }
 
-  if (bane === 'roed') {
+  if (bane === 'bane-6') {
     return 'Er der mod på mere efter Rød, slutter Sort bane med et frit fald fra op til 16 meters højde – altid sammen med en instruktør.'
   }
 
