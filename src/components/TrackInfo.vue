@@ -291,6 +291,8 @@ function faktaFor(bane) {
     line-height: 1.1;
     margin: 0;
     padding-top: 0;
+    // Samme farve som banen (og nummeret ved siden af)
+    color: var(--bane-farve);
 }
 
 .bane__beskrivelse {
