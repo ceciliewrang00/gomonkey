@@ -1,12 +1,12 @@
 <script setup>
 // KORTFILTER
 // Sidebaren til venstre for kortet, hvor man vælger, hvilke baner der skal fremhæves.
-// Banerne hentes fra Firebase og vises i tre grupper: grøn, blå og svære.
+// Banerne hentes fra Firebase og vises i én samlet liste.
 // Alle baner er synlige med det samme, og kortet opdateres, så snart man sætter et flueben
 // (de valgte bane-id'er sendes til KortView.vue med emit).
 // På mobil er filteret skjult bag en "Filtre"-knap og glider ind fra venstre.
 
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 
 // Databaseadresserne står samlet i api.js
 import { KORTFILTER_URL } from '@/services/api.js'
@@ -20,7 +20,7 @@ const valgteFiltre = ref([])
 // Er filteret åbent på mobil?
 const erAaben = ref(false)
 
-// Alle baner/grupper fra Firebase
+// Alle baner fra Firebase
 const banerListe = ref([])
 
 // true, mens banerne hentes ("Henter baner...")
@@ -79,35 +79,6 @@ async function hentBaner() {
 onMounted(() => {
   hentBaner()
 })
-//-------------------------------------------------------------------------------------------------------------
-
-
-//-----------------------------------GRUPPERNE--------------------------------------------------------------------------
-
-// Listen fra Firebase indeholder både hovedgrupper (fx id 'gron') og
-// underpunkter (fx 'gron-1', markeret med underpunkt: true).
-// Her beskrives, hvilke baner der hører til hvilken gruppe.
-// Bounce ligger under grøn, og sort (frit fald) ligger under svære baner
-const GRUPPER = [
-  { id: 'gron', hoererTil: b => b.id === 'bounce' || (b.underpunkt === true && b.id.startsWith('gron')) },
-  { id: 'bla', hoererTil: b => b.underpunkt === true && b.id.startsWith('bla') },
-  { id: 'svaer', hoererTil: b => b.underpunkt === true && (b.id === 'rod' || b.id === 'sort') },
-]
-
-// computed regner grupperne ud igen af sig selv, når banerListe ændrer sig.
-// Hver gruppe får sin overskrift (hoved) og sine baner. Grupper uden data springes over
-const grupper = computed(() =>
-  GRUPPER
-    .map(g => ({
-      id: g.id,
-      hoved: banerListe.value.find(b => b.id === g.id),
-      baner: banerListe.value.filter(g.hoererTil),
-    }))
-    .filter(g => g.hoved && g.baner.length > 0)
-)
-
-// Antal baner i alt (bruges i knappen på mobil)
-const antalBaner = computed(() => grupper.value.reduce((sum, g) => sum + g.baner.length, 0))
 //-------------------------------------------------------------------------------------------------------------
 
 
@@ -200,37 +171,31 @@ function togglerFilter() {
             </div>
           </label>
 
-          <!-- Én boks pr. gruppe (grøn, blå, svære). fieldset + legend samler gruppen for skærmlæsere -->
-          <fieldset v-for="gruppe in grupper" :key="gruppe.id" class="gruppe">
-            <!-- Gruppens navn (fx "Højder for alle") vises ikke, men skærmlæsere læser det stadig op -->
-            <legend class="sr-only">{{ gruppe.hoved.titel }}</legend>
-
-            <!-- Én række pr. bane. Hele rækken er en <label>, så man kan klikke hvor som helst på den -->
-            <label
-              v-for="bane in gruppe.baner"
-              :key="bane.id"
-              class="filter-item underpunkt"
-              :class="{ aktiv: valgteFiltre.includes(bane.id) }"
-            >
-              <input
-                type="checkbox"
-                :checked="valgteFiltre.includes(bane.id)"
-                @change="vaelgBane(bane.id, $event.target.checked)"
-              />
-              <div class="filter-tekst">
-                <div class="titel-linie">
-                  <span class="titel">{{ bane.titel }}</span>
-                </div>
-                <!-- Undertekst til venstre og sværhed til højre på samme linje.
-                     Begge vises kun, hvis banen har dem -->
-                <div v-if="bane.undertekst || bane.svaerhed" class="under-linie">
-                  <span v-if="bane.undertekst" class="undertekst">{{ bane.undertekst }}</span>
-                  <!-- Sværheds-mærke. Bruger .badge fra _badges.scss -->
-                  <span v-if="bane.svaerhed" class="badge ekstra-info">Niveau: {{ bane.svaerhed }}</span>
-                </div>
+          <!-- Én række pr. bane. Hele rækken er en <label>, så man kan klikke hvor som helst på den -->
+          <label
+            v-for="bane in banerListe"
+            :key="bane.id"
+            class="filter-item"
+            :class="{ aktiv: valgteFiltre.includes(bane.id) }"
+          >
+            <input
+              type="checkbox"
+              :checked="valgteFiltre.includes(bane.id)"
+              @change="vaelgBane(bane.id, $event.target.checked)"
+            />
+            <div class="filter-tekst">
+              <div class="titel-linie">
+                <span class="titel">{{ bane.titel }}</span>
               </div>
-            </label>
-          </fieldset>
+              <!-- Undertekst til venstre og sværhed til højre på samme linje.
+                   Begge vises kun, hvis banen har dem -->
+              <div v-if="bane.undertekst || bane.svaerhed" class="under-linie">
+                <span v-if="bane.undertekst" class="undertekst">{{ bane.undertekst }}</span>
+                <!-- Sværheds-mærke. Bruger .badge fra _badges.scss -->
+                <span v-if="bane.svaerhed" class="badge ekstra-info">Niveau: {{ bane.svaerhed }}</span>
+              </div>
+            </div>
+          </label>
 
         </div>
       </div>
@@ -240,7 +205,7 @@ function togglerFilter() {
         <button type="button" class="vis-kort-knap" @click="erAaben = false">
           <template v-if="valgteFiltre.length === 0">Vis alle baner på kortet</template>
           <template v-else-if="valgteFiltre.length === 1">Vis 1 bane på kortet</template>
-          <template v-else>Vis {{ valgteFiltre.length }} af {{ antalBaner }} baner på kortet</template>
+          <template v-else>Vis {{ valgteFiltre.length }} af {{ banerListe.length }} baner på kortet</template>
         </button>
       </div>
     </aside>
@@ -403,22 +368,11 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   padding: 0.5rem 0;
 }
 
-/* Alle rækker i én sammenhængende liste – ingen ekstra luft mellem grupperne */
+/* Alle rækker i én sammenhængende liste */
 .filter-liste {
   display: flex;
   flex-direction: column;
   gap: 0;
-}
-
-/* En gruppe (fx grøn) er bare en del af listen – ingen boks omkring.
-   fieldset har sin egen standard-styling (ramme og luft), som nulstilles her */
-.gruppe {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  min-width: 0;
-  border: none;
 }
 
 /* Én række i filteret (fx en bane) */
