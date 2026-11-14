@@ -5,7 +5,7 @@ const baneFarver = [
   { navn: 'Bounce', klasse: 'bounce' },
   { navn: 'Gul', klasse: 'bane-1' },
   { navn: 'Grøn', klasse: 'bane-2' },
-  { navn: 'Turkis', klasse: 'bane-3' },
+  { navn: 'Pink', klasse: 'bane-3' },
   { navn: 'Blå', klasse: 'bane-4' },
   { navn: 'Lilla', klasse: 'bane-5' },
   { navn: 'Rød', klasse: 'bane-6' },

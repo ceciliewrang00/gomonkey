@@ -145,8 +145,8 @@
   },
   {
     "id": "bane-3",
-    "navn": "Turkis bane",
-    "farve": "#16DBDF",
+    "navn": "Pink bane",
+    "farve": "#DF1685",
     "type": "bane",
     "beskrivelse": "Kommer længere op i trætoppene med sjove svævebaner og balancemomenter.",
     "svaerhedsgradTal": 3,
@@ -290,7 +290,7 @@
   {
     "id": "bane-4",
     "navn": "Blå bane",
-    "farve": "#1B66DF",
+    "farve": "#42C2FD",
     "type": "bane",
     "beskrivelse": "En populær bane med masser af fart og spændende udfordringer i mellemstor højde.",
     "svaerhedsgradTal": 3,
@@ -398,7 +398,7 @@
   {
     "id": "bane-5",
     "navn": "Lilla bane",
-    "farve": "#6556EA",
+    "farve": "#786AF6",
     "type": "bane",
     "beskrivelse": "En ekstra blå bane med fantastisk udsigt og sjove svæv.",
     "svaerhedsgradTal": 3,

@@ -8,7 +8,7 @@
 // Krav fra gomonkey.dk/praktisk-info og gomonkey.dk/forest-odense (grafikken "Højdekrav"):
 //   Bounce:                 ingen krav
 //   Gul og Grøn:            min. 110 cm
-//   Turkis, Blå og Lilla:   min. 140 cm
+//   Pink, Blå og Lilla:     min. 140 cm
 //   Rød:                    min. 160 cm
 //   Sort:                   min. 30 kg (frit fald, kun med instruktør)
 //   Alle:    ingen klatring over 120 kg
@@ -44,9 +44,9 @@ export const RESULTATER = {
     videre: 'Tag gerne en tur på Gul først som opvarmning.',
   },
   'bane-3': {
-    titel: 'Start på Turkis',
+    titel: 'Start på Pink',
     tekst:
-      'Turkis er 4–7 meter oppe, har 13 forhindringer og en svævebane på 96 meter. Der er sus i maven, mens man lærer udstyret at kende.',
+      'Pink er 4–7 meter oppe, har 13 forhindringer og en svævebane på 96 meter. Der er sus i maven, mens man lærer udstyret at kende.',
     videre: 'Går det godt, er Blå og Lilla næste skridt.',
   },
   'bane-4': {
@@ -59,7 +59,7 @@ export const RESULTATER = {
     titel: 'Start på Rød',
     tekst:
       'Rød går helt op i 16 meters højde og har 18 forhindringer og et svæv på 126 meter. Her får du både høj puls og flot udsigt.',
-    videre: 'Er det første gang hos GoMonkey, så varm gerne op på Turkis, Blå eller Lilla først.',
+    videre: 'Er det første gang hos GoMonkey, så varm gerne op på Pink, Blå eller Lilla først.',
   },
 }
 
@@ -161,13 +161,13 @@ export function beregnBane(svar, point, graenser) {
     return 'bane-2'
   }
 
-  // TRIN 3: 140 cm og derover – Turkis, Blå og Lilla er mulige.
+  // TRIN 3: 140 cm og derover – Pink, Blå og Lilla er mulige.
   // Et barn, der er meget utrygt ved højder, starter på Grøn.
   if (boernMed(svar) && tryghed === 0) {
     return 'bane-2'
   }
 
-  // Utryg ved højder eller få point: rolig start på Turkis.
+  // Utryg ved højder eller få point: rolig start på Pink.
   if (tryghed <= 1 || point < graenser.blaaFra) {
     return 'bane-3'
   }
@@ -210,7 +210,7 @@ export function lavBegrundelse(bane, svar, point, graenser) {
     return grunde
   }
   if ((bane === 'bane-1' || bane === 'bane-2') && hoejde < KRAV.blaa) {
-    grunde.push(`${subjekt(svar, 'hoejde')} er under 140 cm, så Turkis, Blå og Lilla er ikke mulige endnu.`)
+    grunde.push(`${subjekt(svar, 'hoejde')} er under 140 cm, så Pink, Blå og Lilla er ikke mulige endnu.`)
   }
   if ((bane === 'bane-3' || bane === 'bane-4') && hoejde < KRAV.roed) {
     grunde.push(`${subjekt(svar, 'hoejde')} er under 160 cm, så Rød er ikke mulig endnu.`)
@@ -268,7 +268,7 @@ export function lavGruppeBesked(bane, svar) {
     (bane === 'bane-1' || bane === 'bane-2' || bane === 'bane-3')
   ) {
     linjer.push(
-      'Anbefalingen passer til den laveste og mest utrygge, der skal klatre. De større i gruppen kan fortsætte på Turkis, Blå og Lilla (fra 140 cm) og Rød (fra 160 cm).'
+      'Anbefalingen passer til den laveste og mest utrygge, der skal klatre. De større i gruppen kan fortsætte på Pink, Blå og Lilla (fra 140 cm) og Rød (fra 160 cm).'
     )
   }
 
