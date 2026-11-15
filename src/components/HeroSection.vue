@@ -395,14 +395,12 @@ onUnmounted(() => {
     min-height: auto;
   }
 
-  // Mobil: billedet er hverken skubbet til højre eller tonet ud i venstre side
-  // (det gør det kun på desktop), så pigen på svævebanen kan ses.
-  // Det første tal i object-position flytter billedet vandret:
+  // Mobil: billedet er ikke skubbet til højre (det er det kun på desktop).
+  // Udtoningen i venstre side (mask-image) er den samme som på desktop, så teksten
+  // står på mørk baggrund. Det første tal i object-position flytter billedet vandret:
   // større tal = pigen længere til venstre, mindre tal = længere til højre
   .hero__billede {
-    object-position: 40% 30%;
-    -webkit-mask-image: none;
-    mask-image: none;
+    object-position: 30% 30%;
   }
 
   // Badget ville ligge oven på overskriften, når hero er så lav, så det skjules
