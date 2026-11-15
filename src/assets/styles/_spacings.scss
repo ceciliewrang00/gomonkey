@@ -8,13 +8,19 @@ $spacing-xxl: clamp(3rem, 6vw, 3.5rem);
 $spacing-xxxl: clamp(4rem, 7vw, 4rem);
 $spacing-xxxxl: clamp(5rem, 8vw, 4.5rem);
 
+/* --- Luft i top og bund af hver sektion ---
+   Bruges i section-reglen i main.scss, introen i TrackInfo og Footer.
+   Mobil: 3rem. Vokser med skærmen (6vw) og bliver højst 6rem på desktop.
+   Det sidste tal styrer desktop – større tal = mere luft på store skærme.
+   Mobil og små skærme ændres ikke, fordi 6vw først bliver større end før over ca. 930px */
+$sektion-luft: clamp(3rem, 6vw, 6rem);
+
 /* --- margin --- */
 $margin: clamp(1.5rem, 3vw, 50rem);
 
 /* --- Indholdsbredde ---
-   Bredderne på tekst og billede i forsidens sektioner.
-   Indholdsbredden er præcis tekst + mellemrum + billede, så der ikke kommer
-   ekstra luft imellem dem. Ændres tekst- eller billedbredden, følger alt med */
-$tekst-bredde: 40rem;
-$billede-bredde: clamp(20rem, 30vw, 35rem);
-$indhold-bredde: calc(#{$tekst-bredde} + #{$spacing-xl} + #{$billede-bredde});
+   Hvor bredt indholdet højst må være på store skærme. Luften til siderne er resten
+   af skærmen delt ligeligt i begge sider (se .forside > section i main.scss).
+   Større tal = mindre luft i siderne på desktop. Mobil påvirkes ikke.
+   80rem = 1280px, så en 1440px skærm får 80px luft i hver side */
+$indhold-bredde: 80rem;

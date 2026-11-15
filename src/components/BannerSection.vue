@@ -29,7 +29,7 @@ const BOOK_URL = 'https://gomonkey.dk'
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  min-height: clamp(20rem, 50vh, 30rem);
+  // Ingen fast højde – sektionen er så høj som indholdet plus luften fra section-reglen i main.scss
   display: flex;
   align-items: center;
   color: c.$primary_light25;

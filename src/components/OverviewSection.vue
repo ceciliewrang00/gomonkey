@@ -65,8 +65,8 @@ const baneFarver = [
 
 #overblik {
   @include m.section-black100;
-  // Kun top – siderne styres af .forside > section i main.scss
-  padding-top: s.$spacing-xxl;
+  // Luften i top og sider kommer fra section-reglen i main.scss.
+  // Ingen luft i bunden, så sektionen går direkte over i TrackPickerSection (også sort)
   padding-bottom: 0;
 
   // Tekst 2/5 til venstre, kort 3/5 til højre
@@ -161,19 +161,23 @@ const baneFarver = [
     color: rgba(c.$primary_light25, 0.7);
   }
 
-  // Mærkerne står side om side og bryder over på næste linje (flex-wrap)
+  // 4 mærker pr. linje i lige brede kolonner, så de står præcis under hinanden,
+  // uanset hvor langt navnet er
   .farve-liste {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.4rem;
     list-style: none;
     margin: 0;
     padding: 0;
 
-    // Ét mærke pr. bane: svag lys baggrund med runde hjørner
+    // Ét mærke pr. bane: svag lys baggrund med runde hjørner.
+    // Fylder hele kolonnens bredde, så alle mærker er lige brede
     li {
-      display: inline-flex;
+      display: flex;
       align-items: center;
+      min-width: 0;
+      white-space: nowrap;
       gap: 0.4rem;
       padding: 0.3rem 0.75rem 0.3rem 0.55rem;
       border-radius: 2rem;

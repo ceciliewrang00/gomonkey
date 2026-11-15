@@ -113,7 +113,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     <div id="bane-info" class="baner-intro">
         <!-- Introteksten. Står til venstre for forklaringsboksen på desktop og over den på mobil -->
         <div class="baner-intro__tekst">
-            <span class="badge badge--dark">Baner i Forrest Odense</span>
+            <span class="badge baner-intro__badge">Baner i Forrest Odense</span>
             <h2><span class="light">Find den bane - </span> <br>der passer til dig</h2>
             <p>
                 Banerne står i rækkefølge efter sværhedsgrad – fra de letteste, hvor alle kan være med,
@@ -278,12 +278,13 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     align-items: flex-start;
     gap: s.$spacing-s;
     text-align: left;
-    // Luft i bunden, så der er god afstand ned til den første bane
-    padding-block: s.$spacing-xxl s.$spacing-xl;
+    // Samme luft i top og bund som sektionerne (se section i main.scss).
+    // Introen er en div og ikke en section, så den skal have det sat her
+    padding-block: s.$sektion-luft;
     padding-inline: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
-    // Lys baggrund, der adskiller introen fra banerne (som har grøn baggrund).
-    // Så kan man se, at introen er overskriften, og at listen med baner starter under den
-    background-color: c.$primary_light25;
+    // Samme grønne baggrund som banerne, så introen hører med til sektionen.
+    // Den tynde streg over den første bane adskiller introen fra listen
+    background-color: c.$forest_green25;
     scroll-margin-top: 5rem; // Så den sticky header ikke dækker overskriften
 
     h2 {
@@ -304,6 +305,15 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 }
 
 // Badge, overskrift og tekst under hinanden
+// Badget: ingen baggrund, kun en mørk kant og mørk tekst – samme stil som badgerne i
+// OverviewSection og FAQ, bare mørk, fordi baggrunden her er lys.
+// Udseendet kommer fra .badge i _badges.scss – her sættes kun farverne og kanten
+.baner-intro__badge {
+    --badge-bg: transparent;
+    --badge-color: #{c.$primary_black100};
+    border: 1.5px solid c.$primary_black100;
+}
+
 .baner-intro__tekst {
     display: flex;
     flex-direction: column;
@@ -338,10 +348,10 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     box-sizing: border-box;
     margin-top: s.$spacing-xs;
     padding: s.$spacing-s;
-
+    // Mørkegrøn boks med lys tekst
     border-radius: 1rem;
-    background-color: c.$forest_green25;
-    color: c.$primary_black100;
+    background-color: c.$primary_darkgreen;
+    color: c.$primary_light25;
 }
 
 // Overskriften i forklaringsboksen
@@ -368,12 +378,14 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     list-style: none;
     padding: 0;
 
-    // Ét kort pr. niveau: mørkegrønt med lys tekst ligesom faktaboksene
+    // Ét kort pr. niveau: samme lyse grønne baggrund som banerne og mørk tekst.
+    // Så ser bjælken helt ens ud her og på banerne
+    // (de mørkegrønne trin ville forsvinde direkte på den mørkegrønne boks)
     > li {
         padding: 0.9rem 1rem 1rem;
         border-radius: 0.75rem;
-        background-color: c.$primary_darkgreen;
-        color: c.$primary_light25;
+        background-color: c.$forest_green25;
+        color: c.$primary_black100;
     }
 
     .trin-bjaelke {
@@ -390,7 +402,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         margin: 0.25rem 0 0;
         font-size: 0.85rem;
         line-height: 1.45;
-        color: c.$primary_light25;
+        color: c.$primary_black100;
     }
 }
 
@@ -423,14 +435,8 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     border-top: 1px solid rgba(c.$primary_darkgreen, 0.25);
 
     &:last-of-type {
-        padding-bottom: s.$spacing-xxl;
+        padding-bottom: s.$sektion-luft;
     }
-}
-
-// Ingen streg over den første bane (Bounce) – den står lige under introen.
-// "+" = den bane, der kommer lige efter introen
-.baner-intro + .bane {
-    border-top: none;
 }
 
 /* --- Kortet --- */
@@ -667,7 +673,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 }
 
 /* --- Trin-bjælke (bruges både på banerne og i forklaringen) ---
-   Tre lige brede trin med lidt luft imellem. Fyldte trin er grønne, tomme trin er lyse.
+   Tre lige brede trin med lidt luft imellem. Fyldte trin er mørkegrønne, tomme trin er lyse.
    Samme farve på alle baner og i forklaringen, så de ser ens ud.
    Ret her, så ændres bjælken begge steder */
 .trin-bjaelke {
@@ -691,7 +697,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     }
 
     .trin-bjaelke__trin.er-fyldt {
-        background-color: c.$forest_green75;
+        background-color: c.$primary_darkgreen;
     }
 }
 

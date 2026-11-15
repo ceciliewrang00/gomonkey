@@ -40,8 +40,7 @@ $pink: c.$forest_pink100;
 
 #baner {
   @include m.section-black100;
-  // Kun top/bund – siderne styres af .forside > section i main.scss
-  padding-block: s.$spacing-xxl;
+  // Luften i top, bund og sider kommer fra section-reglen i main.scss
 
   .baner-container {
     display: grid;
@@ -128,15 +127,17 @@ $pink: c.$forest_pink100;
   gap: s.$spacing-s;
 }
 
-// Knappen er .button-primary fra _buttons.scss.
-// Her overskrives kun farverne: lyserød baggrund og sort tekst
+// Knappen er .button-primary fra _buttons.scss (form, størrelse og skrift).
+// Her overskrives kun farverne: lyserød baggrund og sort tekst.
+// Hover er den samme som på .button-primary: lilla baggrund, her med lys tekst
 .knap {
   background-color: $pink;
   color: c.$primary_black100;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, color 0.2s;
 
   &:hover {
-    background-color: c.$forest_pink75;
+    background-color: c.$secondary_purple100;
+    color: c.$primary_light25;
   }
 }
 

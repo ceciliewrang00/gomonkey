@@ -137,7 +137,8 @@ $linje: rgba(239, 233, 229, 0.08);
 
 // Samme sidemargin som forsidens sektioner (se .forside > section i main.scss)
 .footer__inner {
-  padding-block: s.$spacing-xxxxl s.$spacing-xxl;
+  // Samme luft i top og bund som sektionerne (se section i main.scss)
+  padding-block: s.$sektion-luft;
   padding-inline: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
 }
 
