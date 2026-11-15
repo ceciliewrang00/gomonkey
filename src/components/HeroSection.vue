@@ -166,7 +166,7 @@ onUnmounted(() => {
   width: 100%;
   height: 115%;
   object-fit: cover;
-  object-position: 50% 30%;
+  object-position: 30% 40%;
   transform: translate3d(6%, 0, 0);
   -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 10%, #000 55%);
   mask-image: linear-gradient(90deg, transparent 0%, transparent 10%, #000 55%);
@@ -393,10 +393,10 @@ onUnmounted(() => {
     min-height: auto;
   }
 
-  // Billedet rykkes til højre, så pigen på svævebanen står ude til højre
-  // og ikke gemmer sig bag overskriften. Mindre tal = længere til højre
+  // Billedet er rykket lidt til højre, så pigen på svævebanen ikke gemmer sig
+  // bag overskriften. Mindre tal = billedet længere til højre, større = længere til venstre
   .hero__billede {
-    object-position: 15% 30%;
+    object-position: 30% 30%;
   }
 
   // Badget ville ligge oven på overskriften, når hero er så lav, så det skjules
