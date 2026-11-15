@@ -452,7 +452,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 .bane {
     padding-block: 0;
     background-color: c.$forest_green25;
-    border-top: 1px solid rgba(c.$primary_darkgreen, 0.25);
+  
 
     &:last-of-type {
         padding-bottom: s.$sektion-luft;
@@ -546,7 +546,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     align-items: baseline;
     gap: s.$spacing-s;
     padding-bottom: s.$spacing-s;
-    border-bottom: 1px solid var(--bane-farve);
+    border-bottom: 5px solid var(--bane-farve);
 }
 
 .bane__navn {

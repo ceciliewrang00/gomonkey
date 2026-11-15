@@ -98,7 +98,7 @@ onUnmounted(() => {
 
       <h1 class="hero__titel">
         Hvor højt<br>
-tør du?
+        tør du?
       </h1>
 
       <p class="hero__undertitel">Klatring, svæv og frit fald midt i skoven</p>
