@@ -10,13 +10,13 @@ const isOpen = ref(false)
 
 <template>
   <header>
-      <a href="https://gomonkey.dk" class="logo-link">
+      <a href="#" class="logo-link">
         <img src="@/assets/images/logo.svg" alt="GoMonkey – se Forest lokationer">
       </a>
       <div class="menu">
         <nav :class="{ open: isOpen }">
           <BaseButton variant="header" href="#">Cave</BaseButton>
-          <BaseButton variant="header" href="https://gomonkey.dk/forest-lokationer/">Forest</BaseButton>
+          <BaseButton variant="header" href="#">Forest</BaseButton>
           <BaseButton variant="header" href="#">Alt godt</BaseButton>
           <BaseButton variant="header" href="#">EAN</BaseButton>
         </nav>

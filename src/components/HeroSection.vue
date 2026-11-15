@@ -19,20 +19,34 @@ const heroEl = ref(null)
 const billedeEl = ref(null)
 const wireEl = ref(null)
 
-const TRISSE_START = 0.62
-const TRISSE_SLUT = 0.78
+// Trisserne på wiren. Hver har sin egen tekst og sit eget stykke af wiren
+// (0 = wirens start til venstre, 1 = slutningen til højre).
+// Trissen starter ved "start" og glider hen til "slut", mens man scroller forbi hero.
+// titel: null = antallet af baner fra Firebase, fx "8 klatrebaner"
+// snor: hvor langt badget hænger under wiren (længere = lavere)
+// vip: hvor skævt badget hænger, som om det har sat i sving (0deg = lige)
+const TRISSER = [
+  { id: 'svaev', titel: '126 m svæv', under: 'parkens længste', start: 0.7, slut: 0.73, snor: '2.6rem', vip: '8deg' },
+  { id: 'baner', titel: null, under: 'Næste stop: trætoppene', start: 0.88, slut: 0.91, snor: '4.25rem', vip: '-2deg' },
+]
+const trisseEls = ref([])
 
 let roligBevaegelse = false
 let ventendeFrame = null
 
-function placerTrisse(fremskridt) {
+// Flytter hver trisse hen til sit punkt på wiren.
+// Wiren tegnes i et 0–100-koordinatsystem, så punktet kan bruges direkte som procent
+function placerTrisser(fremskridt) {
   const wire = wireEl.value
-  const hero = heroEl.value
-  if (!wire || !hero) return
+  if (!wire) return
   const laengde = wire.getTotalLength()
-  const punkt = wire.getPointAtLength(laengde * (TRISSE_START + (TRISSE_SLUT - TRISSE_START) * fremskridt))
-  hero.style.setProperty('--trisse-x', `${punkt.x}%`)
-  hero.style.setProperty('--trisse-y', `${punkt.y}%`)
+  trisseEls.value.forEach((el) => {
+    const trisse = TRISSER.find((t) => t.id === el.dataset.trisse)
+    if (!trisse) return
+    const punkt = wire.getPointAtLength(laengde * (trisse.start + (trisse.slut - trisse.start) * fremskridt))
+    el.style.setProperty('--trisse-x', `${punkt.x}%`)
+    el.style.setProperty('--trisse-y', `${punkt.y}%`)
+  })
 }
 
 function opdaterVedScroll() {
@@ -49,7 +63,7 @@ function opdaterVedScroll() {
   if (!roligBevaegelse && billedeEl.value) {
     billedeEl.value.style.transform = `translate3d(6%, ${scroll * 0.25}px, 0)`
   }
-  placerTrisse(roligBevaegelse ? 0 : fremskridt)
+  placerTrisser(roligBevaegelse ? 0 : fremskridt)
 }
 
 function vedScroll() {
@@ -77,15 +91,24 @@ onUnmounted(() => {
     <div class="hero__gradient" aria-hidden="true"></div>
 
     <svg class="hero__wire" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-      <path ref="wireEl" d="M -2 4 Q 48 26 102 30" />
+      <path ref="wireEl" d="M -2 2 Q 45 9 102 15" />
     </svg>
 
-    <div class="hero__trisse">
+    <!-- Badges, der hænger i trisser på wiren. Teksterne står i TRISSER i scriptet -->
+    <div
+      v-for="trisse in TRISSER"
+      :key="trisse.id"
+      ref="trisseEls"
+      :data-trisse="trisse.id"
+      class="hero__trisse"
+      :class="`hero__trisse--${trisse.id}`"
+      :style="{ '--snor': trisse.snor, '--vip': trisse.vip }"
+    >
       <span class="hero__trisse-hjul" aria-hidden="true"></span>
       <span class="hero__trisse-snor" aria-hidden="true"></span>
       <p class="hero__badge">
-        <strong>{{ baner.length || 8 }} klatrebaner</strong>
-        <span>Næste stop: trætoppene</span>
+        <strong>{{ trisse.titel ?? `${baner.length || 8} klatrebaner` }}</strong>
+        <span>{{ trisse.under }}</span>
       </p>
     </div>
 
@@ -128,7 +151,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center; /* Lodret centreret i højden */
   box-sizing: border-box;
-  min-height: clamp(640px, 100vh, 750px);
+  min-height: clamp(640px, 100vh, 70px);
   padding-top: s.$sektion-luft;
   padding-bottom: s.$spacing-xl;
   background-color: c.$primary_black100;
@@ -186,8 +209,24 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: translate(-50%, -0.45rem);
+  // Drejer om hjulet (toppen), så snor og badge hænger skævt som et pendul.
+  // --vip sættes pr. trisse i TRISSER
+  transform-origin: 50% 0.45rem;
+  transform: translate(-50%, -0.45rem) rotate(var(--vip, 0deg));
   transition: left 0.4s ease-out, top 0.4s ease-out;
+  // Svinger en lille smule frem og tilbage omkring sin skæve vinkel
+  animation: svinge 4.5s ease-in-out infinite;
+}
+
+// Den anden trisse svinger i sit eget tempo, så de ikke bevæger sig i takt
+.hero__trisse--baner {
+  animation-duration: 5.5s;
+  animation-delay: -2s;
+}
+
+@keyframes svinge {
+  0%, 100% { transform: translate(-50%, -0.45rem) rotate(calc(var(--vip, 0deg) - 2deg)); }
+  50% { transform: translate(-50%, -0.45rem) rotate(calc(var(--vip, 0deg) + 2deg)); }
 }
 
 .hero__trisse-hjul {
@@ -200,7 +239,7 @@ onUnmounted(() => {
 
 .hero__trisse-snor {
   width: 2px;
-  height: 1.75rem;
+  height: var(--snor, 1.75rem); // Længden sættes pr. trisse i TRISSER
   background-color: c.$primary_light25;
 }
 
@@ -354,6 +393,12 @@ onUnmounted(() => {
     min-height: auto;
   }
 
+  // Billedet rykkes til højre, så pigen på svævebanen står ude til højre
+  // og ikke gemmer sig bag overskriften. Mindre tal = længere til højre
+  .hero__billede {
+    object-position: 15% 30%;
+  }
+
   // Badget ville ligge oven på overskriften, når hero er så lav, så det skjules
   .hero__trisse {
     display: none;
@@ -374,12 +419,18 @@ onUnmounted(() => {
     display: none;
   }
 
+  // Kun "klatrebaner"-badget vises her – ellers ville de to ligge oven på hinanden
+  .hero__trisse--svaev {
+    display: none;
+  }
+
   .hero__trisse {
     left: auto;
     right: s.$spacing-m;
     top: s.$spacing-m;
     transform: none;
     transition: none;
+    animation: none; // Står fast her, så den skal ikke svinge
   }
 }
 
@@ -388,8 +439,10 @@ onUnmounted(() => {
     transform: translate3d(6%, 0, 0) !important;
   }
 
+  // Ingen svingen – badgen hænger bare stille i sin skæve vinkel
   .hero__trisse {
     transition: none;
+    animation: none;
   }
 }
 </style>

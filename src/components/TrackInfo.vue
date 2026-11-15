@@ -74,13 +74,19 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 </script>
 
 <template>
+    <!-- En lyserød bue i højre side, der sidder hen over overgangen fra banner-sektionen
+         (lige over) til introen. Kun pynt, så skærmlæsere springer den over -->
+    <div class="sten-samling" aria-hidden="true">
+        <span class="sten-samling__sten sten-samling__sten--bue"></span>
+    </div>
+
     <!-- Intro over banerne. id="bane-info", så "Se banerne"-knapperne linker hertil.
          Det er en div og ikke en <header>, fordi header har sit eget layout i main.scss -->
     <div id="bane-info" class="baner-intro">
         <!-- Introteksten. Står til venstre for forklaringsboksen på desktop og over den på mobil -->
         <div class="baner-intro__tekst">
             <span class="badge baner-intro__badge">Baner i Forrest Odense</span>
-            <h2><span class="light">Find den bane - </span> <br>der passer til dig</h2>
+            <h2><span class="light">Find den bane - </span><br>der passer til dig</h2>
             <p>
                 Banerne står i rækkefølge efter sværhedsgrad – fra de letteste, hvor alle kan være med,
                 til de vildeste, der kræver mod og erfaring.
@@ -92,7 +98,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         <!-- Forklaring af sværhedsbjælken, som står på hver bane længere nede.
              Står her ét sted, så man ikke selv skal gætte, hvad bjælken betyder -->
         <section id="skala-forklaring" class="skala-forklaring" aria-labelledby="skala-titel">
-            <h3 id="skala-titel" class="skala-titel">Sådan læser du sværhedsgraden</h3>
+            <h4 id="skala-titel" class="skala-titel">Sådan læser du sværhedsgraden</h4>
             <p class="skala-tekst">
                 Bjælken på hver bane har tre trin, der viser, hvor svær den er i forhold til parkens andre baner.
                 Jo flere trin der er fyldt ud, jo sværere er banen.
@@ -115,13 +121,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                 </li>
             </ul>
         </section>
-    </div>
-
-    <!-- To sten samlet, der sidder hen over overgangen mellem introen og banerne
-         (samme idé som på gomonkey.dk). Kun pynt, så skærmlæsere springer dem over -->
-    <div class="sten-samling" aria-hidden="true">
-        <span class="sten-samling__sten sten-samling__sten--bue"></span>
-        <span class="sten-samling__sten sten-samling__sten--rund"></span>
     </div>
 
     <p v-if="loading" class="status">Henter baner...</p>
@@ -262,9 +261,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     scroll-margin-top: 5rem; // Så den sticky header ikke dækker overskriften
 
     h2 {
-        font-size: clamp(2rem, 4vw, 2.75rem);
-        font-weight: 800;
-        line-height: 1.15;
+        
         padding-top: 0;
 
         // "Find den bane" står tyndt, resten fedt
@@ -288,6 +285,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     border: 1.5px solid c.$primary_black100;
 }
 
+// Badge, overskrift og tekst under hinanden
 .baner-intro__tekst {
     display: flex;
     flex-direction: column;
@@ -296,21 +294,18 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 }
 
 // Desktop: introteksten til venstre og forklaringsboksen til højre.
-// Boksen får lidt mere plads (1.2fr), da den har tre kort ved siden af hinanden
+// Boksen får mere plads (2fr), da den har tre kort ved siden af hinanden.
+// end = boksen står nederst, så dens bund flugter med den sidste linje tekst til venstre
 @media (min-width: 900px) {
     .baner-intro {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
         column-gap: s.$spacing-xl;
-        // stretch = forklaringsboksen bliver lige så høj som teksten til venstre,
-        // så toppen og bunden flugter
-    
+        align-items: end;
     }
 
-    // Indholdet i boksen står lodret i midten af den højere boks
     .baner-intro .skala-forklaring {
         margin-top: 0;
-        justify-content: center;
     }
 }
 
@@ -397,13 +392,13 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     }
 }
 
-/* --- To sten mellem introen og banerne ---
-   Rækken har ingen højde, så den ikke skubber noget. Stenene centreres på stregen
-   over den første bane (translateY(-50%)), så de sidder halvt i introen og halvt i banerne.
-   Samme sidemargin som resten, og stenene står ude til højre, hvor den første bane har tom plads.
-   Formerne er sten4.svg og sten_1.svg fra public, brugt som maske, så de kan få en farve.
-   Farverne følger sidens design: lyserød som i hero og knapperne,
-   mørkegrøn som forklaringsboksen lige over */
+/* --- Bue mellem banner-sektionen og introen ---
+   Rækken har ingen højde, så den ikke skubber noget. Buen sidder hen over overgangen
+   fra banner-sektionen (lige over) til introen – mest oppe i banneret, så den ikke
+   dækker forklaringsboksen. Den står helt ude i højre side og er en smule skåret af kanten.
+   Formen er sten4.svg fra public, brugt som maske, så den kan få en farve (lyserød).
+   overflow-x: clip skærer det af, der stikker ud til siden (så siden ikke kan scrolles
+   sidelæns), mens buen stadig må stikke op og ned over overgangen (overflow-y: visible) */
 .sten-samling {
     position: relative;
     z-index: 1;
@@ -411,33 +406,25 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     display: flex;
     justify-content: flex-end;
     align-items: flex-start;
-    gap: 2rem;
-    padding-inline: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
+    overflow-x: clip;
+    overflow-y: visible;
 }
 
 .sten-samling__sten {
     display: block;
+    flex-shrink: 0;
 }
 
-// Stor lyserød bue (sten4), spejlvendt så åbningen vender mod højre.
-// Sidder mest under stregen – kun den øverste del stikker op i introen
+// Stor lyserød bue (sten4), spejlvendt så åbningen vender ind mod siden.
+// Den negative margin skubber en lille del af buen ud over højre kant
 .sten-samling__sten--bue {
-    width: clamp(6rem, 11vw, 9rem);
+    width: clamp(8rem, 15vw, 13rem);
     aspect-ratio: 42.71 / 40.91;
+    margin-right: calc(clamp(8rem, 15vw, 13rem) * -0.15);
     background-color: c.$forest_pink100;
     -webkit-mask: url('/sten4.svg') center / contain no-repeat;
     mask: url('/sten4.svg') center / contain no-repeat;
-    transform: translateY(-38%) scaleX(-1);
-}
-
-// Mindre mørkegrøn rund sten (sten_1) ved siden af – let drejet og centreret på stregen
-.sten-samling__sten--rund {
-    width: clamp(3rem, 5vw, 4.25rem);
-    aspect-ratio: 42.25 / 48.78;
-    background-color: c.$primary_darkgreen;
-    -webkit-mask: url('/sten_1.svg') center / contain no-repeat;
-    mask: url('/sten_1.svg') center / contain no-repeat;
-    transform: translateY(-50%) rotate(-15deg);
+    transform: translateY(-62%) scaleX(-1);
 }
 
 .status {
