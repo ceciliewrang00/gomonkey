@@ -1,14 +1,15 @@
+@use 'fonts' as ft;
 
 @use 'spacings' as s;
 h1 {
-    font-family: "Inter", sans-serif;
+    font-family: ft.$font;
     font-weight: 900;
     font-size: 64px;
     margin: 0;
 }
 
 h2 {
-    font-family: "Inter", sans-serif;
+    font-family: ft.$font;
     font-weight: 900;
     font-size: 40px;
     margin: 0;
@@ -16,7 +17,7 @@ h2 {
 }
 
 h3 {
-    font-family: "Inter", sans-serif;
+    font-family: ft.$font;
     font-weight: 400;
     font-size: 24px;
     margin: 0;
@@ -24,20 +25,20 @@ h3 {
 }
 
 h4 {
-    font-family: "Inter", sans-serif;
+    font-family: ft.$font;
     font-weight: 300;
     font-size: 24px;
     margin: 0;
 }
 
 label {
-    font-family: "Inter", sans-serif;
+    font-family: ft.$font;
     font-weight: 300;
     font-size: clamp(1rem, 1.5vw, 1.25rem);
 }
 
 p {
-    font-family: "Inter", sans-serif;
+    font-family: ft.$font;
     font-weight: 300;
     font-size: 18px;
     line-height: 1.6;
@@ -48,28 +49,28 @@ ul {
 }
 
 .text {
-    font-family: "Inter", sans-serif;
+    font-family: ft.$font;
     font-weight: 300;
     font-size: 16px;
     line-height: 1.6;
 }
 
 li {
-    font-family: "Inter", sans-serif;
+    font-family: ft.$font;
     font-weight: 300;
     font-size: clamp(1rem, 1.5vw, 1.25rem);
     line-height: 1.6;
 }
 
 @mixin button {
-    font-family: "Inter", sans-serif;
+    font-family: ft.$font;
     font-weight: 900;
     font-size: 1rem;
     text-decoration: none;
 }
 
 @mixin button_header {
-    font-family: "Inter", sans-serif;
+    font-family: ft.$font;
     font-weight: 500;
     font-size: clamp(1rem, 1.5vw, 2rem);
 }

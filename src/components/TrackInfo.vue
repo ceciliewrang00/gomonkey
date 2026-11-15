@@ -322,18 +322,21 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 }
 
 // Desktop: introteksten til venstre og forklaringsboksen til højre.
-// Boksen får lidt mere plads (1.2fr), da den har tre kort ved siden af hinanden.
-// align-items: center centrerer teksten lodret ud for boksen
+// Boksen får lidt mere plads (1.2fr), da den har tre kort ved siden af hinanden
 @media (min-width: 900px) {
     .baner-intro {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         column-gap: s.$spacing-xl;
-        align-items: center;
+        // stretch = forklaringsboksen bliver lige så høj som teksten til venstre,
+        // så toppen og bunden flugter
+        align-items: stretch;
     }
 
+    // Indholdet i boksen står lodret i midten af den højere boks
     .baner-intro .skala-forklaring {
         margin-top: 0;
+        justify-content: center;
     }
 }
 

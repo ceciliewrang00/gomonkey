@@ -1,3 +1,4 @@
+@use 'fonts' as ft;
 @use 'colors' as c;
 
 /* --- BADGES ---
@@ -14,10 +15,10 @@
     align-self: flex-start; // Bliver ikke strakt ud i flex-kolonner
     width: fit-content;
     padding: 0.6rem 1rem;
-    border-radius: 2rem;
+    border-radius: 1rem;
     background-color: var(--badge-bg, #{c.$forest_pink100});
     color: var(--badge-color, #{c.$primary_black100});
-    font-family: "Inter", sans-serif;
+    font-family: ft.$font;
     font-size: 0.85rem;
     font-weight: 700;
     letter-spacing: 0.05em;

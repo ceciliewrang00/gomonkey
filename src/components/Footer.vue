@@ -106,6 +106,7 @@ const aar = new Date().getFullYear()
 </template>
 
 <style lang="scss" scoped>
+@use '@/assets/styles/fonts' as ft;
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
 
@@ -116,7 +117,7 @@ $linje: rgba(239, 233, 229, 0.08);
   background-color: c.$primary_black100;
   color: $tekst;
   border-top: 1px solid $linje;
-  font-family: "Inter", sans-serif;
+  font-family: ft.$font;
 
   a {
     color: inherit;

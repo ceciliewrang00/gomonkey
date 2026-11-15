@@ -39,6 +39,7 @@ function haandterFilterAendring(nytFilter) {
      Alt ligger under .kort-app, så intet rammer resten af sitet (admin, forside osv.).
      Farverne kommer fra _colors.scss, så kortet passer til resten af siderne -->
 <style lang="scss">
+@use '@/assets/styles/fonts' as ft;
 @use '@/assets/styles/colors' as c;
 
 // Kortets egen baggrundsfarve. Den er ikke en del af farvepaletten,
@@ -64,7 +65,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   display: flex;
   gap: 0;
   overflow: hidden;
-  font-family: "Inter", sans-serif;
+  font-family: ft.$font;
   color: c.$primary_black100;
   background: c.$primary_light25;
   font-synthesis: none;

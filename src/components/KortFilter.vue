@@ -213,6 +213,7 @@ function togglerFilter() {
 </template>
 
 <style lang="scss" scoped>
+@use '@/assets/styles/fonts' as ft;
 // Farverne kommer fra _colors.scss, så filteret passer til resten af siderne
 @use '@/assets/styles/colors' as c;
 
@@ -302,7 +303,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   z-index: 100;
   transition: left 0.3s ease-in-out;
   overflow-y: auto;
-  font-family: "Inter", sans-serif;
+  font-family: ft.$font;
   color: c.$primary_black100;
 }
 

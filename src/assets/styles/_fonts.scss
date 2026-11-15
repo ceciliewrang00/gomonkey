@@ -1,0 +1,8 @@
+/* --- FONT ---
+   Sidens font. Bruges alle steder med:  font-family: ft.$font;
+   (i en komponent: @use '@/assets/styles/fonts' as ft;)
+
+   Vil du skifte font:
+   1) Hent den nye font i index.html (linket fra Google Fonts)
+   2) Ret navnet her – så skifter hele siden */
+$font: "Montserrat", sans-serif;

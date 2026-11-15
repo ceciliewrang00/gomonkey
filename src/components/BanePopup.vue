@@ -70,6 +70,7 @@ const skalaer = computed(() => [
 </template>
 
 <style lang="scss" scoped>
+@use '@/assets/styles/fonts' as ft;
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
 
@@ -86,7 +87,7 @@ const skalaer = computed(() => [
   background-color: c.$primary_light25;
   color: c.$primary_black100;
   box-shadow: 0 0.75rem 2rem rgba(c.$primary_darkgreen, 0.2);
-  font-family: "Inter", sans-serif; // Samme font som resten af siden
+  font-family: ft.$font; // Samme font som resten af siden
   animation: popup-glid-ind 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 
   // Farvestreg i toppen i banens farve

@@ -169,6 +169,7 @@ onUnmounted(() => {
 
 <!-- Layout for selve siden. Scoped = gælder kun i denne fil -->
 <style lang="scss" scoped>
+@use '@/assets/styles/fonts' as ft;
 @use '@/assets/styles/buttons' as b;
 @use '@/assets/styles/spacings' as s;
 @use '@/assets/styles/colors' as c;
@@ -197,6 +198,7 @@ onUnmounted(() => {
      IKKE scoped, for ellers rammer det ikke indholdet inde i AdminBaner og AdminQuiz.
      Alt ligger under .admin, så det ikke påvirker resten af sitet -->
 <style lang="scss">
+@use '@/assets/styles/fonts' as ft;
 @use '@/assets/styles/colors' as c;
 
 .admin {
@@ -207,7 +209,7 @@ onUnmounted(() => {
     display: block;
     width: 100%;
     max-width: 36rem;
-    font-family: "Inter", sans-serif;
+    font-family: ft.$font;
     font-weight: 300;
     // clamp: skriften skalerer med skærmen, men aldrig under 1rem eller over 1.25rem
     font-size: clamp(1rem, 1.5vw, 1.25rem);

@@ -1,3 +1,4 @@
+@use 'fonts' as ft;
 @use '_colors' as c;
 @use '_typography' as t;
 
@@ -55,7 +56,7 @@
     border: none;
     padding: 0;
     color: c.$forest_pink100;
-    font-family: "Inter", sans-serif;
+    font-family: ft.$font;
     font-weight: 500;
     font-size: 1rem;
     text-decoration: none;
