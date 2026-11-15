@@ -61,7 +61,9 @@ function opdaterVedScroll() {
   const fremskridt = Math.min(Math.max(scroll / hoejde, 0), 1)
 
   if (!roligBevaegelse && billedeEl.value) {
-    billedeEl.value.style.transform = `translate3d(6%, ${scroll * 0.25}px, 0)`
+    // Desktop: billedet er skubbet 6 % til højre. Mobil: ingen forskydning (se CSS)
+    const forskydning = window.matchMedia('(max-width: 767px)').matches ? '0%' : '6%'
+    billedeEl.value.style.transform = `translate3d(${forskydning}, ${scroll * 0.25}px, 0)`
   }
   placerTrisser(roligBevaegelse ? 0 : fremskridt)
 }
@@ -166,7 +168,7 @@ onUnmounted(() => {
   width: 100%;
   height: 115%;
   object-fit: cover;
-  object-position: 30% 40%;
+  object-position: 30% 30%;
   transform: translate3d(6%, 0, 0);
   -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 10%, #000 55%);
   mask-image: linear-gradient(90deg, transparent 0%, transparent 10%, #000 55%);
@@ -393,10 +395,14 @@ onUnmounted(() => {
     min-height: auto;
   }
 
-  // Billedet er rykket lidt til højre, så pigen på svævebanen ikke gemmer sig
-  // bag overskriften. Mindre tal = billedet længere til højre, større = længere til venstre
+  // Mobil: billedet er hverken skubbet til højre eller tonet ud i venstre side
+  // (det gør det kun på desktop), så pigen på svævebanen kan ses.
+  // Det første tal i object-position flytter billedet vandret:
+  // større tal = pigen længere til venstre, mindre tal = længere til højre
   .hero__billede {
-    object-position: 30% 30%;
+    object-position: 40% 30%;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   // Badget ville ligge oven på overskriften, når hero er så lav, så det skjules
@@ -430,7 +436,6 @@ onUnmounted(() => {
     top: s.$spacing-m;
     transform: none;
     transition: none;
-    animation: none; // Står fast her, så den skal ikke svinge
   }
 }
 
