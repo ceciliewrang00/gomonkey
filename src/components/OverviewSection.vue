@@ -167,6 +167,12 @@ const baneFarver = [
     margin: 0;
     padding: 0;
 
+    // Mobil: der er ikke plads til 4 på en række, så de står 2 og 2.
+    // Stadig lige brede kolonner, så de står præcis under hinanden
+    @media (max-width: 520px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     // Ét mærke pr. bane: svag lys baggrund med runde hjørner.
     // Fylder hele kolonnens bredde, så alle mærker er lige brede
     li {

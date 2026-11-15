@@ -114,8 +114,6 @@ onUnmounted(() => {
         <li>Udstyr og instruktion inkluderet</li>
       </ul>
     </div>
-
-    <HvemSkalMed :baner="baner" class="hero__hvem" />
   </section>
 </template>
 
@@ -329,17 +327,15 @@ onUnmounted(() => {
   }
 }
 
-.hero__hvem {
-  position: absolute;
-  right: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
-  bottom: auto; /* Placeret pænt i forhold til midten af højden */
-  z-index: 1;
-  width: 27rem;
-}
-
 @media (max-width: 767px) {
+  // Mobil: ingen fast højde – hero er kun så høj som teksten og knapperne
   .hero {
-    min-height: max(640px, 100svh);
+    min-height: auto;
+  }
+
+  // Badget ville ligge oven på overskriften, når hero er så lav, så det skjules
+  .hero__trisse {
+    display: none;
   }
 }
 
@@ -349,14 +345,6 @@ onUnmounted(() => {
     align-items: stretch;
     justify-content: center;
     gap: s.$spacing-l;
-  }
-
-  .hero__hvem {
-    position: relative;
-    right: auto;
-    bottom: auto;
-    width: 100%;
-    max-width: 34rem;
   }
 
   .hero__wire,
