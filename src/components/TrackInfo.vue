@@ -3,8 +3,9 @@
 // onUnmounted = kører, når siden forlades (bruges til at fjerne klik-lytteren igen)
 import { ref, onMounted, onUnmounted } from 'vue'
 
-// Adressen til databasen (API'et)
-const URL = 'https://gomonkey-baner-default-rtdb.europe-west1.firebasedatabase.app/baner.json'
+// Banerne og reglerne for niveauer står i services/baner.js,
+// så hero-sektionen (banestigen) bruger præcis de samme data
+import { hentBaner, NIVEAUER, trinFor, niveauFor } from '@/services/baner.js'
 
 // Tom liste til banerne. Siden opdateres, når listen får data
 const baner = ref([])
@@ -18,19 +19,8 @@ const error = ref(null)
 // Når siden er vist: hent data fra databasen
 onMounted(async () => {
     try {
-        // API-kald: spørger databasen om banerne
-        const res = await fetch(URL)
-
-        // Hvis databasen svarer med en fejl (fx 401 eller 404), så stop her
-        if (!res.ok) throw new Error(`Fejl ${res.status}`)
-
-        // Åbner svaret fra databasen og laver det om til data, JavaScript kan arbejde med
-        const data = await res.json()
-
-        // Laver Firebase-objektet om til en liste, gemmer navnet som id og sorterer efter sværhedsgrad
-        baner.value = Object.entries(data)
-            .map(([id, bane]) => ({ id, ...bane }))
-            .sort((a, b) => parseFloat(a.difficulty) - parseFloat(b.difficulty))
+        // Henter banerne (sorteret fra let til svær) – se services/baner.js
+        baner.value = await hentBaner()
     } catch (e) {
         // Hvis noget fejler, gemmer vi en besked, som vi kan vise
         error.value = 'Banerne kunne ikke hentes. Prøv igen senere.'
@@ -53,30 +43,6 @@ const FAKTA = [
 
 function faktaFor(bane) {
     return FAKTA.filter(f => bane[f.key])
-}
-
-// De tre niveauer på skalaen. Bruges både i forklaringen øverst og på hver bane,
-// så bjælkerne og ordene er ens begge steder
-const NIVEAUER = [
-    { navn: 'Let', tekst: 'Lavt og overskueligt. God til første tur og til de mindste.' },
-    { navn: 'Mellem', tekst: 'Højere oppe med flere forhindringer og svævebaner.' },
-    { navn: 'Svær', tekst: 'Højt oppe og fysisk krævende. Kræver mod og erfaring.' },
-]
-
-// Oversætter sværhedsgraden fra databasen (fx "42.5%") til et trin: 1, 2 eller 3.
-// Under 35 % = 1 (Let), under 70 % = 2 (Mellem), ellers 3 (Svær).
-// Grænserne passer med niveauerne i kortfiltret (Firebase "mapfilter").
-// Ændres en banes sværhedsgrad i admin, følger trinnet automatisk med
-function trinFor(bane) {
-    const procent = parseFloat(bane.difficulty)
-    if (procent < 35) return 1
-    if (procent < 70) return 2
-    return 3
-}
-
-// Niveauet som ord, fx "Mellem"
-function niveauFor(bane) {
-    return NIVEAUER[trinFor(bane) - 1].navn
 }
 
 // (i)-forklaringen ved "Sværhedsgrad": id på banen, hvis boble er åben (null = ingen)
@@ -151,6 +117,13 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         </section>
     </div>
 
+    <!-- To sten samlet, der sidder hen over overgangen mellem introen og banerne
+         (samme idé som på gomonkey.dk). Kun pynt, så skærmlæsere springer dem over -->
+    <div class="sten-samling" aria-hidden="true">
+        <span class="sten-samling__sten sten-samling__sten--bue"></span>
+        <span class="sten-samling__sten sten-samling__sten--rund"></span>
+    </div>
+
     <p v-if="loading" class="status">Henter baner...</p>
     <p v-else-if="error" class="status">{{ error }}</p>
     <!-- Ét kort pr. bane (v-for gentager article) -->
@@ -158,9 +131,10 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         v-else
         v-for="(bane, index) in baner"
         :key="bane.id"
+        :id="bane.id"
         :class="[bane.class, `bane--${bane.id}`]"
         class="bane"
-    >
+    ><!-- id = banens id (fx "bane-6"), så banestigen i hero kan linke direkte hertil -->
         <div class="bane__kort">
             <!-- Overskriften står i sin egen række over teksten,
                  så billedet kun flugter med teksten under den -->
@@ -421,6 +395,49 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     .skala-trin {
         grid-template-columns: 1fr;
     }
+}
+
+/* --- To sten mellem introen og banerne ---
+   Rækken har ingen højde, så den ikke skubber noget. Stenene centreres på stregen
+   over den første bane (translateY(-50%)), så de sidder halvt i introen og halvt i banerne.
+   Samme sidemargin som resten, og stenene står ude til højre, hvor den første bane har tom plads.
+   Formerne er sten4.svg og sten_1.svg fra public, brugt som maske, så de kan få en farve.
+   Farverne følger sidens design: lyserød som i hero og knapperne,
+   mørkegrøn som forklaringsboksen lige over */
+.sten-samling {
+    position: relative;
+    z-index: 1;
+    height: 0;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    gap: 2rem;
+    padding-inline: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
+}
+
+.sten-samling__sten {
+    display: block;
+}
+
+// Stor lyserød bue (sten4), spejlvendt så åbningen vender mod højre.
+// Sidder mest under stregen – kun den øverste del stikker op i introen
+.sten-samling__sten--bue {
+    width: clamp(6rem, 11vw, 9rem);
+    aspect-ratio: 42.71 / 40.91;
+    background-color: c.$forest_pink100;
+    -webkit-mask: url('/sten4.svg') center / contain no-repeat;
+    mask: url('/sten4.svg') center / contain no-repeat;
+    transform: translateY(-38%) scaleX(-1);
+}
+
+// Mindre mørkegrøn rund sten (sten_1) ved siden af – let drejet og centreret på stregen
+.sten-samling__sten--rund {
+    width: clamp(3rem, 5vw, 4.25rem);
+    aspect-ratio: 42.25 / 48.78;
+    background-color: c.$primary_darkgreen;
+    -webkit-mask: url('/sten_1.svg') center / contain no-repeat;
+    mask: url('/sten_1.svg') center / contain no-repeat;
+    transform: translateY(-50%) rotate(-15deg);
 }
 
 .status {

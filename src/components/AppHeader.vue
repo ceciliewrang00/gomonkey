@@ -1,6 +1,8 @@
 <script setup>
 import { ref } from 'vue'
 import BaseButton from './BaseButton.vue'
+// Link til booking – samme som "Book nu" i hero (står ét sted i services/api.js)
+import { BOOK_URL } from '@/services/api.js'
 
 // false = menuen er lukket, true = menuen er åben
 const isOpen = ref(false)
@@ -23,7 +25,7 @@ const isOpen = ref(false)
           <button class="burger" aria-label="Menu" @click="isOpen = !isOpen">
             {{ isOpen ? '✕' : '☰' }}
           </button>
-          <BaseButton variant="primary">BOOK</BaseButton>
+          <BaseButton variant="primary" :href="BOOK_URL">BOOK</BaseButton>
         </div>
       </div>
   </header>

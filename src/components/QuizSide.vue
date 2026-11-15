@@ -31,8 +31,8 @@ import {
   lavGodtAtVide,
 } from '@/services/quizLogik.js'
 
-// Link til booking. RET til jeres egen bookingside.
-const BOOK_URL = 'https://gomonkey.dk'
+// Link til booking – står ét sted i services/api.js
+import { BOOK_URL } from '@/services/api.js'
 
 // Gemmer svarene under hvert spørgsmåls id.
 const valgteSvar = ref({})

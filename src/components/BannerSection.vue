@@ -1,9 +1,8 @@
 <script setup>
 import BaseButton from './BaseButton.vue'
 
-// Link til booking. Samme adresse som "Book"-knappen i quizzen (QuizSide.vue) –
-// ret begge steder, hvis I får en direkte bookingside
-const BOOK_URL = 'https://gomonkey.dk'
+// Link til booking – står ét sted i services/api.js
+import { BOOK_URL } from '@/services/api.js'
 </script>
 
 <template>
@@ -12,7 +11,7 @@ const BOOK_URL = 'https://gomonkey.dk'
       <span class="badge badge--outline banner__kicker">Klar til at slippe jorden?</span>
       <h2>
         Skru’ op for
-        <span class="banner__fremhaev">modet</span>
+        <span class="fremhaev">modet</span>
       </h2>
 
       <!-- Knappen er .button-primary fra _buttons.scss -->
@@ -98,37 +97,6 @@ h2 {
   }
 }
 
-// "modet" står i pink kursiv med en streg under, der tegnes ind
-.banner__fremhaev {
-  position: relative;
-  display: inline-block;
-  color: c.$forest_pink100;
-  font-style: italic;
-  padding-right: 0.1em;
-
-  &::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -0.08em;
-    height: 0.14em;
-    border-radius: 1em;
-    background-color: c.$primary_light25;
-    transform: rotate(-2deg);
-    transform-origin: left;
-    animation: streg 0.9s 0.3s ease-out both;
-  }
-}
-
-@keyframes streg {
-  from { transform: rotate(-2deg) scaleX(0); }
-  to { transform: rotate(-2deg) scaleX(1); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .banner__fremhaev::after {
-    animation: none;
-  }
-}
+// "modet" bruger den fælles .fremhaev-klasse fra _typography.scss
+// (pink kursiv med en streg under, der tegnes ind – samme som "du?" i hero)
 </style>

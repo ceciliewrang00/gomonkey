@@ -1,201 +1,387 @@
 <script setup>
-import BaseButton from './BaseButton.vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { hentBaner } from '@/services/baner.js'
+
+import { BOOK_URL } from '@/services/api.js'
+import heroBillede from '@/assets/images/gomonkey_bane.webp'
+
+const baner = ref([])
+
+onMounted(async () => {
+  try {
+    baner.value = await hentBaner()
+  } catch (e) {
+    console.error('Banerne kunne ikke hentes til hero', e)
+  }
+})
+
+const heroEl = ref(null)
+const billedeEl = ref(null)
+const wireEl = ref(null)
+
+const TRISSE_START = 0.62
+const TRISSE_SLUT = 0.78
+
+let roligBevaegelse = false
+let ventendeFrame = null
+
+function placerTrisse(fremskridt) {
+  const wire = wireEl.value
+  const hero = heroEl.value
+  if (!wire || !hero) return
+  const laengde = wire.getTotalLength()
+  const punkt = wire.getPointAtLength(laengde * (TRISSE_START + (TRISSE_SLUT - TRISSE_START) * fremskridt))
+  hero.style.setProperty('--trisse-x', `${punkt.x}%`)
+  hero.style.setProperty('--trisse-y', `${punkt.y}%`)
+}
+
+function opdaterVedScroll() {
+  ventendeFrame = null
+  const hero = heroEl.value
+  if (!hero) return
+
+  const scroll = window.scrollY
+  const hoejde = hero.offsetHeight
+  if (scroll > hoejde) return
+
+  const fremskridt = Math.min(Math.max(scroll / hoejde, 0), 1)
+
+  if (!roligBevaegelse && billedeEl.value) {
+    billedeEl.value.style.transform = `translate3d(6%, ${scroll * 0.25}px, 0)`
+  }
+  placerTrisse(roligBevaegelse ? 0 : fremskridt)
+}
+
+function vedScroll() {
+  if (!ventendeFrame) ventendeFrame = requestAnimationFrame(opdaterVedScroll)
+}
+
+onMounted(() => {
+  roligBevaegelse = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  opdaterVedScroll()
+  window.addEventListener('scroll', vedScroll, { passive: true })
+  window.addEventListener('resize', vedScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', vedScroll)
+  window.removeEventListener('resize', vedScroll)
+  if (ventendeFrame) cancelAnimationFrame(ventendeFrame)
+})
 </script>
 
 <template>
-  <section id="hero">
-    <div id="hero__content">
-      <div id="hero__content__title">
-        <div class="forest-icon">
-          <img src="@/assets/images/forrest-ikon.webp" alt="Ikon med træer" class="icon">
-          <h4>Forrest Odense</h4>
-        </div>
-        <h1>Hvor højt tør du?</h1>
-        <h3>Klatring, svæv og frit fald midt i skoven</h3>
-      </div>
-      <p>8 baner i trætoppene – fra lave, trygge baner for de mindste til svæv på 126 meter og frit fald fra 16 meters højde. Der er en bane til dig, uanset om du er nybegynder eller erfaren klatreabe.</p>      <div class="double-button">
-        <BaseButton variant="primary" href="#overblik">Find din bane</BaseButton>
-        <BaseButton variant="secondary" href="#bane-info">Se oversigtskort</BaseButton>
-      </div>
+  <section id="hero" ref="heroEl" class="hero">
+    <img ref="billedeEl" :src="heroBillede" alt="" class="hero__billede" fetchpriority="high">
+
+    <div class="hero__gradient" aria-hidden="true"></div>
+
+    <svg class="hero__wire" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <path ref="wireEl" d="M -2 4 Q 48 26 102 30" />
+    </svg>
+
+    <div class="hero__trisse">
+      <span class="hero__trisse-hjul" aria-hidden="true"></span>
+      <span class="hero__trisse-snor" aria-hidden="true"></span>
+      <p class="hero__badge">
+        <strong>{{ baner.length || 8 }} klatrebaner</strong>
+        <span>Næste stop: trætoppene</span>
+      </p>
     </div>
 
-    <!-- Billede med organisk form, skygge-form bagved og badge -->
-    <div class="hero__visual">
-      <div class="hero__shape" aria-hidden="true"></div>
-      <img
-        src="@/assets/images/gomonkey_bane.webp"
-        alt="Pige på svævebanen mellem træerne i GoMonkey Forest Odense"
-        class="hero__img"
-      >
+    <!-- Indhold til venstre, lodret centreret -->
+    <div class="hero__indhold">
+      <p class="hero__label">
+        <img src="@/assets/images/forrest-ikon.webp" alt="" class="hero__label-ikon">
+        Forest Odense
+      </p>
 
-      <!-- Lille badge -->
-      <span class="hero__badge">
-        <strong>8 klatrebaner</strong> fra let til vild
-      </span>
+      <h1 class="hero__titel">
+        Hvor højt<br>
+tør du?
+      </h1>
+
+      <p class="hero__undertitel">Klatring, svæv og frit fald midt i skoven</p>
+
+      <div class="hero__knapper">
+        <a href="#baner" class="button-primary hero__knap-pink">Find din bane</a>
+        <a :href="BOOK_URL" class="button-secondary hero__knap-hvid">Se oversigtskort</a>
+      </div>
+
+      <ul class="hero__fakta">
+        <li>Fra 230 kr.</li>
+        <li>3 timer</li>
+        <li>Udstyr og instruktion inkluderet</li>
+      </ul>
     </div>
+
+    <HvemSkalMed :baner="baner" class="hero__hvem" />
   </section>
 </template>
 
 <style lang="scss" scoped>
-
 @use '@/assets/styles/spacings' as s;
 @use '@/assets/styles/colors' as c;
 
-// Organisk "blad/sten"-form til billedet
-$form: 62% 38% 46% 54% / 55% 45% 55% 45%;
-
-#hero {
-  // position + isolation, så blad-mønsteret (::before) kan ligge bag indholdet
+.hero {
   position: relative;
   isolation: isolate;
-  background-color: c.$forest-pink100;
-  display: grid;
-  grid-template-columns: 1fr;
-  align-items: center;
-  gap: s.$spacing-xxl;
-  overflow: hidden; // Så klistermærker ikke giver vandret scroll
-
-  @media (min-width: 900px) {
-    grid-template-columns: 1.1fr 1fr;
-  }
-
-  // Blad-mønsteret i baggrunden. Det ligger i sit eget lag, så det kan gøres
-  // svagere med opacity uden at teksten og billedet også bliver gennemsigtige.
-  // z-index: -1 lægger det bag indholdet. Ret opacity for at gøre det svagere/stærkere
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background-image: url('@/assets/images/leaves.svg');
-    background-repeat: repeat;
-    background-size: 150px;
-    opacity: 0.8;
-  }
-
-  #hero__content {
-    max-width: 36rem;
-
-    #hero__content__title {
-      display: flex;
-      flex-direction: column;
-    }
-  }
-}
-
-/* --- Teksten ---
-   Tydeligt hierarki: lille "Forrest Odense" øverst, stor overskrift,
-   mellemstor undertitel, rolig brødtekst og så knapperne.
-   Luften mellem hvert lag gør, at man læser ét ting ad gangen */
-
-// Lille "etiket" øverst: ikon + Forrest Odense med store bogstaver
-.forest-icon {
+  overflow: hidden;
   display: flex;
-  flex-direction: row;
-  gap: 0.75rem;
-  align-items: center; // Teksten står i midten ud for ikonet
-  margin-bottom: s.$spacing-s;
-
-  h4 {
-    font-size: 0.9rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
+  align-items: center; /* Lodret centreret i højden */
+  box-sizing: border-box;
+  min-height: clamp(640px, 100vh, 750px);
+  padding-top: s.$sektion-luft;
+  padding-bottom: s.$spacing-xl;
+  background-color: c.$primary_black100;
+  color: c.$primary_light25;
 }
 
-.icon {
-  width: 2.25rem;
-  height: 2.25rem;
+.hero__billede {
+  position: absolute;
+  top: -15%;
+  left: 0;
+  z-index: -2;
+  width: 100%;
+  height: 115%;
+  object-fit: cover;
+  object-position: 50% 30%;
+  transform: translate3d(6%, 0, 0);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 10%, #000 55%);
+  mask-image: linear-gradient(90deg, transparent 0%, transparent 10%, #000 55%);
+  will-change: transform;
 }
 
-// Stor, tæt overskrift – det første øjet rammer
-#hero h1 {
-  
-  line-height: 0.98;
-  letter-spacing: -0.02em;
-}
-
-// Undertitlen: tydeligt mindre og lettere end overskriften
-#hero h3 {
-  padding-top: 0;
-  margin-top: s.$spacing-s;
-  font-size: clamp(1.2rem, 2vw, 1.55rem);
-  font-weight: 500;
-  line-height: 1.3;
-}
-
-// Brødteksten: lidt luft over og en behagelig linjelængde
-#hero__content > p {
-  max-width: 32rem;
-  margin: s.$spacing-m 0 0;
-  font-size: clamp(1rem, 1.3vw, 1.125rem);
-  line-height: 1.65;
-}
-
-// God afstand ned til knapperne, så de står for sig selv
-#hero .double-button {
-  margin-top: s.$spacing-l;
-  gap: 1rem;
-
-  
-}
-
-/* --- Billedet --- */
-.hero__visual {
-  position: relative;
-  width: min(100%, 34rem);
-  aspect-ratio: 1 / 1.05;
-  justify-self: center;
-  margin-block: s.$spacing-m;
-}
-
-// Sort form bagved, lidt forskudt – giver dybde og "klistermærke"-look
-.hero__shape {
+.hero__gradient {
   position: absolute;
   inset: 0;
-  border-radius: $form;
-  background-color: c.$primary_black100;
-  transform: translate(1rem, 1rem) rotate(-4deg);
+  z-index: -1;
+  background:
+    linear-gradient(
+      100deg,
+      rgba(c.$primary_black100, 0.85) 0%,
+      rgba(c.$primary_black100, 0.45) 45%,
+      rgba(c.$primary_black100, 0) 75%
+    );
 }
 
-.hero__img {
+.hero__wire {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: 50% 40%; // Hold fokus på personen på svævebanen
-  border-radius: $form;
-  border: 6px solid c.$primary_light25;
-  transform: rotate(-4deg);
-  transition: transform 0.5s ease, border-radius 0.8s ease;
+  pointer-events: none;
+
+  path {
+    fill: none;
+    stroke: rgba(c.$primary_light25, 0.85);
+    stroke-width: 2px;
+    vector-effect: non-scaling-stroke;
+  }
 }
 
-.hero__visual:hover .hero__img {
-  transform: rotate(-1deg) scale(1.02);
-  border-radius: 48% 52% 58% 42% / 45% 55% 45% 55%;
-}
-
-/* --- Badge --- */
-.hero__badge {
+.hero__trisse {
   position: absolute;
-  right: -0.5rem;
-  bottom: 12%;
-  padding: 0.7rem 1.2rem;
-  border-radius: 3rem;
-  background-color: c.$secondary_purple100;
-  color: c.$primary_light25;
-  box-shadow: 4px 4px 0 c.$primary_black100;
-  transform: rotate(6deg);
+  left: var(--trisse-x, 70%);
+  top: var(--trisse-y, 24%);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -0.45rem);
+  transition: left 0.4s ease-out, top 0.4s ease-out;
+}
+
+.hero__trisse-hjul {
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2.5px solid c.$primary_light25;
+  border-radius: 50%;
+  background-color: c.$primary_black100;
+}
+
+.hero__trisse-snor {
+  width: 2px;
+  height: 1.75rem;
+  background-color: c.$primary_light25;
+}
+
+.hero__badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding: 0.55rem 1rem;
+  border-radius: 1rem;
+  background-color: c.$primary_light25;
+  color: c.$primary_darkgreen;
+  box-shadow: 0 0.5rem 1.5rem rgba(c.$primary_black100, 0.3);
+  font-size: 0.8rem;
+  line-height: 1.25;
+  text-align: center;
+  white-space: nowrap;
+  transform: rotate(-4deg);
 
   strong {
+    font-size: 0.95rem;
     font-weight: 900;
   }
 }
 
+.hero__indhold {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 42rem;
+  text-align: left; /* Venstrestillet tekst */
+  text-shadow: 0 2px 16px rgba(c.$primary_black100, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Elementerne flugter til venstre */
+}
+
+.hero__label {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.6rem;
+  margin: 0 0 s.$spacing-s;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hero__label-ikon {
+  width: 2rem;
+  height: 2rem;
+  filter: brightness(0) invert(1);
+}
+
+.hero__titel {
+  margin: 0;
+  color: c.$primary_light25;
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+}
+
+.hero__undertitel {
+  margin: s.$spacing-s 0 0;
+  font-size: clamp(1.15rem, 2vw, 1.5rem);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.hero__knapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin-top: s.$spacing-l;
+  text-shadow: none;
+}
+
+.hero__knap-pink {
+  background-color: c.$forest_pink100;
+  color: c.$primary_black100;
+
+  &:hover {
+    background-color: c.$secondary_purple100;
+    color: c.$primary_light25;
+  }
+}
+
+.hero__knap-hvid {
+  border-color: c.$primary_light25;
+  color: c.$primary_light25;
+
+  &:hover {
+    background-color: c.$primary_light25;
+    border-color: c.$primary_light25;
+    color: c.$primary_darkgreen;
+  }
+}
+
+.hero__knap-pink,
+.hero__knap-hvid {
+  &:focus-visible {
+    outline: 3px solid c.$primary_light25;
+    outline-offset: 3px;
+  }
+}
+
+.hero__fakta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin: s.$spacing-s 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.6;
+  }
+
+  li + li::before {
+    content: '·' / '';
+    margin: 0 0.6rem;
+  }
+}
+
+.hero__hvem {
+  position: absolute;
+  right: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
+  bottom: auto; /* Placeret pænt i forhold til midten af højden */
+  z-index: 1;
+  width: 27rem;
+}
+
+@media (max-width: 767px) {
+  .hero {
+    min-height: max(640px, 100svh);
+  }
+}
+
+@media (max-width: 1199px) {
+  .hero {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: s.$spacing-l;
+  }
+
+  .hero__hvem {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    max-width: 34rem;
+  }
+
+  .hero__wire,
+  .hero__trisse-hjul,
+  .hero__trisse-snor {
+    display: none;
+  }
+
+  .hero__trisse {
+    left: auto;
+    right: s.$spacing-m;
+    top: s.$spacing-m;
+    transform: none;
+    transition: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .hero__img {
+  .hero__billede {
+    transform: translate3d(6%, 0, 0) !important;
+  }
+
+  .hero__trisse {
     transition: none;
   }
 }
