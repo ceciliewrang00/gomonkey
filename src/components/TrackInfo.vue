@@ -304,7 +304,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         column-gap: s.$spacing-xl;
         // stretch = forklaringsboksen bliver lige så høj som teksten til venstre,
         // så toppen og bunden flugter
-        align-items: stretch;
+    
     }
 
     // Indholdet i boksen står lodret i midten af den højere boks

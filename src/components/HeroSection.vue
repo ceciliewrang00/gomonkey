@@ -259,11 +259,9 @@ onUnmounted(() => {
 }
 
 .hero__titel {
-  margin: 0;
+
   color: c.$primary_light25;
-  font-weight: 900;
-  line-height: 0.92;
-  letter-spacing: -0.02em;
+ 
 }
 
 .hero__undertitel {

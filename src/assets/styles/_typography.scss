@@ -6,7 +6,7 @@
 h1 {
     font-family: ft.$font;
     font-weight: 900;
-    font-size: 40px; 
+    font-size: 56px; 
     margin: 0;
 }
 
@@ -68,6 +68,7 @@ ul {
 @media (min-width: 768px) {
     h1 {
         font-size: 72px; /* 8 x 10 */
+        line-height: 0.9;
     }
 
     h2 {
@@ -83,7 +84,7 @@ ul {
     }
 
     p, .text, li {
-        font-size: 16px; /* Holder 16px standard */
+        font-size: 18px; 
     }
 }
 

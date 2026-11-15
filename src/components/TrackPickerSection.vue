@@ -56,7 +56,7 @@ $pink: c.$forest_pink100;
 
 /* --- Billede --- */
 .billede-ramme {
-  border-radius: 1.5rem;
+  border-radius: 1rem;
   overflow: hidden;
   min-height: 20rem;
 
@@ -95,16 +95,12 @@ $pink: c.$forest_pink100;
 }
 
 .tekst-indhold {
-  // Skubber teksten ned midt i kortet, ligesom på designet
-  margin-block: auto;
+
 
   h2 {
     color: $pink;
-    font-size: clamp(2rem, 4vw, 3rem);
     font-weight: 400;
-    line-height: 1.1;
-    padding-top: 0;
-    margin-bottom: s.$spacing-s;
+
 
     strong {
       font-weight: 900;
@@ -112,9 +108,6 @@ $pink: c.$forest_pink100;
   }
 
   p {
-    margin: 0;
-    max-width: 38rem;
-    font-size: clamp(1.05rem, 1.5vw, 1.2rem);
     color: c.$primary_light25;
   }
 }

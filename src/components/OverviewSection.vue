@@ -122,10 +122,6 @@ const baneFarver = [
     }
 
     h2 {
-      font-size: clamp(2rem, 4vw, 2.75rem);
-      font-weight: 800;
-      line-height: 1.15;
-      padding-top: 0;
       color: c.$forest_pink100;
     }
 
@@ -211,7 +207,7 @@ const baneFarver = [
     position: relative;
     display: block;
     min-height: 20rem;
-    border-radius: 1.5rem;
+    border-radius: 1rem;
     overflow: hidden;
     color: inherit;
     text-decoration: none;
