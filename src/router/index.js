@@ -8,9 +8,17 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   // Bestemmer scroll-positionen ved sideskift.
   // Bruger man browserens tilbage/frem, huskes den gamle position (savedPosition).
+  // Linker man til en sektion (fx #skala-forklaring), scrolles der ned til den.
+  // top: 96 giver plads til den sticky header, så den ikke dækker sektionen.
   // Ellers starter den nye side altid i toppen
   scrollBehavior(to, from, savedPosition) {
-    return savedPosition || { top: 0 }
+    if (savedPosition) {
+      return savedPosition
+    }
+    if (to.hash) {
+      return { el: to.hash, top: 96, behavior: 'smooth' }
+    }
+    return { top: 0 }
   },
   routes: [
     {

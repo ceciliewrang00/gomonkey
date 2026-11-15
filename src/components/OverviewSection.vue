@@ -41,13 +41,18 @@ const baneFarver = [
           Hver bane har sin egen unikke farve og sværhedsgrad, så du nemt kan finde den perfekte udfordring for dig.
         </p>
 
-        <!-- Farveforklaring -->
-        <ul class="farve-liste" aria-label="Banefarver">
-          <li v-for="f in baneFarver" :key="f.klasse">
-            <span class="prik" :class="`prik--${f.klasse}`"></span>
-            {{ f.navn }}
-          </li>
-        </ul>
+        <!-- Farveforklaring: hvilken farve hver bane har på kortet -->
+        <div class="farve-forklaring">
+          <h3 id="banefarver-titel" class="farve-titel">Banernes farver</h3>
+
+          <!-- Små mærker side om side, der bryder over på flere linjer, når pladsen slipper op -->
+          <ul class="farve-liste" aria-labelledby="banefarver-titel">
+            <li v-for="f in baneFarver" :key="f.klasse">
+              <span class="markering" :class="`farve--${f.klasse}`" aria-hidden="true"></span>
+              {{ f.navn }}
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>
@@ -57,8 +62,6 @@ const baneFarver = [
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/mixins' as m;
 @use '@/assets/styles/spacings' as s;
-
-$linje: rgba(239, 233, 229, 0.12);
 
 #overblik {
   @include m.section-black100;
@@ -135,40 +138,59 @@ $linje: rgba(239, 233, 229, 0.12);
   }
 
   /* --- Farveforklaring --- */
+  .farve-forklaring {
+    margin-top: 0.25rem;
+  }
+
+  // Lille overskrift med store bogstaver, så den ikke konkurrerer med h2
+  .farve-titel {
+    margin: 0 0 0.6rem;
+    padding: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(c.$primary_light25, 0.7);
+  }
+
+  // Mærkerne står side om side og bryder over på næste linje (flex-wrap)
   .farve-liste {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.6rem;
+    gap: 0.4rem;
     list-style: none;
     margin: 0;
-    padding: s.$spacing-xs 0 0;
+    padding: 0;
 
+    // Ét mærke pr. bane: svag lys baggrund med runde hjørner
     li {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      padding-right: 1rem;
-
+      gap: 0.4rem;
+      padding: 0.3rem 0.75rem 0.3rem 0.55rem;
       border-radius: 2rem;
-      font-size: 0.9rem;
+      background-color: rgba(c.$primary_light25, 0.07);
+      font-size: 0.85rem;
       font-weight: 500;
+      line-height: 1.2;
     }
 
-    .prik {
-      width: 0.9rem;
-      height: 0.9rem;
+    // Prik i banens farve.
+    // Tynd lys kant, så den sorte bane kan ses på den mørke baggrund
+    .markering {
+      flex-shrink: 0;
+      width: 0.65rem;
+      height: 0.65rem;
       border-radius: 50%;
-      // Tynd lys kant, så den sorte prik kan ses på den sorte baggrund.
-      // box-sizing: border-box holder prikken i samme størrelse
       box-sizing: border-box;
-      border: 1px solid rgba(c.$primary_light25, 0.6);
+      border: 1px solid rgba(c.$primary_light25, 0.3);
     }
+  }
 
-    // Farverne kommer fra $kort-bane-farver i _colors.scss (samme som på kortet)
-    @each $navn, $farve in c.$kort-bane-farver {
-      .prik--#{$navn} {
-        background-color: $farve;
-      }
+  // Farverne kommer fra $kort-bane-farver i _colors.scss (samme som på kortet)
+  @each $navn, $farve in c.$kort-bane-farver {
+    .farve--#{$navn} {
+      background-color: $farve;
     }
   }
 

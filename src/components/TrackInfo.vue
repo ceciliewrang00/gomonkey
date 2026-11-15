@@ -1,6 +1,7 @@
 <script setup>
-// ref = en værdi som Vue holder øje med. onMounted = kører, når siden er vist
-import { ref, onMounted } from 'vue'
+// ref = en værdi som Vue holder øje med. onMounted = kører, når siden er vist.
+// onUnmounted = kører, når siden forlades (bruges til at fjerne klik-lytteren igen)
+import { ref, onMounted, onUnmounted } from 'vue'
 
 // Adressen til databasen (API'et)
 const URL = 'https://gomonkey-baner-default-rtdb.europe-west1.firebasedatabase.app/baner.json'
@@ -53,19 +54,101 @@ const FAKTA = [
 function faktaFor(bane) {
     return FAKTA.filter(f => bane[f.key])
 }
+
+// De tre niveauer på skalaen. Bruges både i forklaringen øverst og på hver bane,
+// så bjælkerne og ordene er ens begge steder
+const NIVEAUER = [
+    { navn: 'Let', tekst: 'Lavt og overskueligt. God til første tur og til de mindste.' },
+    { navn: 'Mellem', tekst: 'Højere oppe med flere forhindringer og svævebaner.' },
+    { navn: 'Svær', tekst: 'Højt oppe og fysisk krævende. Kræver mod og erfaring.' },
+]
+
+// Oversætter sværhedsgraden fra databasen (fx "42.5%") til et trin: 1, 2 eller 3.
+// Under 35 % = 1 (Let), under 70 % = 2 (Mellem), ellers 3 (Svær).
+// Grænserne passer med niveauerne i kortfiltret (Firebase "mapfilter").
+// Ændres en banes sværhedsgrad i admin, følger trinnet automatisk med
+function trinFor(bane) {
+    const procent = parseFloat(bane.difficulty)
+    if (procent < 35) return 1
+    if (procent < 70) return 2
+    return 3
+}
+
+// Niveauet som ord, fx "Mellem"
+function niveauFor(bane) {
+    return NIVEAUER[trinFor(bane) - 1].navn
+}
+
+// (i)-forklaringen ved "Sværhedsgrad": id på banen, hvis boble er åben (null = ingen)
+const aabenInfo = ref(null)
+
+// Klik på (i) åbner boblen – klik igen lukker den
+function skiftInfo(id) {
+    aabenInfo.value = aabenInfo.value === id ? null : id
+}
+
+// Lukker boblen, når fokus forlader (i)-knappen og boblen (fx med Tab).
+// relatedTarget er det element, der får fokus bagefter
+function lukVedFokusUd(event) {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+        aabenInfo.value = null
+    }
+}
+
+// Lukker boblen ved klik et andet sted på siden.
+// (Safari giver ikke knapper fokus ved klik, så focusout alene er ikke nok)
+function lukVedKlikUdenfor(event) {
+    if (aabenInfo.value && !event.target.closest('.info')) {
+        aabenInfo.value = null
+    }
+}
+
+onMounted(() => document.addEventListener('click', lukVedKlikUdenfor))
+onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 </script>
 
 <template>
     <!-- Intro over banerne. id="bane-info", så "Se banerne"-knapperne linker hertil.
          Det er en div og ikke en <header>, fordi header har sit eget layout i main.scss -->
     <div id="bane-info" class="baner-intro">
-        <span class="badge badge--dark">Baner i Forrest Odense</span>
-        <h2><span class="light">Find den bane</span> - der passer til dig</h2>
-        <p>
-            Banerne står i rækkefølge efter sværhedsgrad – fra de letteste, hvor alle kan være med,
-            til de vildeste, der kræver mod og erfaring. <br>Hver bane har sin egen farve, så du nemt
-            kan genkende den i parken.
-        </p>
+        <!-- Introteksten. Står til venstre for forklaringsboksen på desktop og over den på mobil -->
+        <div class="baner-intro__tekst">
+            <span class="badge badge--dark">Baner i Forrest Odense</span>
+            <h2><span class="light">Find den bane - </span> <br>der passer til dig</h2>
+            <p>
+                Banerne står i rækkefølge efter sværhedsgrad – fra de letteste, hvor alle kan være med,
+                til de vildeste, der kræver mod og erfaring.
+            </p>
+            <p>Hver bane har sin egen farve, så du nemt
+                kan genkende den i parken.</p>
+        </div>
+
+        <!-- Forklaring af sværhedsbjælken, som står på hver bane længere nede.
+             Står her ét sted, så man ikke selv skal gætte, hvad bjælken betyder -->
+        <section id="skala-forklaring" class="skala-forklaring" aria-labelledby="skala-titel">
+            <h3 id="skala-titel" class="skala-titel">Sådan læser du sværhedsgraden</h3>
+            <p class="skala-tekst">
+                Bjælken på hver bane har tre trin, der viser, hvor svær den er i forhold til parkens andre baner.
+                Jo flere trin der er fyldt ud, jo sværere er banen.
+            </p>
+
+            <!-- De tre niveauer. Hvert kort har samme trin-bjælke som banerne,
+                 så man kan sammenligne direkte -->
+            <ul class="skala-trin">
+                <li v-for="(niveau, i) in NIVEAUER" :key="niveau.navn">
+                    <div class="trin-bjaelke" aria-hidden="true">
+                        <span
+                            v-for="t in 3"
+                            :key="t"
+                            class="trin-bjaelke__trin"
+                            :class="{ 'er-fyldt': t <= i + 1 }"
+                        ></span>
+                    </div>
+                    <strong class="skala-trin__navn">{{ niveau.navn }}</strong>
+                    <p class="skala-trin__tekst">{{ niveau.tekst }}</p>
+                </li>
+            </ul>
+        </section>
     </div>
 
     <p v-if="loading" class="status">Henter baner...</p>
@@ -110,18 +193,59 @@ function faktaFor(bane) {
 
                 <div class="difficulty">
                     <div class="difficulty__label">
-                        <span>Sværhedsgrad</span>
-                        <span class="difficulty__skala">Let — Svær</span>
+                        <!-- "Sværhedsgrad" med (i)-knap. Klik åbner en lille boble med forklaringen.
+                             Escape eller fokus et andet sted lukker den igen -->
+                        <span
+                            class="info"
+                            @focusout="lukVedFokusUd"
+                            @keydown.esc="aabenInfo = null"
+                        >
+                            Sværhedsgrad
+                            <button
+                                type="button"
+                                class="info__knap"
+                                aria-label="Hvad betyder sværhedsgrad?"
+                                :aria-expanded="aabenInfo === bane.id"
+                                :aria-controls="`info-${bane.id}`"
+                                @click="skiftInfo(bane.id)"
+                            >
+                                <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+                                    <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+                                    <circle cx="10" cy="6.2" r="1.15" fill="currentColor" />
+                                    <rect x="9.1" y="8.6" width="1.8" height="6" rx="0.9" fill="currentColor" />
+                                </svg>
+                            </button>
+                            <span
+                                v-if="aabenInfo === bane.id"
+                                :id="`info-${bane.id}`"
+                                class="info__boble"
+                            >
+                                Niveauet bygger på banens højde og længde, antallet af forhindringer
+                                og svæv, og hvor fysisk krævende banen er.
+                                Bjælken har tre trin: Let, Mellem og Svær.
+                                <a href="#skala-forklaring" class="info__link" @click="aabenInfo = null">Se hele forklaringen</a>
+                            </span>
+                        </span>
+                        <!-- Niveauet skrevet med ord (Let, Mellem eller Svær), så man ikke selv skal aflæse bjælken -->
+                        <span class="difficulty__niveau">{{ niveauFor(bane) }}</span>
                     </div>
+                    <!-- Bjælke med tre trin: 1 fyldt = Let, 2 = Mellem, 3 = Svær.
+                         Præcis samme bjælke og farve som i forklaringen øverst -->
                     <div
-                        class="difficulty__track"
+                        class="trin-bjaelke"
                         role="meter"
                         aria-label="Sværhedsgrad"
-                        :aria-valuenow="parseFloat(bane.difficulty)"
-                        aria-valuemin="0"
-                        aria-valuemax="100"
+                        :aria-valuetext="niveauFor(bane)"
+                        :aria-valuenow="trinFor(bane)"
+                        aria-valuemin="1"
+                        aria-valuemax="3"
                     >
-                        <div class="difficulty__fill" :style="{ width: bane.difficulty }"></div>
+                        <span
+                            v-for="t in 3"
+                            :key="t"
+                            class="trin-bjaelke__trin"
+                            :class="{ 'er-fyldt': t <= trinFor(bane) }"
+                        ></span>
                     </div>
                 </div>
             </div>
@@ -154,9 +278,12 @@ function faktaFor(bane) {
     align-items: flex-start;
     gap: s.$spacing-s;
     text-align: left;
-    padding-block: s.$spacing-xxl s.$spacing-s;
+    // Luft i bunden, så der er god afstand ned til den første bane
+    padding-block: s.$spacing-xxl s.$spacing-xl;
     padding-inline: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
-    background-color: c.$forest_green25;
+    // Lys baggrund, der adskiller introen fra banerne (som har grøn baggrund).
+    // Så kan man se, at introen er overskriften, og at listen med baner starter under den
+    background-color: c.$primary_light25;
     scroll-margin-top: 5rem; // Så den sticky header ikke dækker overskriften
 
     h2 {
@@ -173,6 +300,111 @@ function faktaFor(bane) {
 
     p {
         margin: 0;
+    }
+}
+
+// Badge, overskrift og tekst under hinanden
+.baner-intro__tekst {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: s.$spacing-s;
+}
+
+// Desktop: introteksten til venstre og forklaringsboksen til højre.
+// Boksen får lidt mere plads (1.2fr), da den har tre kort ved siden af hinanden.
+// align-items: center centrerer teksten lodret ud for boksen
+@media (min-width: 900px) {
+    .baner-intro {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+        column-gap: s.$spacing-xl;
+        align-items: center;
+    }
+
+    .baner-intro .skala-forklaring {
+        margin-top: 0;
+    }
+}
+
+/* --- Forklaring af sværhedsgraden --- */
+// Boks med mørk kant i stedet for baggrundsfarve (samme runde hjørner som faktaboksene).
+// Fylder hele bredden inden for introens padding, så den flugter med banerne under
+.skala-forklaring {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: s.$spacing-xs;
+    padding: s.$spacing-s;
+
+    border-radius: 1rem;
+    background-color: c.$forest_green25;
+    color: c.$primary_black100;
+}
+
+// Overskriften i forklaringsboksen
+.skala-titel {
+    margin: 0;
+    padding: 0;
+    font-weight: 700;
+}
+
+// Teksten holdes i en behagelig linjelængde, selvom boksen er bred
+.baner-intro .skala-tekst {
+    max-width: 60ch;
+
+
+}
+
+// Let, Mellem og Svær som tre små kort side om side
+.skala-trin {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.6rem;
+    margin: 0.4rem 0 0;
+
+    list-style: none;
+    padding: 0;
+
+    // Ét kort pr. niveau: mørkegrønt med lys tekst ligesom faktaboksene
+    > li {
+        padding: 0.9rem 1rem 1rem;
+        border-radius: 0.75rem;
+        background-color: c.$primary_darkgreen;
+        color: c.$primary_light25;
+    }
+
+    .trin-bjaelke {
+        margin-bottom: 0.75rem;
+    }
+
+    .skala-trin__navn {
+        display: block;
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .skala-trin__tekst {
+        margin: 0.25rem 0 0;
+        font-size: 0.85rem;
+        line-height: 1.45;
+        color: c.$primary_light25;
+    }
+}
+
+// Når forklaringsboksen er smal, står kortene under hinanden.
+// @container kigger på boksens bredde (ikke skærmens), så det virker både på mobil
+// og på desktop, hvor boksen kun fylder den højre halvdel.
+// container-type gør boksen til den "container", der måles på
+.skala-forklaring {
+    container-type: inline-size;
+}
+
+@container (max-width: 34rem) {
+    .skala-trin {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -193,6 +425,12 @@ function faktaFor(bane) {
     &:last-of-type {
         padding-bottom: s.$spacing-xxl;
     }
+}
+
+// Ingen streg over den første bane (Bounce) – den står lige under introen.
+// "+" = den bane, der kommer lige efter introen
+.baner-intro + .bane {
+    border-top: none;
 }
 
 /* --- Kortet --- */
@@ -347,28 +585,113 @@ function faktaFor(bane) {
     .difficulty__label {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         margin-bottom: 0.5rem;
         font-size: 0.95rem;
         font-weight: 700;
     }
 
-    .difficulty__skala {
-        font-weight: 400;
-        color: c.$primary_black50;
+    // Niveauet ude til højre, fx "Let"
+    .difficulty__niveau {
+        font-weight: 800;
     }
 }
 
-.difficulty__track {
-    background-color: c.$primary_light50;
-    width: 100%;
-    height: 0.75rem;
-    border-radius: 1rem;
-    overflow: hidden;
+/* --- (i)-knap og forklaringsboble ved "Sværhedsgrad" --- */
+// position: relative, så boblen placeres i forhold til teksten
+.info {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
 
-    .difficulty__fill {
-        background-color: var(--bane-farve);
-        height: 100%;
-        border-radius: 1rem;
+// Rund knap uden baggrund – ikonet arver tekstfarven (currentColor)
+.info__knap {
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    color: c.$primary_black50;
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:hover,
+    &[aria-expanded="true"] {
+        color: c.$primary_black100;
+    }
+
+    &:focus-visible {
+        outline: 3px solid c.$secondary_purple100;
+        outline-offset: 2px;
+    }
+}
+
+// Boblen over "Sværhedsgrad", så den ikke dækker bjælken, den forklarer.
+// Mørkegrøn med lys tekst ligesom faktaboksene. z-index lægger den øverst
+.info__boble {
+    position: absolute;
+    bottom: calc(100% + 0.6rem);
+    left: 0;
+    z-index: 5;
+    width: min(18rem, 80vw);
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    background-color: c.$primary_darkgreen;
+    color: c.$primary_light25;
+    font-size: 0.85rem;
+    font-weight: 400;
+    line-height: 1.45;
+    box-shadow: 0 0.5rem 1.5rem rgba(c.$primary_darkgreen, 0.25);
+}
+
+.info__link {
+    display: inline-block;
+    margin-top: 0.4rem;
+    color: c.$primary_light25;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:focus-visible {
+        outline: 2px solid c.$primary_light25;
+        outline-offset: 2px;
+    }
+}
+
+// Så den sticky header ikke dækker forklaringen, når man hopper til den fra boblen
+.skala-forklaring {
+    scroll-margin-top: 6rem;
+}
+
+/* --- Trin-bjælke (bruges både på banerne og i forklaringen) ---
+   Tre lige brede trin med lidt luft imellem. Fyldte trin er grønne, tomme trin er lyse.
+   Samme farve på alle baner og i forklaringen, så de ser ens ud.
+   Ret her, så ændres bjælken begge steder */
+.trin-bjaelke {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    width: 100%;
+
+    .trin-bjaelke__trin {
+        height: 0.75rem;
+        background-color: c.$primary_light50;
+    }
+
+    // Runde hjørner kun i hver ende, så de tre trin ligner én bjælke
+    .trin-bjaelke__trin:first-child {
+        border-radius: 1rem 0 0 1rem;
+    }
+
+    .trin-bjaelke__trin:last-child {
+        border-radius: 0 1rem 1rem 0;
+    }
+
+    .trin-bjaelke__trin.er-fyldt {
+        background-color: c.$forest_green75;
     }
 }
 
