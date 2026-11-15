@@ -10,13 +10,12 @@ import BaseButton from './BaseButton.vue'
           <img src="@/assets/images/forrest-ikon.webp" alt="Ikon med træer" class="icon">
           <h4>Forrest Odense</h4>
         </div>
-        <h1>Oplev banerne</h1>
-        <h3>GoMonkey Forrest Odense</h3>
+        <h1>Hvor højt tør du?</h1>
+        <h3>Klatring, svæv og frit fald midt i skoven</h3>
       </div>
-      <p>Fra den første forsigtige tur på svævebanen til frit fald fra ti meters højde. <br>Hos GoMonkey er der en bane til alle, uanset om du er en nybegynder eller en erfaren klatreabe.</p>
-      <div class="double-button">
-        <BaseButton variant="primary" href="#overblik">Se oversigtskort</BaseButton>
-        <BaseButton variant="secondary" href="#bane-info">Se banerne</BaseButton>
+      <p>8 baner i trætoppene – fra lave, trygge baner for de mindste til svæv på 126 meter og frit fald fra 16 meters højde. Der er en bane til dig, uanset om du er nybegynder eller erfaren klatreabe.</p>      <div class="double-button">
+        <BaseButton variant="primary" href="#overblik">Find din bane</BaseButton>
+        <BaseButton variant="secondary" href="#bane-info">Se oversigtskort</BaseButton>
       </div>
     </div>
 
@@ -24,7 +23,7 @@ import BaseButton from './BaseButton.vue'
     <div class="hero__visual">
       <div class="hero__shape" aria-hidden="true"></div>
       <img
-        src="@/assets/images/banner2.webp"
+        src="@/assets/images/gomonkey_bane.webp"
         alt="Pige på svævebanen mellem træerne i GoMonkey Forest Odense"
         class="hero__img"
       >
@@ -46,10 +45,10 @@ import BaseButton from './BaseButton.vue'
 $form: 62% 38% 46% 54% / 55% 45% 55% 45%;
 
 #hero {
+  // position + isolation, så blad-mønsteret (::before) kan ligge bag indholdet
+  position: relative;
+  isolation: isolate;
   background-color: c.$forest-pink100;
-  background-image: url('@/assets/images/leaves.svg');
-  background-repeat: repeat;
-  background-size: 150px;
   display: grid;
   grid-template-columns: 1fr;
   align-items: center;
@@ -60,8 +59,22 @@ $form: 62% 38% 46% 54% / 55% 45% 55% 45%;
     grid-template-columns: 1.1fr 1fr;
   }
 
+  // Blad-mønsteret i baggrunden. Det ligger i sit eget lag, så det kan gøres
+  // svagere med opacity uden at teksten og billedet også bliver gennemsigtige.
+  // z-index: -1 lægger det bag indholdet. Ret opacity for at gøre det svagere/stærkere
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: url('@/assets/images/leaves.svg');
+    background-repeat: repeat;
+    background-size: 150px;
+    opacity: 0.8;
+  }
+
   #hero__content {
-    max-width: 50rem;
+    max-width: 36rem;
 
     #hero__content__title {
       display: flex;
@@ -70,16 +83,62 @@ $form: 62% 38% 46% 54% / 55% 45% 55% 45%;
   }
 }
 
+/* --- Teksten ---
+   Tydeligt hierarki: lille "Forrest Odense" øverst, stor overskrift,
+   mellemstor undertitel, rolig brødtekst og så knapperne.
+   Luften mellem hvert lag gør, at man læser ét ting ad gangen */
+
+// Lille "etiket" øverst: ikon + Forrest Odense med store bogstaver
 .forest-icon {
   display: flex;
   flex-direction: row;
-  gap: 1.5rem;
+  gap: 0.75rem;
   align-items: center; // Teksten står i midten ud for ikonet
+  margin-bottom: s.$spacing-s;
+
+  h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
 }
 
 .icon {
-  width: 3rem;
-  height: 3rem;
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+// Stor, tæt overskrift – det første øjet rammer
+#hero h1 {
+  
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+}
+
+// Undertitlen: tydeligt mindre og lettere end overskriften
+#hero h3 {
+  padding-top: 0;
+  margin-top: s.$spacing-s;
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+// Brødteksten: lidt luft over og en behagelig linjelængde
+#hero__content > p {
+  max-width: 32rem;
+  margin: s.$spacing-m 0 0;
+  font-size: clamp(1rem, 1.3vw, 1.125rem);
+  line-height: 1.65;
+}
+
+// God afstand ned til knapperne, så de står for sig selv
+#hero .double-button {
+  margin-top: s.$spacing-l;
+  gap: 1rem;
+
+  
 }
 
 /* --- Billedet --- */

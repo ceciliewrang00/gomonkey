@@ -1,4 +1,9 @@
 <script setup>
+import BaseButton from './BaseButton.vue'
+
+// Link til booking. Samme adresse som "Book"-knappen i quizzen (QuizSide.vue) –
+// ret begge steder, hvis I får en direkte bookingside
+const BOOK_URL = 'https://gomonkey.dk'
 </script>
 
 <template>
@@ -9,6 +14,9 @@
         Skru’ op for
         <span class="banner__fremhaev">modet</span>
       </h2>
+
+      <!-- Knappen er .button-primary fra _buttons.scss -->
+      <BaseButton variant="primary" :href="BOOK_URL" class="banner__knap">Book din tur</BaseButton>
     </div>
   </section>
 </template>
@@ -21,15 +29,40 @@
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  min-height: clamp(22rem, 60vh, 36rem);
+  min-height: clamp(20rem, 50vh, 30rem);
   display: flex;
   align-items: center;
   color: c.$primary_light25;
 
+  // Sort bag billedet: når billedet skubbes til højre, bliver den smalle stribe
+  // i venstre side sort – den ligger alligevel under den mørke gradient
+  background-color: c.$primary_black100;
+
+  // Billedet ligger i sit eget lag (::before) i samme størrelse som sektionen,
+  // så det ikke zoomes. Det skubbes til højre med translateX.
+  // Ret tallet for at flytte billedet: større tal = længere til højre
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background: url('@/assets/images/klatrepark.webp') center 35% / cover no-repeat;
+    transform: translateX(6%);
+    // Billedets venstre kant toner blødt ud i den sorte baggrund,
+    // så man ikke kan se, hvor billedet starter.
+    // Helt sort de første 10%, og så toner billedet frem frem til 55%.
+    // Større tal = det sorte dækker mere af billedet
+    mask-image: linear-gradient(90deg, transparent 0%, transparent 10%, #000 55%);
+  }
+
   // Mørk gradient fra venstre over billedet, så teksten kan læses
-  background:
-    linear-gradient(100deg, rgba(c.$primary_black100, 0.85) 0%, rgba(c.$primary_black100, 0.45) 45%, rgba(c.$primary_black100, 0) 75%),
-    url('@/assets/images/gomonkey_bane.webp') center 35% / cover no-repeat;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(100deg, rgba(c.$primary_black100, 0.85) 0%, rgba(c.$primary_black100, 0.45) 45%, rgba(c.$primary_black100, 0) 75%);
+  }
 }
 
 .banner__indhold {
@@ -42,11 +75,27 @@
 }
 
 h2 {
-  font-size: clamp(2.75rem, 8vw, 6rem);
+  font-size: clamp(2.5rem, 7vw, 5rem);
   font-weight: 900;
   line-height: 0.95;
   letter-spacing: -0.02em;
   padding-top: 0;
+}
+
+// Book-knappen: form og størrelse kommer fra .button-primary i _buttons.scss.
+// Her er den lyserød med sort tekst, så den kan ses på det mørke billede.
+// display: inline-block, så margin virker på <a>
+.banner__knap {
+  display: inline-block;
+  margin-top: s.$spacing-l;
+  background-color: c.$forest_pink100;
+  color: c.$primary_black100;
+
+  // Samme hover som .button-primary: lilla baggrund, her med lys tekst
+  &:hover {
+    background-color: c.$secondary_purple100;
+    color: c.$primary_light25;
+  }
 }
 
 // "modet" står i pink kursiv med en streg under, der tegnes ind
