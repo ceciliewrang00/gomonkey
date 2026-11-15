@@ -325,6 +325,27 @@ onUnmounted(() => {
     content: '·' / '';
     margin: 0 0.6rem;
   }
+
+  // Mobil: linjen kan ikke være på én række, og så ville en prik ende alene
+  // i starten af næste linje. Her bliver hvert faktum i stedet en lille pille
+  // med lys kant, og pillerne bryder pænt over på flere linjer
+  @media (max-width: 767px) {
+    gap: 0.4rem;
+
+    li {
+      padding: 0.2rem 0.75rem;
+      border: 1px solid rgba(c.$primary_light25, 0.45);
+      border-radius: 2rem;
+      background-color: rgba(c.$primary_black100, 0.25);
+      font-size: 0.8rem;
+      line-height: 1.5;
+      white-space: nowrap;
+    }
+
+    li + li::before {
+      content: none;
+    }
+  }
 }
 
 @media (max-width: 767px) {
