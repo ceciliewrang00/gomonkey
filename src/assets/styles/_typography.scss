@@ -1,18 +1,19 @@
 @use 'fonts' as ft;
-
 @use 'spacings' as s;
 @use 'colors' as c;
+
+/* --- MOBILE-FIRST (Bygget på 8-punkts systemet) --- */
 h1 {
     font-family: ft.$font;
     font-weight: 900;
-    font-size: 80px;
+    font-size: 40px; 
     margin: 0;
 }
 
 h2 {
     font-family: ft.$font;
     font-weight: 900;
-    font-size: 40px;
+    font-size: 32px; 
     margin: 0;
     padding-top: s.$spacing-xs;
 }
@@ -20,7 +21,7 @@ h2 {
 h3 {
     font-family: ft.$font;
     font-weight: 400;
-    font-size: 24px;
+    font-size: 24px; /* 8 x 3 */
     margin: 0;
     padding-top: s.$spacing-xs;
 }
@@ -28,59 +29,66 @@ h3 {
 h4 {
     font-family: ft.$font;
     font-weight: 300;
-    font-size: 24px;
+    font-size: 16px; /* 8 x 2 */
     margin: 0;
+}
+
+p, .text, li {
+    font-family: ft.$font;
+    font-weight: 300;
+    font-size: 16px; /* 8 x 2 */
+    line-height: 1.6;
 }
 
 label {
     font-family: ft.$font;
     font-weight: 300;
-    font-size: clamp(1rem, 1.5vw, 1.25rem);
-}
-
-p {
-    font-family: ft.$font;
-    font-weight: 300;
-    font-size: 18px;
-    line-height: 1.6;
+    font-size: 16px; /* 8 x 2 */
 }
 
 ul {
     padding-top: s.$spacing-m;
 }
 
-.text {
-    font-family: ft.$font;
-    font-weight: 300;
-    font-size: 16px;
-    line-height: 1.6;
-}
-
-li {
-    font-family: ft.$font;
-    font-weight: 300;
-    font-size: clamp(1rem, 1.5vw, 1.25rem);
-    line-height: 1.6;
-}
-
 @mixin button {
     font-family: ft.$font;
     font-weight: 900;
-    font-size: 1rem;
+    font-size: 16px; /* 8 x 2 */
     text-decoration: none;
 }
 
 @mixin button_header {
     font-family: ft.$font;
     font-weight: 500;
-    font-size: clamp(1rem, 1.5vw, 2rem);
+    font-size: 16px; /* 8 x 2 */
 }
 
 
-/* --- Fremhævet ord i en overskrift ---
-   Pink kursiv med en lys streg under, der tegnes ind, når siden vises.
-   Brug: <span class="fremhaev">modet</span>
-   Bruges i banner-sektionen ("modet") og hero ("du?") */
+/* --- DESKTOP VERSION (Fra 768px og opefter) --- */
+@media (min-width: 768px) {
+    h1 {
+        font-size: 72px; /* 8 x 10 */
+    }
+
+    h2 {
+        font-size: 48px; /* 8 x 6 */
+    }
+
+    h3 {
+        font-size: 32px; /* 8 x 4 */
+    }
+
+    h4 {
+        font-size: 24px; /* 8 x 3 */
+    }
+
+    p, .text, li {
+        font-size: 16px; /* Holder 16px standard */
+    }
+}
+
+
+/* --- Fremhævet ord i en overskrift --- */
 .fremhaev {
     position: relative;
     display: inline-block;

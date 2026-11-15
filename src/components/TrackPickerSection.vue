@@ -76,8 +76,8 @@ $pink: c.$forest_pink100;
   display: flex;
   flex-direction: column;
   gap: s.$spacing-xl;
-  padding: s.$spacing-xl;
-  border-radius: 1.5rem;
+  padding: s.$spacing-l;
+  border-radius: 1rem;
   background-color: $kort-baggrund;
 
   // Svagt blad-mønster i baggrunden

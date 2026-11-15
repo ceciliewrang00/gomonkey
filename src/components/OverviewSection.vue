@@ -104,8 +104,8 @@ const baneFarver = [
     flex-direction: column;
     justify-content: center;
     gap: s.$spacing-s;
-    padding: s.$spacing-xl;
-    border-radius: 1.5rem;
+    padding: s.$spacing-l;
+    border-radius: 1rem;
     background-color: #0f1a10;
 
     // Svagt blad-mønster i baggrunden

@@ -300,7 +300,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 @media (min-width: 900px) {
     .baner-intro {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
         column-gap: s.$spacing-xl;
         // stretch = forklaringsboksen bliver lige så høj som teksten til venstre,
         // så toppen og bunden flugter
@@ -324,7 +324,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     width: 100%;
     box-sizing: border-box;
     margin-top: s.$spacing-xs;
-    padding: s.$spacing-s;
+    padding: s.$spacing-l;
     // Mørkegrøn boks med lys tekst
     border-radius: 1rem;
     background-color: c.$primary_darkgreen;
