@@ -311,55 +311,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- Opret spørgsmål -->
-  <section class="admin-kort">
-    <h2>Opret spørgsmål</h2>
-
-    <label for="nyt-spoergsmaal">Spørgsmålstekst</label>
-    <input id="nyt-spoergsmaal" v-model="nytSpoergsmaal.tekst" type="text" required />
-
-    <!-- Ét sæt felter pr. svarmulighed. indeks starter ved 0, derfor indeks + 1 -->
-    <div v-for="(svar, indeks) in nytSpoergsmaal.svar" :key="svar.id">
-      <label :for="'nyt-svar-' + svar.id">Svarmulighed {{ indeks + 1 }}</label>
-      <input :id="'nyt-svar-' + svar.id" v-model="svar.tekst" type="text" required />
-
-      <!-- Valgfri tekster, når man svarer for sit barn eller en gruppe (fx "Det tør mit barn ikke") -->
-      <label :for="'nyt-svar-barn-' + svar.id">Tekst, når man svarer for sit barn (valgfri)</label>
-      <input :id="'nyt-svar-barn-' + svar.id" v-model="svar.tekstBarn" type="text" />
-
-      <label :for="'nyt-svar-gruppe-' + svar.id">Tekst, når man svarer for en gruppe (valgfri)</label>
-      <input :id="'nyt-svar-gruppe-' + svar.id" v-model="svar.tekstGruppe" type="text" />
-
-      <label :for="'nyt-niveau-' + svar.id">Giver højst</label>
-      <select :id="'nyt-niveau-' + svar.id" v-model.number="svar.maksNiveau">
-        <option v-for="v in NIVEAU_VALG" :key="v.vaerdi" :value="v.vaerdi">{{ v.tekst }}</option>
-      </select>
-
-      <!-- Vises kun, når der er mere end to svar -->
-      <div v-if="nytSpoergsmaal.svar.length > 2" class="knapper">
-        <BaseButton
-          type="button"
-          variant="secondary"
-          :disabled="gemmer"
-          @click="fjernSvarmulighed(svar.id)"
-        >
-          Fjern svarmulighed
-        </BaseButton>
-      </div>
-    </div>
-
-    <div class="knapper">
-      <BaseButton type="button" variant="secondary" :disabled="gemmer" @click="tilfoejSvarmulighed">
-        Tilføj svarmulighed
-      </BaseButton>
-      <BaseButton type="button" variant="primary" :disabled="gemmer" @click="opretSpoergsmaal">
-        {{ gemmer ? 'Gemmer...' : 'Gem spørgsmål' }}
-      </BaseButton>
-    </div>
-
-    <p v-if="gemBesked" role="status">{{ gemBesked }}</p>
-  </section>
-
+  <h2>Rediger quiz</h2>
   <!-- Beskeder om redigering og sletning vises her, også når formularen er lukket -->
   <p v-if="redigerBesked" role="status">{{ redigerBesked }}</p>
   <p v-if="sletBesked" role="status">{{ sletBesked }}</p>
@@ -450,4 +402,53 @@ onMounted(() => {
       </div>
     </article>
   </div>
+
+  <!-- Opret spørgsmål (under listen med alle spørgsmål) -->
+  <section class="admin-kort">
+    <h2>Opret spørgsmål</h2>
+
+    <label for="nyt-spoergsmaal">Spørgsmålstekst</label>
+    <input id="nyt-spoergsmaal" v-model="nytSpoergsmaal.tekst" type="text" required />
+
+    <!-- Ét sæt felter pr. svarmulighed. indeks starter ved 0, derfor indeks + 1 -->
+    <div v-for="(svar, indeks) in nytSpoergsmaal.svar" :key="svar.id">
+      <label :for="'nyt-svar-' + svar.id">Svarmulighed {{ indeks + 1 }}</label>
+      <input :id="'nyt-svar-' + svar.id" v-model="svar.tekst" type="text" required />
+
+      <!-- Valgfri tekster, når man svarer for sit barn eller en gruppe (fx "Det tør mit barn ikke") -->
+      <label :for="'nyt-svar-barn-' + svar.id">Tekst, når man svarer for sit barn (valgfri)</label>
+      <input :id="'nyt-svar-barn-' + svar.id" v-model="svar.tekstBarn" type="text" />
+
+      <label :for="'nyt-svar-gruppe-' + svar.id">Tekst, når man svarer for en gruppe (valgfri)</label>
+      <input :id="'nyt-svar-gruppe-' + svar.id" v-model="svar.tekstGruppe" type="text" />
+
+      <label :for="'nyt-niveau-' + svar.id">Giver højst</label>
+      <select :id="'nyt-niveau-' + svar.id" v-model.number="svar.maksNiveau">
+        <option v-for="v in NIVEAU_VALG" :key="v.vaerdi" :value="v.vaerdi">{{ v.tekst }}</option>
+      </select>
+
+      <!-- Vises kun, når der er mere end to svar -->
+      <div v-if="nytSpoergsmaal.svar.length > 2" class="knapper">
+        <BaseButton
+          type="button"
+          variant="secondary"
+          :disabled="gemmer"
+          @click="fjernSvarmulighed(svar.id)"
+        >
+          Fjern svarmulighed
+        </BaseButton>
+      </div>
+    </div>
+
+    <div class="knapper">
+      <BaseButton type="button" variant="secondary" :disabled="gemmer" @click="tilfoejSvarmulighed">
+        Tilføj svarmulighed
+      </BaseButton>
+      <BaseButton type="button" variant="primary" :disabled="gemmer" @click="opretSpoergsmaal">
+        {{ gemmer ? 'Gemmer...' : 'Gem spørgsmål' }}
+      </BaseButton>
+    </div>
+
+    <p v-if="gemBesked" role="status">{{ gemBesked }}</p>
+  </section>
 </template>

@@ -388,26 +388,47 @@ async function indlaesKort() {
     svg.setAttribute('height', '100%')
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet')
 
+    // Linjer, der er lavet i admin, har ingen fast plads ("slot") i kort-base.svg.
+    // De samles i én gruppe lige under navne-labels, så de ligger oven på træerne
+    let nyeLinjer = null
+
     for (const bane of baner.value) {
       for (const segment of bane.segmenter ?? []) {
-        const gruppe = svg.querySelector(`[id="${segment.slot}"]`)
+        let gruppe = segment.slot ? svg.querySelector(`[id="${segment.slot}"]`) : null
 
-        if (!gruppe || !segment.paths?.[1]) {
-          throw new Error(`Manglende SVG-data: ${segment.slot}`)
+        if (!segment.paths?.[1]) {
+          throw new Error(`Manglende SVG-data: ${segment.slot ?? bane.id}`)
+        }
+
+        if (!gruppe) {
+          if (!nyeLinjer) {
+            nyeLinjer = dokument.createElementNS('http://www.w3.org/2000/svg', 'g')
+            nyeLinjer.setAttribute('id', 'nye-linjer')
+            const labels = svg.querySelector('#Banner')
+            if (labels) labels.before(nyeLinjer)
+            else svg.appendChild(nyeLinjer)
+          }
+          gruppe = dokument.createElementNS('http://www.w3.org/2000/svg', 'g')
+          nyeLinjer.appendChild(gruppe)
         }
 
         gruppe.classList.add('bane-segment')
         gruppe.dataset.bane = bane.id
 
-        for (const sti of segment.paths) {
+        segment.paths.forEach((sti, i) => {
           const path = dokument.createElementNS(
             'http://www.w3.org/2000/svg',
             'path'
           )
           path.setAttribute('class', sti.class)
           path.setAttribute('d', sti.d)
+          // Farvestregen (nr. 2): faste baner får farven fra _colors.scss (--kort-bane-<id>),
+          // nye baner fra admin bruger deres egen "farve"
+          if (i === 1 && bane.farve) {
+            path.style.stroke = `var(--kort-bane-${bane.id}, ${bane.farve})`
+          }
           gruppe.appendChild(path)
-        }
+        })
 
         const kliksti = dokument.createElementNS(
           'http://www.w3.org/2000/svg',

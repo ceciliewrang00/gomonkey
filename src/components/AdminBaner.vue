@@ -3,7 +3,7 @@
 // Udseendet kommer fra de fælles styles i AdminView.vue
 
 import BaseButton from '@/components/BaseButton.vue'
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { BANER_URL, hentToken } from '@/services/api.js'
 
 // Felter i bane-formularen. Vil du kunne rette et nyt felt, så tilføj en linje her
@@ -29,14 +29,19 @@ const BANE_FIELDS = [
 // Alle baner fra databasen
 const baner = ref([])
 
-// Id på banen, der er valgt i dropdown ('' = ingen)
-const valgtBaneId = ref('')
+// Én kopi pr. bane, så alle formularer kan vises på én gang.
+// Nøglen er banens id. Man retter i kopien, til man trykker "Gem"
+const baneForms = ref({})
 
-// En kopi af den valgte bane. Man retter i kopien, til man trykker "Gem"
-const baneForm = ref({})
+// Beskeder pr. bane, fx "Banen er gemt." (nøglen er banens id)
+const baneBeskeder = ref({})
 
-// Besked til brugeren, fx "Banen er gemt."
-const baneBesked = ref('')
+// Id på banen, der gemmes lige nu ('' = ingen)
+const gemmerId = ref('')
+
+// Vises, mens banerne hentes, eller hvis de ikke kunne hentes
+const indlaeser = ref(true)
+const fejlbesked = ref('')
 
 // Henter alle baner fra Firebase (GET-kald, kræver ikke login)
 async function hentBaner() {
@@ -50,9 +55,19 @@ async function hentBaner() {
 
     // Firebase giver et objekt. Vi laver det til en liste med navnet som id
     baner.value = Object.entries(data ?? {}).map(([id, bane]) => ({ id, ...bane }))
+
+    // Fylder en formular ud pr. bane. Mangler banen et felt, bliver det ''
+    baneForms.value = Object.fromEntries(
+      baner.value.map((bane) => [
+        bane.id,
+        Object.fromEntries(BANE_FIELDS.map((f) => [f.key, hentFelt(bane, f.key)]))
+      ])
+    )
   } catch (e) {
-    baneBesked.value = 'Banerne kunne ikke hentes.'
+    fejlbesked.value = 'Banerne kunne ikke hentes.'
     console.error(e)
+  } finally {
+    indlaeser.value = false
   }
 }
 
@@ -83,47 +98,38 @@ function tilGem(form) {
   return data
 }
 
-// Kører hver gang man vælger en ny bane i dropdown
-watch(valgtBaneId, (id) => {
-  baneBesked.value = ''
-
-  const bane = baner.value.find((b) => b.id === id)
-
-  if (bane) {
-    // Én værdi pr. felt i BANE_FIELDS. Mangler banen et felt, bliver det ''
-    baneForm.value = Object.fromEntries(BANE_FIELDS.map((f) => [f.key, hentFelt(bane, f.key)]))
-  }
-})
-
 // Gemmer rettelserne i Firebase. Kræver login.
 // Tokenet (loginbeviset) sendes med i adressen (?auth=...), så databasen ved,
 // at det er en admin. encodeURIComponent gør teksten sikker at bruge i en adresse
-async function gemBane() {
-  baneBesked.value = ''
+async function gemBane(bane) {
+  baneBeskeder.value[bane.id] = ''
+  gemmerId.value = bane.id
 
   try {
     const token = await hentToken()
+    const data = tilGem(baneForms.value[bane.id])
 
     // PATCH ændrer kun de felter, vi sender. PUT ville slette resten
     const res = await fetch(
-      `${BANER_URL}/${encodeURIComponent(valgtBaneId.value)}.json?auth=${encodeURIComponent(token)}`,
+      `${BANER_URL}/${encodeURIComponent(bane.id)}.json?auth=${encodeURIComponent(token)}`,
       {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(tilGem(baneForm.value))
+        body: JSON.stringify(data)
       }
     )
 
     if (!res.ok) throw new Error(`Fejl ${res.status}`)
 
-    // Opdaterer listen på siden, så den passer med databasen
-    const bane = baner.value.find((b) => b.id === valgtBaneId.value)
-    Object.assign(bane, tilGem(baneForm.value))
+    // Opdaterer listen på siden, så den passer med databasen (fx navnet i overskriften)
+    Object.assign(bane, data)
 
-    baneBesked.value = 'Banen er gemt.'
+    baneBeskeder.value[bane.id] = 'Banen er gemt.'
   } catch (e) {
-    baneBesked.value = 'Banen kunne ikke gemmes. Prøv igen.'
+    baneBeskeder.value[bane.id] = 'Banen kunne ikke gemmes. Prøv igen.'
     console.error(e)
+  } finally {
+    gemmerId.value = ''
   }
 }
 
@@ -132,39 +138,42 @@ onMounted(hentBaner)
 </script>
 
 <template>
-  <section class="admin-kort">
-    <h2>Rediger baner</h2>
+  <h2>Rediger baner</h2>
 
-    <!-- Dropdown med alle baner. v-model gemmer den valgte banes id i valgtBaneId,
-         og så fylder watch i scriptet formularen ud -->
-    <label for="bane">Vælg bane</label>
-    <select id="bane" v-model="valgtBaneId">
-      <option value="" disabled>Vælg...</option>
-      <option v-for="bane in baner" :key="bane.id" :value="bane.id">
-        {{ bane.name }}
-      </option>
-    </select>
+  <!-- v-if / v-else-if / v-else: kun én af dem vises ad gangen -->
+  <p v-if="indlaeser">Henter baner...</p>
+  <p v-else-if="fejlbesked">{{ fejlbesked }}</p>
+  <p v-else-if="baner.length === 0">Der er ingen baner endnu.</p>
 
-    <!-- Redigeringsformular. Vises først, når en bane er valgt -->
-    <form v-if="valgtBaneId" class="felter" @submit.prevent="gemBane">
+  <div v-else class="admin-liste">
+    <!-- Ét kort pr. bane, med formularen åben fra starten -->
+    <form
+      v-for="(bane, indeks) in baner"
+      :key="bane.id"
+      class="admin-kort felter"
+      @submit.prevent="gemBane(bane)"
+    >
+      <h3>{{ bane.name }}</h3>
+
       <!-- Ét felt pr. post i BANE_FIELDS -->
       <div v-for="field in BANE_FIELDS" :key="field.key" class="felt">
-        <!-- :for og :id hænger sammen, så et klik på teksten går til feltet -->
-        <label :for="'bane-' + field.key">{{ field.label }}</label>
+        <!-- :for og :id hænger sammen, så et klik på teksten går til feltet.
+             indeks gør id'et unikt, fordi der er en formular pr. bane -->
+        <label :for="'bane-' + indeks + '-' + field.key">{{ field.label }}</label>
 
         <!-- Feltets type bestemmer, hvad der vises:
              textarea = stort tekstfelt, select = dropdown, ellers et almindeligt tekstfelt -->
         <textarea
           v-if="field.type === 'textarea'"
-          :id="'bane-' + field.key"
-          v-model="baneForm[field.key]"
+          :id="'bane-' + indeks + '-' + field.key"
+          v-model="baneForms[bane.id][field.key]"
           rows="5"
         ></textarea>
 
         <select
           v-else-if="field.type === 'select'"
-          :id="'bane-' + field.key"
-          v-model="baneForm[field.key]"
+          :id="'bane-' + indeks + '-' + field.key"
+          v-model="baneForms[bane.id][field.key]"
         >
           <option value="">(ingen)</option>
           <option v-for="option in field.options" :key="option" :value="option">
@@ -172,15 +181,22 @@ onMounted(hentBaner)
           </option>
         </select>
 
-        <input v-else :id="'bane-' + field.key" v-model="baneForm[field.key]" type="text" />
+        <input
+          v-else
+          :id="'bane-' + indeks + '-' + field.key"
+          v-model="baneForms[bane.id][field.key]"
+          type="text"
+        />
       </div>
 
       <div class="knapper">
-        <BaseButton type="submit" variant="primary">Gem bane</BaseButton>
+        <BaseButton type="submit" variant="primary" :disabled="gemmerId !== ''">
+          {{ gemmerId === bane.id ? 'Gemmer...' : 'Gem bane' }}
+        </BaseButton>
       </div>
-    </form>
 
-    <!-- role="status" gør, at skærmlæsere læser beskeden højt -->
-    <p v-if="baneBesked" role="status">{{ baneBesked }}</p>
-  </section>
+      <!-- role="status" gør, at skærmlæsere læser beskeden højt -->
+      <p v-if="baneBeskeder[bane.id]" role="status">{{ baneBeskeder[bane.id] }}</p>
+    </form>
+  </div>
 </template>

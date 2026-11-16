@@ -1,8 +1,9 @@
 <script setup>
 // ADMIN-SIDEN (adressen /admin)
-// Først skal man logge ind med Firebase. Derefter kan man skifte mellem to faner:
+// Først skal man logge ind med Firebase. Derefter kan man skifte mellem tre faner:
 // - Baner: ret teksterne om banerne (AdminBaner.vue)
 // - Quiz: ret pointgrænser og quizspørgsmål (AdminQuiz.vue)
+// - Kort: ret banernes forløb på kortet og kortfiltrets tekster (AdminKort.vue)
 // Denne fil styrer kun login og faner. Hver fane henter og gemmer selv sine data.
 
 // ---------- Imports ----------
@@ -13,6 +14,7 @@ import BaseButton from '@/components/BaseButton.vue'
 // De to dele af admin-siden
 import AdminBaner from '@/components/AdminBaner.vue'
 import AdminQuiz from '@/components/AdminQuiz.vue'
+import AdminKort from '@/components/AdminKort.vue'
 
 // ref = en værdi Vue holder øje med. onUnmounted = kører, når man forlader siden
 import { ref, onUnmounted } from 'vue'
@@ -158,11 +160,19 @@ onUnmounted(() => {
         >
           Quiz
         </BaseButton>
+        <BaseButton
+          type="button"
+          :variant="fane === 'kort' ? 'primary' : 'secondary'"
+          @click="fane = 'kort'"
+        >
+          Kort
+        </BaseButton>
       </div>
 
       <!-- Hver del henter og gemmer selv sine data -->
       <AdminBaner v-if="fane === 'baner'" />
-      <AdminQuiz v-else />
+      <AdminQuiz v-else-if="fane === 'quiz'" />
+      <AdminKort v-else />
     </template>
   </main>
 </template>
