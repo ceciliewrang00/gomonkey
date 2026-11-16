@@ -5,7 +5,7 @@ import { hentVejr } from '@/services/vejr.js'
 
 import { BOOK_URL } from '@/services/api.js'
 import heroBillede from '@/assets/images/gomonkey_bane.webp'
-import abeIkon from '@/assets/images/gomonkey-logo.svg'
+import abeSvaev from '@/assets/images/Abe.svg'
 
 const baner = ref([])
 
@@ -135,15 +135,11 @@ onUnmounted(() => {
       :class="`hero__trisse--${trisse.id}`"
       :style="{ '--snor': trisse.snor, '--vip': trisse.vip }"
     >
-      <span class="hero__trisse-hjul" aria-hidden="true"></span>
+      <!-- Aben har sin egen trisse i tegningen, så den får ikke det almindelige hjul -->
+      <span v-if="!trisse.abe" class="hero__trisse-hjul" aria-hidden="true"></span>
 
-      <!-- Aben: hænger på hovedet i sin krøllede hale. Kun pynt -->
-      <template v-if="trisse.abe">
-        <svg class="hero__abe-hale" viewBox="0 0 24 60" aria-hidden="true">
-          <path d="M12 0 C 2 10, 22 16, 12 26 S 2 42, 12 52 C 15 55, 15 58, 12 60" />
-        </svg>
-        <span class="hero__abe" :style="{ '--abe-ikon': `url(${abeIkon})` }" aria-hidden="true"></span>
-      </template>
+      <!-- Aben, der svæver på wiren (Abe.svg). Kun pynt -->
+      <img v-if="trisse.abe" :src="abeSvaev" alt="" class="hero__abe" aria-hidden="true">
 
       <span v-if="!trisse.abe" class="hero__trisse-snor" aria-hidden="true"></span>
       <p v-if="!trisse.abe" class="hero__badge">
@@ -339,11 +335,14 @@ onUnmounted(() => {
   }
 }
 
-/* --- Aben, der hænger i halen fra wiren ---
-   GoMonkey-ikonet (gomonkey-logo.svg) bruges som maske, så det kan blive lyserødt.
-   Øjne og næse er huller i ikonet, så skoven skinner igennem dem.
+/* --- Aben, der svæver på wiren ---
+   Tegningen (Abe.svg) har sin egen trisse øverst. Trissens punkt ligger
+   57,1 % inde og 21,4 % nede i tegningen – billedet flyttes, så netop det punkt
+   sidder på wiren. Så svinger aben også om trissen som et pendul.
    Aben svinger mere end badgerne – og rigtig meget, når man holder musen over den */
 .hero__trisse--abe {
+  // Pendulets omdrejningspunkt = trissen (se margin-top på .hero__abe)
+  transform-origin: 50% 0.45rem;
   animation: abe-sving 3.5s ease-in-out infinite;
 }
 
@@ -356,32 +355,18 @@ onUnmounted(() => {
   50% { transform: translate(-50%, -0.45rem) rotate(7deg); }
 }
 
-// Den krøllede hale fra hjulet ned til aben – samme lyse farve som snorene
-.hero__abe-hale {
-  display: block;
-  width: 1.4rem;
-  height: 3.75rem;
-  margin-top: -1px;
-
-  path {
-    fill: none;
-    stroke: rgba(c.$primary_light25, 0.9);
-    stroke-width: 2;
-    stroke-linecap: round;
-  }
-}
-
-// Aben på hovedet (rotate 180deg) i lyserød
 .hero__abe {
   display: block;
-  width: 5rem;
-  aspect-ratio: 1292 / 1109;
-  margin-top: -0.2rem;
-  background-color: c.$forest_pink100;
-  -webkit-mask: var(--abe-ikon) center / contain no-repeat;
-  mask: var(--abe-ikon) center / contain no-repeat;
-  transform: rotate(180deg);
-  filter: drop-shadow(0 0.4rem 0.8rem rgba(c.$primary_black100, 0.35));
+  width: 10rem;
+  height: auto;
+  // Flytter tegningen, så trissen (57,1 % / 21,4 %) står i containerens midte øverst
+  margin-top: 0.45rem;
+  transform: translate(-7.1%, -21.4%);
+  // Tynd lys kant rundt om aben, så den mørkegrønne abe kan ses på den mørke skov
+  filter:
+    drop-shadow(0 0 1px rgba(c.$primary_light25, 0.9))
+    drop-shadow(0 0 1px rgba(c.$primary_light25, 0.9))
+    drop-shadow(0 0.4rem 0.8rem rgba(c.$primary_black100, 0.35));
   cursor: pointer;
 }
 
