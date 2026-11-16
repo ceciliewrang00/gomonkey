@@ -20,6 +20,7 @@ const props = defineProps({
 
 const emit = defineEmits(['bane-valgt'])
 
+
 const kortHolder = ref(null)
 const baner = ref([])
 const valgtId = ref(null)
@@ -431,12 +432,37 @@ async function indlaesKort() {
       'bane-5'
     ]
 
+    // Navne-labels på kortet. Navnene i kort-base.svg er tegnet som former (de gamle navne
+    // "Blå 1" osv.), så de skjules, og banens rigtige navn fra Firebase skrives i stedet –
+    // samme navn som på forsiden og i popup'en. Labelens felt bliver banens farve
     svg.querySelectorAll('#Banner > g').forEach((gruppe, i) => {
       const bane = baner.value.find(b => b.id === labelIds[i])
-      if (bane) {
-        gruppe.dataset.bane = bane.id
-        goerKlikbar(gruppe, bane)
-      }
+      if (!bane) return
+
+      gruppe.dataset.bane = bane.id
+      gruppe.classList.add('bane-label')
+      goerKlikbar(gruppe, bane)
+
+      const felt = gruppe.querySelector('rect')
+      const gammeltNavn = gruppe.querySelector(':scope > g')
+      if (!felt) return
+
+      // Skjuler det gamle, indtegnede navn
+      if (gammeltNavn) gammeltNavn.style.display = 'none'
+
+      // Feltet i banens farve (fra $kort-bane-farver via --kort-bane-<id> i KortView.vue)
+      felt.style.fill = `var(--kort-bane-${bane.id})`
+
+      // Det nye navn, centreret i feltet
+      const x = parseFloat(felt.getAttribute('x')) + parseFloat(felt.getAttribute('width')) / 2
+      const y = parseFloat(felt.getAttribute('y')) + parseFloat(felt.getAttribute('height')) / 2
+      const tekst = dokument.createElementNS('http://www.w3.org/2000/svg', 'text')
+      tekst.setAttribute('x', x)
+      tekst.setAttribute('y', y)
+      tekst.setAttribute('class', 'bane-label__tekst')
+      tekst.setAttribute('aria-hidden', 'true') // Knappen har allerede et aria-label med navnet
+      tekst.textContent = bane.navn
+      gruppe.appendChild(tekst)
     })
 
     for (const [id, gruppeId] of [
@@ -461,6 +487,17 @@ async function indlaesKort() {
       .kort-klikbar {
         cursor: pointer;
       }
+
+      .bane-label__tekst {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 26px;
+        font-weight: 800;
+        fill: #EFE9E5;
+        text-anchor: middle;
+        dominant-baseline: central;
+        pointer-events: none;
+      }
+
 
       .bane-hit {
         stroke: transparent;
@@ -505,6 +542,30 @@ async function indlaesKort() {
 
     svg.appendChild(stil)
     kortHolder.value.replaceChildren(svg)
+
+    // Skiltene (navne-labels) får en bredde, der passer til navnet, med ens luft på alle sider.
+    // Teksten kan først måles, når kortet står på siden – derfor sker det her.
+    // Skiltet beholder sin midte, så det står samme sted på kortet som før
+    const SKILT_LUFT_SIDE = 18
+    const SKILT_HOEJDE = 52
+    svg.querySelectorAll('.bane-label').forEach((label) => {
+      const felt = label.querySelector('rect')
+      const tekst = label.querySelector('.bane-label__tekst')
+      if (!felt || !tekst) return
+
+      const midteX = parseFloat(tekst.getAttribute('x'))
+      const midteY = parseFloat(tekst.getAttribute('y'))
+      const bredde = tekst.getBBox().width + SKILT_LUFT_SIDE * 2
+
+      felt.setAttribute('x', midteX - bredde / 2)
+      felt.setAttribute('y', midteY - SKILT_HOEJDE / 2)
+      felt.setAttribute('width', bredde)
+      felt.setAttribute('height', SKILT_HOEJDE)
+      // Helt runde ender som en pille
+      felt.setAttribute('rx', SKILT_HOEJDE / 2)
+      felt.setAttribute('ry', SKILT_HOEJDE / 2)
+    })
+
 
     const trampolin = svg.querySelector('#Bounce > path.st25')
     const fritFald = svg.querySelector('#Free-Fall')

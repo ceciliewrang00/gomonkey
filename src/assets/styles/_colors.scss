@@ -52,33 +52,22 @@ $secondary_purple75: #5C6BAB;
 $secondary_purple50: #929CC7;
 $secondary_purple25: #C8CEE3;
 
-/* --- BANEFARVER ---
-   Én farve pr. bane – det eneste sted, banefarverne står.
-   Bruges til banens streg på kortet, popup'en, baneoversigten (TrackInfo)
-   og farveforklaringen på forsiden (OverviewSection).
-   Ret farven her, så skifter den alle steder. */
-$kortbane_brun: #715631;    // Bounce
-$kortbane_gul: #f9e668;     // Gul
-$kortbane_groen: #40BB65;   // Grøn
-$kortbane_pink: #df1685;    // Pink
-$kortbane_blaa: #42c2fd;    // Blå
-$kortbane_lilla: #786af6;   // Lilla
-$kortbane_roed: #FF2C48;    // Rød
-$kortbane_sort: #151515;    // Sort
+$kortbane_brun: #7F5B37;    // Bounce   – for alle
+$kortbane_groen: #2EB45C;   // Grøn     – let
+$kortbane_gul: #F5B005;     // Gul      – let
+$kortbane_blaa: #0395DB;    // Blå      – mellem
+$kortbane_lilla: #7C63D6;   // Lilla    – mellem
+$kortbane_pink: #D44996;    // Pink     – mellem
+$kortbane_roed: #D73431;    // Rød      – svær
+$kortbane_sort: #161616;    // Sort     – Svær
 
-/* Kobler farverne til banerne.
-   Navnene til venstre er banernes id – de er ens i Firebase (baner og mapfilter),
-   public/popup.json og koden. Dem må du ikke ændre.
-   Banerne er nummereret efter sværhedsgrad. Skifter en bane farve, rettes kun farven her.
-   Sort og bounce er tegnede figurer på kortet, så deres farve bruges kun i popup'en.
-   Brug: @each $id, $farve in c.$kort-bane-farver { ... } */
 $kort-bane-farver: (
   bounce: $kortbane_brun,
-  bane-1: $kortbane_gul,
-  bane-2: $kortbane_groen,
-  bane-3: $kortbane_pink,
-  bane-4: $kortbane_blaa,
-  bane-5: $kortbane_lilla,
+  bane-1: $kortbane_groen,
+  bane-2: $kortbane_gul,
+  bane-3: $kortbane_blaa,
+  bane-4: $kortbane_lilla,
+  bane-5: $kortbane_pink,
   bane-6: $kortbane_roed,
   bane-7: $kortbane_sort
 );
