@@ -496,12 +496,25 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     gap: s.$spacing-s;
 }
 
+// Linjen under navn og nummer er en ::after-streg i stedet for en border,
+// så den kan få runde ender. Ret height for tykkelsen
 .bane__top {
+    position: relative;
     display: flex;
     align-items: baseline;
     gap: s.$spacing-s;
-    padding-bottom: s.$spacing-s;
-    border-bottom: 5px solid var(--bane-farve);
+    padding-bottom: calc(#{s.$spacing-s} + 5px);
+
+    &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 5px;
+        border-radius: 1rem;
+        background-color: var(--bane-farve);
+    }
 }
 
 .bane__navn {
