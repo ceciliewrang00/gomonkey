@@ -11,7 +11,6 @@ export const BANER_URL = `${BANER_DB}/baner`
 export const KORTBANER_URL = `${BANER_DB}/kortbaner`
 export const KORTFILTER_URL = `${BANER_DB}/mapfilter`
 export const SPOERGSMAAL_URL = `${BANER_DB}/spoergsmaal`
-export const GRAENSER_URL = `${BANER_DB}/baneGraenser`
 
 // Link til booking. Bruges af alle "Book"-knapper (hero, banner, quiz).
 // RET her, når I får en direkte bookingside – så skifter alle knapperne

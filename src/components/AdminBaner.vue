@@ -10,6 +10,11 @@ import { BANER_URL, hentToken } from '@/services/api.js'
 const BANE_FIELDS = [
   { key: 'name', label: 'Navn', type: 'text' },
   { key: 'description', label: 'Beskrivelse', type: 'textarea' },
+  // Teksten i banevælgerens resultat. Skal være neutral, så voksne ikke føler sig talt ned til.
+  // Tom = quizzen bygger selv en tekst ud fra banens fakta. Gemmes som quizTekst { mig, barn, gruppe }
+  { key: 'quizTekst.mig', label: 'Banevælger: tekst i resultatet', type: 'textarea' },
+  { key: 'quizTekst.barn', label: 'Banevælger: tekst, når man svarer for sit barn (valgfri)', type: 'textarea' },
+  { key: 'quizTekst.gruppe', label: 'Banevælger: tekst til grupper (valgfri)', type: 'textarea' },
   { key: 'requirements', label: 'Krav', type: 'text' },
   { key: 'trackHeight', label: 'Banehøjde', type: 'text' },
   { key: 'obstacles', label: 'Forhindringer', type: 'text' },
@@ -51,6 +56,33 @@ async function hentBaner() {
   }
 }
 
+// Læser et felt fra banen. "quizTekst.barn" betyder feltet barn inde i quizTekst.
+// quizTekst kan også være en almindelig tekst – så hører den til "mig"
+function hentFelt(bane, key) {
+  if (!key.startsWith('quizTekst.')) return bane[key] ?? ''
+  const del = key.split('.')[1]
+  const qt = bane.quizTekst
+  if (typeof qt === 'string') return del === 'mig' ? qt : ''
+  return qt?.[del] ?? ''
+}
+
+// Laver formularen om til det, der gemmes: de tre quizTekst-felter samles i ét
+// objekt { mig, barn, gruppe }. Tomme felter udelades, og er alle tomme, slettes quizTekst (null)
+function tilGem(form) {
+  const data = {}
+  const quizTekst = {}
+  for (const [key, vaerdi] of Object.entries(form)) {
+    if (key.startsWith('quizTekst.')) {
+      const tekst = String(vaerdi ?? '').trim()
+      if (tekst) quizTekst[key.split('.')[1]] = tekst
+    } else {
+      data[key] = vaerdi
+    }
+  }
+  data.quizTekst = Object.keys(quizTekst).length ? quizTekst : null
+  return data
+}
+
 // Kører hver gang man vælger en ny bane i dropdown
 watch(valgtBaneId, (id) => {
   baneBesked.value = ''
@@ -59,7 +91,7 @@ watch(valgtBaneId, (id) => {
 
   if (bane) {
     // Én værdi pr. felt i BANE_FIELDS. Mangler banen et felt, bliver det ''
-    baneForm.value = Object.fromEntries(BANE_FIELDS.map((f) => [f.key, bane[f.key] ?? '']))
+    baneForm.value = Object.fromEntries(BANE_FIELDS.map((f) => [f.key, hentFelt(bane, f.key)]))
   }
 })
 
@@ -78,7 +110,7 @@ async function gemBane() {
       {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(baneForm.value)
+        body: JSON.stringify(tilGem(baneForm.value))
       }
     )
 
@@ -86,7 +118,7 @@ async function gemBane() {
 
     // Opdaterer listen på siden, så den passer med databasen
     const bane = baner.value.find((b) => b.id === valgtBaneId.value)
-    Object.assign(bane, baneForm.value)
+    Object.assign(bane, tilGem(baneForm.value))
 
     baneBesked.value = 'Banen er gemt.'
   } catch (e) {

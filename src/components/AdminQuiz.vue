@@ -1,12 +1,27 @@
 <script setup>
-// Administration af quizzen: pointgrænser, spørgsmål og svar.
+// Administration af quizzen: spørgsmål og svar.
+// Hvert svar har et "maksNiveau": den sværeste bane, svaret tillader
+// (1 = Let, 2 = Mellem, 3 = Svær). Det laveste svar bestemmer anbefalingen (se quizLogik.js).
+// Quizzen bruger ingen point.
 // Vises i AdminView, når man er logget ind.
 // Udseendet kommer fra de fælles styles i AdminView.vue
 
 import BaseButton from '@/components/BaseButton.vue'
 import { ref, onMounted } from 'vue'
 import { auth } from '../firebase'
-import { SPOERGSMAAL_URL, GRAENSER_URL, hentToken } from '@/services/api.js'
+import { SPOERGSMAAL_URL, hentToken } from '@/services/api.js'
+
+// Valgene i "Giver højst"-feltet ved hvert svar
+const NIVEAU_VALG = [
+  { vaerdi: 3, tekst: 'Svær (ingen begrænsning)' },
+  { vaerdi: 2, tekst: 'Mellem' },
+  { vaerdi: 1, tekst: 'Let' },
+]
+
+// Viser maksNiveau som ord i oversigten
+function niveauTekst(n) {
+  return { 1: 'Let', 2: 'Mellem', 3: 'Svær' }[n] ?? '–'
+}
 
 // ---------- Spørgsmål ----------
 
@@ -40,6 +55,18 @@ async function hentSpoergsmaal() {
   }
 }
 
+// Fjerner mellemrum omkring teksterne. Tomme barn- og gruppetekster fjernes helt,
+// så quizzen bruger den almindelige tekst i stedet
+function rydSvar(svar) {
+  const ren = { ...svar, tekst: svar.tekst.trim() }
+  for (const felt of ['tekstBarn', 'tekstGruppe']) {
+    const vaerdi = (ren[felt] ?? '').trim()
+    if (vaerdi) ren[felt] = vaerdi
+    else delete ren[felt]
+  }
+  return ren
+}
+
 // ---------- Opret spørgsmål ----------
 
 // Det nye spørgsmål, mens man skriver det i formularen
@@ -47,8 +74,8 @@ const nytSpoergsmaal = ref({
   tekst: '',
   // Starter med to svarmuligheder. Flere kan tilføjes
   svar: [
-    { id: 's1', tekst: '', point: 0 },
-    { id: 's2', tekst: '', point: 0 }
+    { id: 's1', tekst: '', maksNiveau: 3 },
+    { id: 's2', tekst: '', maksNiveau: 3 }
   ]
 })
 
@@ -61,7 +88,7 @@ function tilfoejSvarmulighed() {
   nytSpoergsmaal.value.svar.push({
     id: crypto.randomUUID(),
     tekst: '',
-    point: 0
+    maksNiveau: 3
   })
 }
 
@@ -94,12 +121,6 @@ async function opretSpoergsmaal() {
     return
   }
 
-  // Point skal være hele tal på mindst 0
-  if (nytSpoergsmaal.value.svar.some((svar) => !Number.isInteger(svar.point) || svar.point < 0)) {
-    gemBesked.value = 'Point skal være hele tal på mindst 0.'
-    return
-  }
-
   gemmer.value = true
 
   try {
@@ -114,12 +135,9 @@ async function opretSpoergsmaal() {
     const data = {
       id,
       tekst: nytSpoergsmaal.value.tekst.trim(),
-      type: 'point',
+      type: 'niveau',
       raekkefoelge: sidstePlacering + 1,
-      svar: nytSpoergsmaal.value.svar.map((svar) => ({
-        ...svar,
-        tekst: svar.tekst.trim()
-      }))
+      svar: nytSpoergsmaal.value.svar.map(rydSvar)
     }
 
     // PUT gemmer spørgsmålet på dets egen unikke placering
@@ -140,8 +158,8 @@ async function opretSpoergsmaal() {
     nytSpoergsmaal.value = {
       tekst: '',
       svar: [
-        { id: 's1', tekst: '', point: 0 },
-        { id: 's2', tekst: '', point: 0 }
+        { id: 's1', tekst: '', maksNiveau: 3 },
+        { id: 's2', tekst: '', maksNiveau: 3 }
       ]
     }
 
@@ -191,14 +209,9 @@ async function gemRedigering() {
     return
   }
 
-  if (data.svar.some((svar) => !Number.isInteger(svar.point) || svar.point < 0)) {
-    redigerBesked.value = 'Point skal være hele tal på mindst 0.'
-    return
-  }
-
   // Fjerner mellemrum omkring tekster og bevarer alle øvrige felter
   data.tekst = data.tekst.trim()
-  data.svar = data.svar.map((svar) => ({ ...svar, tekst: svar.tekst.trim() }))
+  data.svar = data.svar.map(rydSvar)
 
   gemmerRedigering.value = true
 
@@ -291,125 +304,13 @@ async function sletSpoergsmaal(sp) {
   }
 }
 
-// ---------- Pointgrænser ----------
-
-// Blå bane fra 5 point og rød bane fra 9 point er startværdier
-const baneGraenser = ref({
-  blaaFra: 5,
-  roedFra: 9
-})
-
-// true mens grænserne gemmes, og beskeden bagefter
-const gemmerGraenser = ref(false)
-const graenseBesked = ref('')
-
-// Henter de gemte pointgrænser. Fejler det, beholdes startværdierne 5 og 9
-async function hentBaneGraenser() {
-  try {
-    const response = await fetch(`${GRAENSER_URL}.json`)
-
-    if (!response.ok) {
-      throw new Error('Hentning fejlede med status ' + response.status)
-    }
-
-    const data = await response.json()
-
-    // Tjekker, at data indeholder gyldige pointgrænser
-    if (
-      !data ||
-      !Number.isInteger(data.blaaFra) ||
-      !Number.isInteger(data.roedFra) ||
-      data.blaaFra < 1 ||
-      data.roedFra <= data.blaaFra
-    ) {
-      throw new Error('Pointgrænserne mangler eller er ugyldige')
-    }
-
-    baneGraenser.value = data
-  } catch (fejl) {
-    graenseBesked.value = 'Pointgrænserne kunne ikke hentes. Felterne viser startværdierne 5 og 9.'
-    console.error('Fejl ved hentning af pointgrænser:', fejl)
-  }
-}
-
-// Gemmer pointgrænserne. QuizSide.vue bruger dem til at vælge mellem grøn, blå og rød.
-// const { blaaFra, roedFra } = ... henter de to værdier ud af objektet på én gang
-async function gemBaneGraenser() {
-  graenseBesked.value = ''
-
-  const { blaaFra, roedFra } = baneGraenser.value
-
-  // Hele tal, mindst 1 for blå og en højere grænse for rød
-  if (
-    !Number.isInteger(blaaFra) ||
-    !Number.isInteger(roedFra) ||
-    blaaFra < 1 ||
-    roedFra <= blaaFra
-  ) {
-    graenseBesked.value = 'Brug hele tal. Blå skal være mindst 1, og rød skal være højere end blå.'
-    return
-  }
-
-  if (!auth.currentUser) {
-    graenseBesked.value = 'Du skal være logget ind.'
-    return
-  }
-
-  gemmerGraenser.value = true
-
-  try {
-    const token = await hentToken()
-
-    // PUT erstatter indholdet på denne placering
-    const response = await fetch(`${GRAENSER_URL}.json?auth=${encodeURIComponent(token)}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ blaaFra, roedFra })
-    })
-
-    if (!response.ok) {
-      throw new Error('Gemning fejlede med status ' + response.status)
-    }
-
-    graenseBesked.value = 'Pointgrænserne er gemt.'
-  } catch (fejl) {
-    graenseBesked.value = 'Pointgrænserne kunne ikke gemmes.'
-    console.error('Fejl ved gemning af pointgrænser:', fejl)
-  } finally {
-    gemmerGraenser.value = false
-  }
-}
-
 // Henter alt, når komponenten vises
 onMounted(() => {
   hentSpoergsmaal()
-  hentBaneGraenser()
 })
 </script>
 
 <template>
-  <!-- Pointgrænser -->
-  <!-- v-model.number laver det indtastede om til et tal i stedet for tekst -->
-  <section class="admin-kort">
-    <h2>Pointgrænser for baner</h2>
-
-    <p>Pointgrænserne bruges sammen med krav til højde, erfaring og tryghed.</p>
-
-    <label for="blaa-fra">Blå bane fra antal point</label>
-    <input id="blaa-fra" v-model.number="baneGraenser.blaaFra" type="number" min="1" step="1" required />
-
-    <label for="roed-fra">Rød bane fra antal point</label>
-    <input id="roed-fra" v-model.number="baneGraenser.roedFra" type="number" min="2" step="1" required />
-
-    <div class="knapper">
-      <BaseButton type="button" variant="primary" :disabled="gemmerGraenser" @click="gemBaneGraenser">
-        {{ gemmerGraenser ? 'Gemmer...' : 'Gem pointgrænser' }}
-      </BaseButton>
-    </div>
-
-    <p v-if="graenseBesked" role="status">{{ graenseBesked }}</p>
-  </section>
-
   <!-- Opret spørgsmål -->
   <section class="admin-kort">
     <h2>Opret spørgsmål</h2>
@@ -422,15 +323,17 @@ onMounted(() => {
       <label :for="'nyt-svar-' + svar.id">Svarmulighed {{ indeks + 1 }}</label>
       <input :id="'nyt-svar-' + svar.id" v-model="svar.tekst" type="text" required />
 
-      <label :for="'nye-point-' + svar.id">Point</label>
-      <input
-        :id="'nye-point-' + svar.id"
-        v-model.number="svar.point"
-        type="number"
-        min="0"
-        step="1"
-        required
-      />
+      <!-- Valgfri tekster, når man svarer for sit barn eller en gruppe (fx "Det tør mit barn ikke") -->
+      <label :for="'nyt-svar-barn-' + svar.id">Tekst, når man svarer for sit barn (valgfri)</label>
+      <input :id="'nyt-svar-barn-' + svar.id" v-model="svar.tekstBarn" type="text" />
+
+      <label :for="'nyt-svar-gruppe-' + svar.id">Tekst, når man svarer for en gruppe (valgfri)</label>
+      <input :id="'nyt-svar-gruppe-' + svar.id" v-model="svar.tekstGruppe" type="text" />
+
+      <label :for="'nyt-niveau-' + svar.id">Giver højst</label>
+      <select :id="'nyt-niveau-' + svar.id" v-model.number="svar.maksNiveau">
+        <option v-for="v in NIVEAU_VALG" :key="v.vaerdi" :value="v.vaerdi">{{ v.tekst }}</option>
+      </select>
 
       <!-- Vises kun, når der er mere end to svar -->
       <div v-if="nytSpoergsmaal.svar.length > 2" class="knapper">
@@ -476,7 +379,7 @@ onMounted(() => {
 
       <ul>
         <li v-for="svar in sp.svar" :key="svar.id">
-          {{ svar.tekst }} — {{ svar.point }} point
+          {{ svar.tekst }}<template v-if="svar.maksNiveau"> — giver højst {{ niveauTekst(svar.maksNiveau) }}</template>
         </li>
       </ul>
 
@@ -505,17 +408,19 @@ onMounted(() => {
             required
           />
 
-          <!-- Point kan kun rettes på almindelige pointspørgsmål -->
-          <div v-if="redigerer.type === 'point'">
-            <label :for="'rediger-point-' + sp.id + '-' + svar.id">Point</label>
-            <input
-              :id="'rediger-point-' + sp.id + '-' + svar.id"
-              v-model.number="svar.point"
-              type="number"
-              min="0"
-              step="1"
-              required
-            />
+          <!-- Valgfri tekster, når man svarer for sit barn eller en gruppe -->
+          <label :for="'rediger-svar-barn-' + sp.id + '-' + svar.id">Tekst, når man svarer for sit barn (valgfri)</label>
+          <input :id="'rediger-svar-barn-' + sp.id + '-' + svar.id" v-model="svar.tekstBarn" type="text" />
+
+          <label :for="'rediger-svar-gruppe-' + sp.id + '-' + svar.id">Tekst, når man svarer for en gruppe (valgfri)</label>
+          <input :id="'rediger-svar-gruppe-' + sp.id + '-' + svar.id" v-model="svar.tekstGruppe" type="text" />
+
+          <!-- "Giver højst" kan kun rettes på spørgsmål, der styrer anbefalingen -->
+          <div v-if="redigerer.type === 'niveau'">
+            <label :for="'rediger-niveau-' + sp.id + '-' + svar.id">Giver højst</label>
+            <select :id="'rediger-niveau-' + sp.id + '-' + svar.id" v-model.number="svar.maksNiveau">
+              <option v-for="v in NIVEAU_VALG" :key="v.vaerdi" :value="v.vaerdi">{{ v.tekst }}</option>
+            </select>
           </div>
         </div>
 
