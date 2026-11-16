@@ -1,6 +1,10 @@
 <script setup>
+// POPUP PÅ KORTET
+// Viser den bane, man har klikket på. Alle tekster og tal kommer fra Firebase via
+// services/baner.js – de samme data som banekortene på forsiden (TrackInfo.vue).
 import { computed } from 'vue'
 import logoUrl from '@/assets/images/gomonkey-logo.svg'
+import { trinFor, niveauFor, harSvaerhedsgrad, faktaFor } from '@/services/baner.js'
 
 const props = defineProps({
   bane: {
@@ -11,12 +15,13 @@ const props = defineProps({
 
 defineEmits(['luk'])
 
-// De tre skalaer i popuppen. Kun dem, banen har et tal for, bliver vist
-const skalaer = computed(() => [
-  { label: 'Sværhedsgrad', vaerdi: props.bane.svaerhedsgradTal },
-  { label: 'Højde over jorden', vaerdi: props.bane.hoejdekravTal },
-  { label: 'Adrenalin & fart', vaerdi: props.bane.adrenalinTal },
-].filter(s => s.vaerdi))
+// Niveauet med ord (Let, Mellem, Svær – eller "For alle" for Bounce) og som trin 1–3
+const niveau = computed(() => niveauFor(props.bane))
+const trin = computed(() => trinFor(props.bane))
+const medSvaerhedsgrad = computed(() => harSvaerhedsgrad(props.bane))
+
+// Faktatallene i 2×2-gitteret: Banehøjde, Banelængde, Forhindringer, Antal svæv
+const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
 </script>
 
 <template>
@@ -44,28 +49,52 @@ const skalaer = computed(() => [
       </button>
     </div>
 
-    <p v-if="bane.beskrivelse" class="popup-beskrivelse">
-      {{ bane.beskrivelse }}
+    <!-- Beskrivelsen – samme tekst som på forsiden. Skjules på smalle skærme -->
+    <p v-if="bane.description" class="popup-beskrivelse">
+      {{ bane.description }}
     </p>
 
-    <!-- Skalaer: 5 logoer, de aktive står tydeligt -->
-    <ul v-if="skalaer.length" class="popup-skalaer">
-      <li v-for="s in skalaer" :key="s.label" class="skala">
-        <span class="skala-label">{{ s.label }}</span>
-        <span class="skala-ikoner">
+    <!-- Sværhedsgrad: 3 aber (fyldte = niveau) og ordet skrevet ud ved siden af.
+         Samme 3 trin som bjælken på forsiden. Bounce viser 3 tomme aber og "For alle" -->
+    <div class="skala">
+      <span class="skala-label">Sværhedsgrad</span>
+      <span class="skala-vaerdi">
+        <span
+          class="skala-ikoner"
+          role="img"
+          :aria-label="medSvaerhedsgrad ? `Sværhedsgrad: ${niveau}, ${trin} ud af 3` : `Sværhedsgrad: ${niveau}`"
+        >
           <img
-            v-for="i in 5"
+            v-for="i in 3"
             :key="i"
             :src="logoUrl"
             alt=""
             class="skala-logo"
-            :class="{ aktiv: i <= s.vaerdi }"
+            :class="{ aktiv: medSvaerhedsgrad && i <= trin }"
           />
-          <!-- Skærmlæsere får tallet i stedet for 5 billeder -->
-          <span class="sr-only">{{ s.vaerdi }} ud af 5</span>
         </span>
-      </li>
-    </ul>
+        <span class="skala-ord">{{ niveau }}</span>
+      </span>
+    </div>
+
+    <!-- Faktatal i 2×2-gitter – samme tal som på forsiden -->
+    <dl v-if="fakta.length" class="popup-fakta">
+      <div v-for="f in fakta" :key="f.key" class="popup-fakta__boks">
+        <dt>{{ f.label }}</dt>
+        <dd>{{ bane[f.key] }}</dd>
+      </div>
+    </dl>
+
+    <!-- Kravet under faktatallene -->
+    <p v-if="bane.requirements" class="popup-krav">
+      <strong>Krav:</strong> {{ bane.requirements }}
+    </p>
+
+    <!-- Link til banens kort på forsiden (artiklen har banens id, fx /#bane-6) -->
+    <RouterLink :to="{ path: '/', hash: `#${bane.id}` }" class="button-arrow popup-link">
+      Læs mere om banen
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+    </RouterLink>
   </div>
 </template>
 
@@ -108,6 +137,9 @@ const skalaer = computed(() => [
     right: s.$spacing-xs;
     bottom: s.$spacing-xs;
     width: auto;
+    // Dækker højst ca. halvdelen af kortet – resten kan scrolles inde i popup'en
+    max-height: 50%;
+    overflow-y: auto;
   }
 }
 
@@ -192,34 +224,38 @@ const skalaer = computed(() => [
 .popup-beskrivelse {
   margin: s.$spacing-xs 0 s.$spacing-s;
   font-size: 0.95rem;
+  font-weight: 400;
   line-height: 1.5;
+
+  // Smalle skærme: skjules, så popup'en ikke dækker for meget af kortet
+  @media (max-width: 600px) {
+    display: none;
+  }
 }
 
-/* --- Skalaer --- */
-.popup-skalaer {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin: 0;
-  padding: 0; // Nulstiller padding fra ul i _typography.scss
-  list-style: none;
-}
-
+/* --- Sværhedsgrad (aberne) --- */
 .skala {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: s.$spacing-xs;
+  margin-top: s.$spacing-xs;
   padding: 0.6rem 0.9rem;
   border-radius: 0.75rem;
   background-color: c.$forest_green25;
-  font-size: 0.85rem; // Overskriver li-størrelsen fra _typography.scss
+  font-size: 0.875rem; // 14px
   line-height: 1.3;
 }
 
 .skala-label {
   font-weight: 600;
   color: c.$primary_darkgreen;
+}
+
+.skala-vaerdi {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .skala-ikoner {
@@ -229,8 +265,8 @@ const skalaer = computed(() => [
 }
 
 .skala-logo {
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 1.25rem;
+  height: 1.25rem;
   object-fit: contain;
   opacity: 0.25;
   transition: opacity 0.2s ease;
@@ -240,14 +276,59 @@ const skalaer = computed(() => [
   }
 }
 
-// Skjult tekst til skærmlæsere
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
+// Ordet (Let, Mellem, Svær eller "For alle") står altid skrevet ud
+.skala-ord {
+  font-weight: 800;
+  color: c.$primary_darkgreen;
+}
+
+/* --- Faktatal (2×2) --- */
+// Samme mørke bokse som faktaboksene på forsiden
+.popup-fakta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin: 0.5rem 0 0;
+}
+
+.popup-fakta__boks {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  background-color: c.$primary_darkgreen;
+  color: c.$primary_light25;
+
+  dt {
+    font-size: 0.875rem; // 14px
+    font-weight: 400;
+    opacity: 0.85;
+  }
+
+  dd {
+    margin: 0.1rem 0 0;
+    font-size: 1rem;
+    font-weight: 800;
+  }
+}
+
+/* --- Krav --- */
+.popup-krav {
+  margin: 0.6rem 0 0;
+  font-size: 0.875rem; // 14px
+  font-weight: 400;
+  line-height: 1.4;
+
+  strong {
+    font-weight: 800;
+  }
+}
+
+/* --- Link til forsiden --- */
+// .button-arrow fra _buttons.scss – her mørk, så den kan læses på den lyse baggrund
+.popup-link {
+  margin-top: 0.75rem;
+  color: c.$primary_darkgreen;
+  font-size: 0.95rem;
+  font-weight: 700;
 }
 
 @media (prefers-reduced-motion: reduce) {

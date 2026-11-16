@@ -5,7 +5,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 
 // Banerne og reglerne for niveauer står i services/baner.js,
 // så hero-sektionen (banestigen) bruger præcis de samme data
-import { hentBaner, NIVEAUER, trinFor, niveauFor } from '@/services/baner.js'
+import { hentBaner, NIVEAUER, trinFor, niveauFor, harSvaerhedsgrad, faktaFor } from '@/services/baner.js'
 
 // Tom liste til banerne. Siden opdateres, når listen får data
 const baner = ref([])
@@ -32,18 +32,8 @@ onMounted(async () => {
     }
 })
 
-// Faktaboksene. Kun felter, banen har udfyldt, bliver vist
-const FAKTA = [
-    { key: 'trackHeight', label: 'Banehøjde' },
-    { key: 'trackLength', label: 'Banelængde' },
-    { key: 'obstacles', label: 'Forhindringer' },
-    { key: 'glideAmount', label: 'Antal svæv' },
-    { key: 'longestGlide', label: 'Længste svæv' },
-]
-
-function faktaFor(bane) {
-    return FAKTA.filter(f => bane[f.key])
-}
+// Faktaboksene (faktaFor) og niveauerne står i services/baner.js,
+// så popup'en på kortet viser præcis de samme tal og ord
 
 // (i)-forklaringen ved "Sværhedsgrad": id på banen, hvis boble er åben (null = ingen)
 const aabenInfo = ref(null)
@@ -92,10 +82,9 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         <!-- Forklaring af sværhedsbjælken, som står på hver bane længere nede.
              Står her ét sted, så man ikke selv skal gætte, hvad bjælken betyder -->
         <section id="skala-forklaring" class="skala-forklaring" aria-labelledby="skala-titel">
-            <h4 id="skala-titel" class="skala-titel">Sådan læser du sværhedsgraden</h4>
+            <h4 id="skala-titel" class="skala-titel">Hvad betyder sværhedsgraden?</h4>
             <p class="skala-tekst">
-                Bjælken på hver bane har tre trin, der viser, hvor svær den er i forhold til parkens andre baner.
-                Jo flere trin der er fyldt ud, jo sværere er banen.
+                Sværhedsgraden viser, hvor højt oppe du er, hvor lange svævene er, og hvor meget banen kræver af din krop og dit mod. Jo flere trin der er fyldt ud på bjælken, jo sværere er banen.
             </p>
 
             <!-- De tre niveauer. Hvert kort har samme trin-bjælke som banerne,
@@ -112,6 +101,10 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                     </div>
                     <strong class="skala-trin__navn">{{ niveau.navn }}</strong>
                     <p class="skala-trin__tekst">{{ niveau.tekst }}</p>
+                    <!-- Hvem niveauet passer til (kun hvis niveauet har en "passer"-tekst) -->
+                    <p v-if="niveau.passer" class="skala-trin__tekst">
+                        <strong>Passer til:</strong> {{ niveau.passer }}
+                    </p>
                 </li>
             </ul>
         </section>
@@ -127,7 +120,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         :id="bane.id"
         :class="[bane.class, `bane--${bane.id}`]"
         class="bane"
-    ><!-- id = banens id (fx "bane-6"), så banestigen i hero kan linke direkte hertil -->
+    ><!-- id = banens id (fx "bane-6"), så hero og popup'en på kortet kan linke direkte hertil (/#bane-6) -->
         <div class="bane__kort">
             <!-- Overskriften står i sin egen række over teksten,
                  så billedet kun flugter med teksten under den -->
@@ -197,24 +190,36 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                         <span class="difficulty__niveau">{{ niveauFor(bane) }}</span>
                     </div>
                     <!-- Bjælke med tre trin: 1 fyldt = Let, 2 = Mellem, 3 = Svær.
-                         Præcis samme bjælke og farve som i forklaringen øverst -->
+                         Præcis samme bjælke og farve som i forklaringen øverst.
+                         Bounce har ingen sværhedsgrad: bjælken vises, men ingen trin er fyldt -->
                     <div
                         class="trin-bjaelke"
                         role="meter"
                         aria-label="Sværhedsgrad"
                         :aria-valuetext="niveauFor(bane)"
-                        :aria-valuenow="trinFor(bane)"
-                        aria-valuemin="1"
+                        :aria-valuenow="harSvaerhedsgrad(bane) ? trinFor(bane) : 0"
+                        aria-valuemin="0"
                         aria-valuemax="3"
                     >
                         <span
                             v-for="t in 3"
                             :key="t"
                             class="trin-bjaelke__trin"
-                            :class="{ 'er-fyldt': t <= trinFor(bane) }"
+                            :class="{ 'er-fyldt': harSvaerhedsgrad(bane) && t <= trinFor(bane) }"
                         ></span>
                     </div>
                 </div>
+
+                <!-- Link til kortet, hvor kun denne bane er valgt (?bane=… læses af KortFilter).
+                     .button-arrow fra _buttons.scss – her bare i mørk farve, så den kan læses på den lyse baggrund -->
+                <RouterLink
+                    :to="{ path: '/kort', query: { bane: bane.id } }"
+                    class="button-arrow bane__kort-link"
+                    :aria-label="`Se ${bane.name} på kortet`"
+                >
+                    Se på kortet
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                </RouterLink>
             </div>
         </div>
     </article>
@@ -293,7 +298,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 @media (min-width: 900px) {
     .baner-intro {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr);
         column-gap: s.$spacing-xl;
         align-items: end;
     }
@@ -369,6 +374,10 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         font-size: 0.85rem;
         line-height: 1.45;
         color: c.$primary_black100;
+
+        strong {
+            font-weight: 700;
+        }
     }
 }
 
@@ -551,21 +560,37 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 }
 
 /* --- Sværhedsgrad --- */
+// "Se på kortet"-linket nederst på hver bane. Mørkt, fordi baggrunden er lys
+.bane__kort-link {
+    color: c.$primary_darkgreen;
+    font-weight: 700;
+}
+
 .difficulty {
     padding-top: s.$spacing-xs;
 
+    // "Sværhedsgrad" er en lille, dæmpet etiket med store bogstaver.
+    // Selve niveauet ("Let", "Mellem" …) står stort og fedt – det er det, man skal se
     .difficulty__label {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-end;
         margin-bottom: 0.5rem;
-        font-size: 0.95rem;
-        font-weight: 700;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: c.$primary_black75;
     }
 
     // Niveauet ude til højre, fx "Let"
     .difficulty__niveau {
-        font-weight: 800;
+        font-size: 1.1rem;
+        font-weight: 900;
+        letter-spacing: 0;
+        text-transform: none;
+        line-height: 1;
+        color: c.$primary_black100;
     }
 }
 

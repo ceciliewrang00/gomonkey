@@ -15,6 +15,31 @@ const SPOERGSMAAL = [
     sp: 'Skal jeg have erfaring med klatring?',
     svar: ['Nej. Vores instruktører lærer dig alt, hvad du skal vide, før du går i gang.'],
   },
+  // Sikkerhed – teksterne bygger på gomonkey.dk/inspiration/sikkerhedssystem/
+  {
+    sp: 'Er det sikkert at klatre?',
+    svar: [
+      'Ja. Vi bruger et sikkerhedssystem med "continuous belay": Du klikker dig på sikkerhedswiren nede på jorden og kan slet ikke klikke dig af, før du står på jorden igen efter banen. Læs mere om ',
+      { tekst: 'vores sikkerhedssystem', href: 'https://gomonkey.dk/inspiration/sikkerhedssystem/' },
+      '.',
+    ],
+  },
+  {
+    sp: 'Hvordan foregår instruktionen?',
+    svar: ['Alle starter med en grundig instruktion, hvor vi viser, hvordan selen bruges, og forklarer reglerne i parken. Vores guider tjekker, at alles seler sidder rigtigt.'],
+    liste: [
+      'Bagefter prøver du en kort prøvebane – så mange gange du har lyst.',
+      'Ingen bliver sendt op i træerne, før de føler sig helt trygge.',
+    ],
+  },
+  {
+    sp: 'Hvem er instruktørerne?',
+    svar: ['Alle vores guider er uddannede klatreinstruktører og kender udstyret, redningsprocedurerne og sikkerheden ud og ind. De er også uddannet i førstehjælp og hjælper gerne med et par opmuntrende ord undervejs.'],
+  },
+  {
+    sp: 'Kan man komme ned, hvis man fortryder?',
+    svar: ['Ja. Der er flere nedgangsstiger undervejs på klatrebanerne, så du kan komme ned, hvis du ikke har lyst til at fortsætte.'],
+  },
   {
     sp: 'Hvad koster det, og hvor længe må vi klatre?',
     svar: ['Klatring koster fra 230 kr. Prisen inkluderer 3 timers klatring, udstyr, instruktion og adgang til Bounce.'],

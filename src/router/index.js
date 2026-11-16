@@ -16,7 +16,22 @@ const router = createRouter({
       return savedPosition
     }
     if (to.hash) {
-      return { el: to.hash, top: 96, behavior: 'smooth' }
+      // Banekortene hentes fra Firebase, så de findes først lidt efter, at siden er vist
+      // (fx når man kommer fra "Læs mere om banen" på kortet).
+      // Derfor venter vi op til 3 sekunder på, at elementet dukker op, før vi scroller
+      return new Promise((resolve) => {
+        const start = Date.now()
+        const led = () => {
+          if (document.querySelector(to.hash)) {
+            resolve({ el: to.hash, top: 96, behavior: 'smooth' })
+          } else if (Date.now() - start > 3000) {
+            resolve({ top: 0 })
+          } else {
+            setTimeout(led, 100)
+          }
+        }
+        led()
+      })
     }
     return { top: 0 }
   },

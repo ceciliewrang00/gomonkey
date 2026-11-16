@@ -7,15 +7,23 @@
 // På mobil er filteret skjult bag en "Filtre"-knap og glider ind fra venstre.
 
 import { ref, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 
 // Databaseadresserne står samlet i api.js
 import { KORTFILTER_URL } from '@/services/api.js'
+// Banernes navn og sværhedsgrad kommer fra de fælles banedata (samme som forsiden og popup'en)
+import { hentBaner as hentFaellesBaner, niveauFor } from '@/services/baner.js'
 
 // Beskeden, der sendes op til KortView.vue med det nye filter
 const emit = defineEmits(['filter-changed'])
 
+// Kommer man fra "Se på kortet" på forsiden, står banens id i adressen, fx /kort?bane=bane-6.
+// Så er den bane valgt fra start. Flere baner kan skrives med komma: ?bane=bane-1,bane-2
+const route = useRoute()
+const fraAdressen = String(route.query.bane ?? '').split(',').filter(Boolean)
+
 // Id'erne på de baner, der er sat flueben ved, fx ['bane-1', 'bane-6']
-const valgteFiltre = ref([])
+const valgteFiltre = ref(fraAdressen)
 
 // Er filteret åbent på mobil?
 const erAaben = ref(false)
@@ -43,6 +51,21 @@ async function hentBaner() {
 // Det gør så dataene kan bruges som JavaScript-objekter i komponenten
     const data = await response.json()
 
+    // Navn og sværhedsgrad hentes fra de fælles banedata, så filteret siger det samme
+    // som forsiden og popup'en (fx "Sort" = "Svær"). Fra "mapfilter" bruges kun den
+    // korte undertekst (fx "Tarzan spring" eller "Frit fald – tilkøb 30 kr.")
+    let faelles = []
+    try {
+      faelles = await hentFaellesBaner()
+    } catch (e) {
+      console.error('Banernes navne kunne ikke hentes:', e)
+    }
+    const medFaellesData = (item) => {
+      const bane = faelles.find((b) => b.id === item.id)
+      if (!bane) return item
+      return { ...item, titel: bane.name, svaerhed: niveauFor(bane) }
+    }
+
 //-------------------------------------------------------------------------------------------------------------
 
 
@@ -53,11 +76,11 @@ async function hentBaner() {
 
   // Hvis data kommer som et array, fjernes eventuelle tomme værdier
       if (Array.isArray(data)) {
-        banerListe.value = data.filter(item => item !== null && item !== undefined)
+        banerListe.value = data.filter(item => item !== null && item !== undefined).map(medFaellesData)
 
   // Hvis data kommer som et objekt, omdannes det til et array
       } else {
-        banerListe.value = Object.values(data)
+        banerListe.value = Object.values(data).map(medFaellesData)
       }
     }
 
@@ -86,9 +109,10 @@ onMounted(() => {
 
 // Kortet opdateres med det samme, når valget ændrer sig – der er ingen "Anvend"-knap.
 // Er intet valgt, sendes 'alle', så alle baner vises
+// immediate: true = sendes også med det samme, så en bane fra adressen vises på kortet fra start
 watch(valgteFiltre, (valgte) => {
   emit('filter-changed', valgte.length === 0 ? 'alle' : [...valgte])
-})
+}, { immediate: true })
 
 // Sætter eller fjerner flueben ved én bane
 function vaelgBane(id, checked) {
@@ -192,7 +216,7 @@ function togglerFilter() {
               <div v-if="bane.undertekst || bane.svaerhed" class="under-linie">
                 <span v-if="bane.undertekst" class="undertekst">{{ bane.undertekst }}</span>
                 <!-- Sværheds-mærke. Bruger .badge fra _badges.scss -->
-                <span v-if="bane.svaerhed" class="badge ekstra-info">Niveau: {{ bane.svaerhed }}</span>
+                <span v-if="bane.svaerhed" class="badge ekstra-info">Sværhedsgrad: {{ bane.svaerhed }}</span>
               </div>
             </div>
           </label>
