@@ -1,16 +1,20 @@
 <script setup>
 // Banefarverne – samme farver som på kortet.
-// klasse er banens id fra $kort-bane-farver i _colors.scss
-const baneFarver = [
-  { navn: 'Bounce', klasse: 'bounce' },
-  { navn: 'Gul', klasse: 'bane-1' },
-  { navn: 'Grøn', klasse: 'bane-2' },
-  { navn: 'Lyserød', klasse: 'bane-3' },
-  { navn: 'Blå', klasse: 'bane-4' },
-  { navn: 'Lilla', klasse: 'bane-5' },
-  { navn: 'Rød', klasse: 'bane-6' },
-  { navn: 'Sort', klasse: 'bane-7' },
-]
+// Navne og rækkefølge (fra let til svær) hentes fra de fælles banedata i Firebase
+// (services/baner.js), så forklaringen altid passer med forsiden, kortet og filtret.
+// Farven kommer fra $kort-bane-farver i _colors.scss ud fra banens id (fx 'bane-1')
+import { ref, onMounted } from 'vue'
+import { hentBaner } from '@/services/baner.js'
+
+const baneFarver = ref([])
+
+onMounted(async () => {
+  try {
+    baneFarver.value = (await hentBaner()).map((bane) => ({ navn: bane.name, klasse: bane.id }))
+  } catch (e) {
+    console.error('Banerne kunne ikke hentes til farveforklaringen', e)
+  }
+})
 </script>
 
 <template>
