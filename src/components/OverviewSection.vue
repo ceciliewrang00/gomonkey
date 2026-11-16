@@ -24,15 +24,14 @@ const baneFarver = [
           class="overblik-kort"
         >
         <div class="kort-overlay">
-          <!-- Knappen er .button-primary fra _buttons.scss.
-               Kun farverne overskrives i .kort-knap nedenfor, så knappen er lyserød på kortet -->
-          <span class="button-primary kort-knap">Se det fulde kort</span>
+          <!-- .button-primary + .button-pink fra _buttons.scss -->
+          <span class="button-primary button-pink kort-knap">Se det fulde kort</span>
         </div>
       </RouterLink>
 
       <!-- Tekstindhold i mørkt kort -->
       <div id="overblik-tekst" class="tekst-indhold">
-        <span class="badge overblik-badge">Udforsk terrænet</span>
+        <span class="badge badge--outline-green">Udforsk terrænet</span>
         <h2>Overblik over parken</h2>
         <p class="lead">
           Før du kaster dig ud i eventyret, så få styr på terrænet. Vores interaktive kort viser dig alle baner, startpunkter og højdekurver.
@@ -87,13 +86,7 @@ const baneFarver = [
     }
   }
 
-  // "Udforsk terrænet"-badget: ingen baggrund, men en lys grøn kant og tekst i samme farve.
-  // Udseendet kommer fra .badge i _badges.scss – her sættes kun farverne og kanten
-  .overblik-badge {
-    --badge-bg: transparent;
-    --badge-color: #{c.$forest_green25};
-    border: 1.5px solid c.$forest_green25;
-  }
+  // "Udforsk terrænet"-badget bruger badge--outline-green fra _badges.scss
 
   /* --- Tekst i mørkt kort --- */
   .tekst-indhold {
@@ -239,13 +232,6 @@ const baneFarver = [
       padding: s.$spacing-m;
       background-color: rgba(c.$primary_black100, 0.25);
       transition: background-color 0.4s ease;
-    }
-
-    // Knappen er .button-primary fra _buttons.scss.
-    // Her overskrives kun farverne: lyserød baggrund og sort tekst
-    .kort-knap {
-      background-color: c.$forest_pink100;
-      color: c.$primary_black100;
     }
 
     &:hover,

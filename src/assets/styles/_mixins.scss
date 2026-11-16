@@ -9,3 +9,14 @@
     background-color: c.$forest_pink50;
     color: c.$primary_black100;
 }
+
+/* Mørk gradient fra venstre over et baggrundsbillede, så teksten til venstre kan læses.
+   Bruges i hero og banner-sektionen. Brug: background: m.billede-gradient(); */
+@function billede-gradient() {
+    @return linear-gradient(
+        100deg,
+        rgba(c.$primary_black100, 0.85) 0%,
+        rgba(c.$primary_black100, 0.45) 45%,
+        rgba(c.$primary_black100, 0) 75%
+    );
+}

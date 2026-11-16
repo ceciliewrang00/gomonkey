@@ -15,13 +15,14 @@ import { BOOK_URL } from '@/services/api.js'
       </h2>
 
       <!-- Knappen er .button-primary fra _buttons.scss -->
-      <BaseButton variant="primary" :href="BOOK_URL" class="banner__knap">Book din tur</BaseButton>
+      <BaseButton variant="primary" :href="BOOK_URL" class="button-pink banner__knap">Book din tur</BaseButton>
     </div>
   </section>
 </template>
 
 <style lang="scss" scoped>
 @use '@/assets/styles/colors' as c;
+@use '@/assets/styles/mixins' as m;
 @use '@/assets/styles/spacings' as s;
 
 #banner {
@@ -60,7 +61,8 @@ import { BOOK_URL } from '@/services/api.js'
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: linear-gradient(100deg, rgba(c.$primary_black100, 0.85) 0%, rgba(c.$primary_black100, 0.45) 45%, rgba(c.$primary_black100, 0) 75%);
+    // Samme gradient som hero (billede-gradient i _mixins.scss)
+    background: m.billede-gradient();
   }
 }
 
@@ -81,20 +83,11 @@ h2 {
   padding-top: 0;
 }
 
-// Book-knappen: form og størrelse kommer fra .button-primary i _buttons.scss.
-// Her er den lyserød med sort tekst, så den kan ses på det mørke billede.
-// display: inline-block, så margin virker på <a>
+// Book-knappen: .button-primary + .button-pink fra _buttons.scss.
+// Her styres kun afstanden. display: inline-block, så margin virker på <a>
 .banner__knap {
   display: inline-block;
   margin-top: s.$spacing-l;
-  background-color: c.$forest_pink100;
-  color: c.$primary_black100;
-
-  // Samme hover som .button-primary: lilla baggrund, her med lys tekst
-  &:hover {
-    background-color: c.$secondary_purple100;
-    color: c.$primary_light25;
-  }
 }
 
 // "modet" bruger den fælles .fremhaev-klasse fra _typography.scss

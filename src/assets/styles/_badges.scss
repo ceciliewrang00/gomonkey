@@ -4,7 +4,7 @@
 /* --- BADGES ---
    Små etiketter over overskrifter, fx "Udforsk terrænet".
    Brug: <span class="badge">Tekst</span>
-   Varianter: badge--light, badge--dark, badge--outline
+   Varianter: badge--light, badge--dark, badge--outline, badge--outline-green
 
    Egen farve på én badge – sæt variablerne:
    <span class="badge" style="--badge-bg: #67ACCB; --badge-color: #000F02">Tekst</span>
@@ -43,4 +43,12 @@
     --badge-color: #{c.$primary_light25};
     border: 1.5px solid rgba(c.$primary_light25, 0.5);
     backdrop-filter: blur(4px);
+}
+
+// Gennemsigtig med lysegrøn kant og tekst – til mørke sektioner
+// (fx "Udforsk terrænet" og "Spørgsmål og svar")
+.badge--outline-green {
+    --badge-bg: transparent;
+    --badge-color: #{c.$forest_green25};
+    border: 1.5px solid c.$forest_green25;
 }

@@ -74,12 +74,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 </script>
 
 <template>
-    <!-- En lyserød bue i højre side, der sidder hen over overgangen fra banner-sektionen
-         (lige over) til introen. Kun pynt, så skærmlæsere springer den over -->
-    <div class="sten-samling" aria-hidden="true">
-        <span class="sten-samling__sten sten-samling__sten--bue"></span>
-    </div>
-
     <!-- Intro over banerne. id="bane-info", så "Se banerne"-knapperne linker hertil.
          Det er en div og ikke en <header>, fordi header har sit eget layout i main.scss -->
     <div id="bane-info" class="baner-intro">
@@ -390,41 +384,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     .skala-trin {
         grid-template-columns: 1fr;
     }
-}
-
-/* --- Bue mellem banner-sektionen og introen ---
-   Rækken har ingen højde, så den ikke skubber noget. Buen sidder hen over overgangen
-   fra banner-sektionen (lige over) til introen – mest oppe i banneret, så den ikke
-   dækker forklaringsboksen. Den står helt ude i højre side og er en smule skåret af kanten.
-   Formen er sten4.svg fra public, brugt som maske, så den kan få en farve (lyserød).
-   overflow-x: clip skærer det af, der stikker ud til siden (så siden ikke kan scrolles
-   sidelæns), mens buen stadig må stikke op og ned over overgangen (overflow-y: visible) */
-.sten-samling {
-    position: relative;
-    z-index: 1;
-    height: 0;
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-start;
-    overflow-x: clip;
-    overflow-y: visible;
-}
-
-.sten-samling__sten {
-    display: block;
-    flex-shrink: 0;
-}
-
-// Stor lyserød bue (sten4), spejlvendt så åbningen vender ind mod siden.
-// Den negative margin skubber en lille del af buen ud over højre kant
-.sten-samling__sten--bue {
-    width: clamp(8rem, 15vw, 13rem);
-    aspect-ratio: 42.71 / 40.91;
-    margin-right: calc(clamp(8rem, 15vw, 13rem) * -0.15);
-    background-color: c.$forest_pink100;
-    -webkit-mask: url('/sten4.svg') center / contain no-repeat;
-    mask: url('/sten4.svg') center / contain no-repeat;
-    transform: translateY(-62%) scaleX(-1);
 }
 
 .status {

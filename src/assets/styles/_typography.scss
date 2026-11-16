@@ -19,7 +19,11 @@ h2 {
     padding-top: s.$spacing-xs;
 }
 
-h3 {
+/* h3 – og klassen .h3, som giver en anden overskrift (fx en h2) præcis samme udseende.
+   Brug .h3, når strukturen kræver en h2, men teksten skal se ud som en h3:
+   <h2 class="h3">Undertitel</h2> */
+h3,
+.h3 {
     font-family: ft.$font;
     font-weight: 400;
     font-size: 24px; /* 8 x 3 */

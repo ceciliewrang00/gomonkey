@@ -107,7 +107,7 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
   <section id="faq" class="faq">
     <!-- Venstre side: overskrift og kontakt -->
     <div class="faq__intro">
-      <span class="badge faq__badge">Spørgsmål og svar</span>
+      <span class="badge badge--outline-green">Spørgsmål og svar</span>
       <h2>Godt at vide før I kommer</h2>
       <p>
         Her er svarene på det, vi oftest bliver spurgt om. Kan du ikke finde det, du leder efter,
@@ -115,11 +115,10 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
       </p>
 
       <!-- Hurtig kontakt -->
-      <div class="faq__kontakt">
-        <!-- .button-primary og .button-secondary fra _buttons.scss.
-             Kun farverne overskrives nedenfor, så de kan ses på den mørke baggrund -->
-        <a href="tel:+4525533022" class="button-primary faq__knap-lys">Ring 25 53 30 22</a>
-        <a href="mailto:forestodense@gomonkey.dk" class="button-secondary faq__knap-kant">Skriv til os</a>
+      <!-- .double-button og knapperne kommer fra main.scss og _buttons.scss -->
+      <div class="double-button faq__kontakt">
+        <a href="tel:+4525533022" class="button-primary button-light">Ring 25 53 30 22</a>
+        <a href="mailto:forestodense@gomonkey.dk" class="button-secondary button-secondary--light">Skriv til os</a>
       </div>
     </div>
 
@@ -178,54 +177,14 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
   align-items: flex-start;
   gap: s.$spacing-s;
 
-  h2 {
-    padding-top: 0;
-    font-size: clamp(2rem, 4vw, 2.75rem);
-    line-height: 1.15;
-  }
-
   p {
     margin: 0;
     max-width: 28rem;
   }
 }
 
-// Badget: ingen baggrund, men lys grøn kant og tekst – samme som "Udforsk terrænet" i OverviewSection.
-// Udseendet kommer fra .badge i _badges.scss – her sættes kun farverne og kanten
-.faq__badge {
-  --badge-bg: transparent;
-  --badge-color: #{c.$forest_green25};
-  border: 1.5px solid c.$forest_green25;
-}
-
 .faq__kontakt {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
   margin-top: s.$spacing-xs;
-}
-
-// "Ring"-knappen: lys med mørk tekst
-.faq__knap-lys {
-  background-color: c.$primary_light25;
-  color: c.$primary_darkgreen;
-
-  &:hover {
-    background-color: c.$forest_pink100;
-    color: c.$primary_black100;
-  }
-}
-
-// "Skriv til os"-knappen: lys kant og lys tekst
-.faq__knap-kant {
-  border-color: c.$primary_light25;
-  color: c.$primary_light25;
-
-  &:hover {
-    background-color: c.$forest_pink100;
-    border-color: c.$forest_pink100;
-    color: c.$primary_black100;
-  }
 }
 
 /* --- Spørgsmålene --- */
@@ -236,11 +195,11 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
 .faq__liste {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: s.$spacing-xs;
   max-height: 30rem;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding-right: 1rem; // Luft mellem kortene og scrollbaren
+  padding-right: s.$spacing-s; // Luft mellem kortene og scrollbaren
   padding-bottom: 4rem; // Så det sidste spørgsmål kan scrolles fri af udtoningen
   // Svag udtoning i bunden, så man kan se, at der er flere spørgsmål længere nede
   mask-image: linear-gradient(to bottom, #000 85%, transparent 100%);
@@ -248,7 +207,7 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
 
 .faq__punkt {
   flex-shrink: 0; // Kortene må ikke klemmes sammen i den scrollbare liste
-  padding: 0 1.25rem;
+  padding: 0 s.$spacing-s;
   border-radius: 0.75rem;
   background-color: c.$primary_darkgreen;
 }
@@ -260,7 +219,7 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
   justify-content: space-between;
   align-items: center;
   gap: s.$spacing-s;
-  padding: 1.25rem 0;
+  padding: s.$spacing-s 0;
   font-size: clamp(1.05rem, 1.5vw, 1.2rem);
   font-weight: 700;
   line-height: 1.35;
@@ -323,7 +282,7 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
 
 // Selve svaret
 .faq__svar {
-  padding: 0 3rem 1.25rem 0;
+  padding: 0 s.$spacing-xl s.$spacing-s 0;
 
   p {
     margin: 0;

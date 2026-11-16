@@ -1,11 +1,16 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { hentBaner } from '@/services/baner.js'
+import { hentVejr } from '@/services/vejr.js'
 
 import { BOOK_URL } from '@/services/api.js'
 import heroBillede from '@/assets/images/gomonkey_bane.webp'
+import abeIkon from '@/assets/images/gomonkey-logo.svg'
 
 const baner = ref([])
+
+// Vejret lige nu ved parken, fx { ikon: '☀️', grader: 18 } – null, indtil det er hentet
+const vejr = ref(null)
 
 onMounted(async () => {
   try {
@@ -14,6 +19,26 @@ onMounted(async () => {
     console.error('Banerne kunne ikke hentes til hero', e)
   }
 })
+
+onMounted(async () => {
+  vejr.value = await hentVejr()
+})
+
+// Når vejr-badgen dukker op, skal den også placeres på wiren
+watch(vejr, async () => {
+  await nextTick()
+  opdaterVedScroll()
+})
+
+// Titlen i badgen:
+// vejr-badgen viser temperaturen, fx "6°" – de andre deres egen titel eller antallet af baner
+function titelTekst(trisse) {
+  if (trisse.vejr) return `${vejr.value.grader}°`
+  return trisse.titel ?? `${baner.value.length || 8} klatrebaner`
+}
+
+// Vejr-badgen vises først, når vejret er hentet (og slet ikke, hvis det ikke kan hentes)
+const synligeTrisser = computed(() => TRISSER.filter((t) => !t.vejr || vejr.value))
 
 const heroEl = ref(null)
 const billedeEl = ref(null)
@@ -25,9 +50,13 @@ const wireEl = ref(null)
 // titel: null = antallet af baner fra Firebase, fx "8 klatrebaner"
 // snor: hvor langt badget hænger under wiren (længere = lavere)
 // vip: hvor skævt badget hænger, som om det har sat i sving (0deg = lige)
+// vejr: true = badgen viser vejret lige nu (se services/vejr.js)
+// abe: true = i stedet for en badge hænger GoMonkey-aben på hovedet i halen fra wiren
 const TRISSER = [
-  { id: 'svaev', titel: '126 m svæv', under: 'parkens længste', start: 0.7, slut: 0.73, snor: '2.6rem', vip: '8deg' },
-  { id: 'baner', titel: null, under: 'Næste stop: trætoppene', start: 0.88, slut: 0.91, snor: '4.25rem', vip: '-2deg' },
+  { id: 'abe', abe: true, start: 0.17, slut: 0.25, vip: '0deg' },
+  { id: 'vejr', vejr: true, under: 'i skoven lige nu', start: 0.66, slut: 0.68, snor: '3rem', vip: '-5deg' },
+  { id: 'svaev', titel: '126 m svæv', under: 'parkens længste', start: 0.78, slut: 0.8, snor: '8.5rem', vip: '8deg' },
+  { id: 'baner', titel: null, under: 'Næste stop: trætoppene', start: 0.91, slut: 0.93, snor: '5.25rem', vip: '-2deg' },
 ]
 const trisseEls = ref([])
 
@@ -98,7 +127,7 @@ onUnmounted(() => {
 
     <!-- Badges, der hænger i trisser på wiren. Teksterne står i TRISSER i scriptet -->
     <div
-      v-for="trisse in TRISSER"
+      v-for="trisse in synligeTrisser"
       :key="trisse.id"
       ref="trisseEls"
       :data-trisse="trisse.id"
@@ -107,9 +136,18 @@ onUnmounted(() => {
       :style="{ '--snor': trisse.snor, '--vip': trisse.vip }"
     >
       <span class="hero__trisse-hjul" aria-hidden="true"></span>
-      <span class="hero__trisse-snor" aria-hidden="true"></span>
-      <p class="hero__badge">
-        <strong>{{ trisse.titel ?? `${baner.length || 8} klatrebaner` }}</strong>
+
+      <!-- Aben: hænger på hovedet i sin krøllede hale. Kun pynt -->
+      <template v-if="trisse.abe">
+        <svg class="hero__abe-hale" viewBox="0 0 24 60" aria-hidden="true">
+          <path d="M12 0 C 2 10, 22 16, 12 26 S 2 42, 12 52 C 15 55, 15 58, 12 60" />
+        </svg>
+        <span class="hero__abe" :style="{ '--abe-ikon': `url(${abeIkon})` }" aria-hidden="true"></span>
+      </template>
+
+      <span v-if="!trisse.abe" class="hero__trisse-snor" aria-hidden="true"></span>
+      <p v-if="!trisse.abe" class="hero__badge">
+        <strong>{{ titelTekst(trisse) }}</strong>
         <span>{{ trisse.under }}</span>
       </p>
     </div>
@@ -121,16 +159,18 @@ onUnmounted(() => {
         Forest Odense
       </p>
 
-      <h1 class="hero__titel">
+      <h1>
         Hvor højt<br>
         tør du?
       </h1>
 
-      <p class="hero__undertitel">Klatring, svæv og frit fald midt i skoven</p>
+      <!-- h2 for strukturen, men samme udseende som h3 (.h3 fra _typography.scss) -->
+      <h2 class="h3">Klatring, svæv og frit fald midt i skoven</h2>
 
-      <div class="hero__knapper">
-        <a href="#baner" class="button-primary hero__knap-pink">Find din bane</a>
-        <a :href="BOOK_URL" class="button-secondary hero__knap-hvid">Se oversigtskort</a>
+      <!-- .double-button og knapperne kommer fra main.scss og _buttons.scss -->
+      <div class="double-button hero__knapper">
+        <a href="#baner" class="button-primary button-pink">Find din bane</a>
+        <a :href="BOOK_URL" class="button-secondary button-secondary--light">Se oversigtskort</a>
       </div>
 
       <ul class="hero__fakta">
@@ -145,6 +185,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 @use '@/assets/styles/spacings' as s;
 @use '@/assets/styles/colors' as c;
+@use '@/assets/styles/mixins' as m;
 
 .hero {
   position: relative;
@@ -153,11 +194,12 @@ onUnmounted(() => {
   display: flex;
   align-items: center; /* Lodret centreret i højden */
   box-sizing: border-box;
-  min-height: clamp(640px, 100vh, 70px);
+  // Mindst 640px, ellers en skærm høj, men højst 750px
+  min-height: clamp(640px, 100vh, 750px);
   padding-top: s.$sektion-luft;
   padding-bottom: s.$spacing-xl;
-  background-color: c.$primary_black100;
-  color: c.$primary_light25;
+  // Mørk baggrund og lys tekst – samme mixin som de andre mørke sektioner
+  @include m.section-black100;
 }
 
 .hero__billede {
@@ -179,13 +221,8 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background:
-    linear-gradient(
-      100deg,
-      rgba(c.$primary_black100, 0.85) 0%,
-      rgba(c.$primary_black100, 0.45) 45%,
-      rgba(c.$primary_black100, 0) 75%
-    );
+  // Samme gradient som banner-sektionen (billede-gradient i _mixins.scss)
+  background: m.billede-gradient();
 }
 
 .hero__wire {
@@ -231,40 +268,121 @@ onUnmounted(() => {
   50% { transform: translate(-50%, -0.45rem) rotate(calc(var(--vip, 0deg) + 2deg)); }
 }
 
+/* --- Den røde tråd på wiren ---
+   Alt på wiren hænger på samme måde, som rigtigt udstyr i parken:
+   - et lyst trissehjul med mørk midte på wiren
+   - en tynd lys snor ned
+   - et lyst "mærke" (som et skilt på en bane) med et hul i toppen, hvor snoren går ind.
+   Hullet har en lyserød ring – den lyserøde farve går igen i aben, så alt hænger sammen */
 .hero__trisse-hjul {
-  width: 0.9rem;
-  height: 0.9rem;
-  border: 2.5px solid c.$primary_light25;
+  position: relative;
+  z-index: 1;
+  width: 0.95rem;
+  height: 0.95rem;
+  box-sizing: border-box;
+  border: 3px solid c.$primary_light25;
   border-radius: 50%;
-  background-color: c.$primary_black100;
+  background-color: c.$primary_darkgreen;
+  box-shadow: 0 1px 4px rgba(c.$primary_black100, 0.5);
 }
 
 .hero__trisse-snor {
-  width: 2px;
+  width: 1.5px;
   height: var(--snor, 1.75rem); // Længden sættes pr. trisse i TRISSER
-  background-color: c.$primary_light25;
+  margin-top: -2px;
+  background-color: rgba(c.$primary_light25, 0.9);
 }
 
+// Mærket. Snoren er bundet i en lille ring, der sidder på mærkets øverste kant
 .hero__badge {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 0.1rem;
   margin: 0;
-  padding: 0.55rem 1rem;
-  border-radius: 1rem;
+  padding: 0.7rem 1.1rem 0.6rem;
+  border-radius: 0.8rem;
   background-color: c.$primary_light25;
   color: c.$primary_darkgreen;
-  box-shadow: 0 0.5rem 1.5rem rgba(c.$primary_black100, 0.3);
-  font-size: 0.8rem;
+  box-shadow:
+    0 0.15rem 0.3rem rgba(c.$primary_black100, 0.2),
+    0 0.75rem 1.75rem rgba(c.$primary_black100, 0.35);
+  font-size: 0.75rem;
   line-height: 1.25;
   text-align: center;
   white-space: nowrap;
-  transform: rotate(-4deg);
+
+  // Ringen på mærkets øverste kant, hvor snoren er bundet fast
+  &::before {
+    content: '';
+    position: absolute;
+    top: -0.3rem;
+    left: 50%;
+    width: 0.6rem;
+    height: 0.6rem;
+    box-sizing: border-box;
+    border: 2px solid c.$forest_pink100;
+    border-radius: 50%;
+    background-color: c.$primary_darkgreen;
+    transform: translateX(-50%);
+  }
 
   strong {
     font-size: 0.95rem;
     font-weight: 900;
+    letter-spacing: -0.01em;
   }
+
+  span {
+    color: c.$primary_black75;
+  }
+}
+
+/* --- Aben, der hænger i halen fra wiren ---
+   GoMonkey-ikonet (gomonkey-logo.svg) bruges som maske, så det kan blive lyserødt.
+   Øjne og næse er huller i ikonet, så skoven skinner igennem dem.
+   Aben svinger mere end badgerne – og rigtig meget, når man holder musen over den */
+.hero__trisse--abe {
+  animation: abe-sving 3.5s ease-in-out infinite;
+}
+
+.hero__trisse--abe:hover {
+  animation-duration: 0.9s;
+}
+
+@keyframes abe-sving {
+  0%, 100% { transform: translate(-50%, -0.45rem) rotate(-7deg); }
+  50% { transform: translate(-50%, -0.45rem) rotate(7deg); }
+}
+
+// Den krøllede hale fra hjulet ned til aben – samme lyse farve som snorene
+.hero__abe-hale {
+  display: block;
+  width: 1.4rem;
+  height: 3.75rem;
+  margin-top: -1px;
+
+  path {
+    fill: none;
+    stroke: rgba(c.$primary_light25, 0.9);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+}
+
+// Aben på hovedet (rotate 180deg) i lyserød
+.hero__abe {
+  display: block;
+  width: 5rem;
+  aspect-ratio: 1292 / 1109;
+  margin-top: -0.2rem;
+  background-color: c.$forest_pink100;
+  -webkit-mask: var(--abe-ikon) center / contain no-repeat;
+  mask: var(--abe-ikon) center / contain no-repeat;
+  transform: rotate(180deg);
+  filter: drop-shadow(0 0.4rem 0.8rem rgba(c.$primary_black100, 0.35));
+  cursor: pointer;
 }
 
 .hero__indhold {
@@ -283,7 +401,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.6rem;
+  gap: s.$spacing-xs;
   margin: 0 0 s.$spacing-s;
   font-size: 0.85rem;
   font-weight: 700;
@@ -297,55 +415,9 @@ onUnmounted(() => {
   filter: brightness(0) invert(1);
 }
 
-.hero__titel {
-
-  color: c.$primary_light25;
- 
-}
-
-.hero__undertitel {
-  margin: s.$spacing-s 0 0;
-  font-size: clamp(1.15rem, 2vw, 1.5rem);
-  font-weight: 500;
-  line-height: 1.3;
-}
-
 .hero__knapper {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 1rem;
   margin-top: s.$spacing-l;
   text-shadow: none;
-}
-
-.hero__knap-pink {
-  background-color: c.$forest_pink100;
-  color: c.$primary_black100;
-
-  &:hover {
-    background-color: c.$secondary_purple100;
-    color: c.$primary_light25;
-  }
-}
-
-.hero__knap-hvid {
-  border-color: c.$primary_light25;
-  color: c.$primary_light25;
-
-  &:hover {
-    background-color: c.$primary_light25;
-    border-color: c.$primary_light25;
-    color: c.$primary_darkgreen;
-  }
-}
-
-.hero__knap-pink,
-.hero__knap-hvid {
-  &:focus-visible {
-    outline: 3px solid c.$primary_light25;
-    outline-offset: 3px;
-  }
 }
 
 .hero__fakta {
@@ -423,8 +495,10 @@ onUnmounted(() => {
     display: none;
   }
 
-  // Kun "klatrebaner"-badget vises her – ellers ville de to ligge oven på hinanden
-  .hero__trisse--svaev {
+  // Kun "klatrebaner"-badget vises her – ellers ville de ligge oven på hinanden
+  .hero__trisse--svaev,
+  .hero__trisse--vejr,
+  .hero__trisse--abe {
     display: none;
   }
 

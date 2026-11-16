@@ -12,13 +12,14 @@
         <div class="tekst-indhold">
           <h2>Find din <strong>bane</strong></h2>
           <p>
-            Kan du ikke afgøre, hvor du skal begynde? Svar på fem hurtige spørgsmål, så finder vi den bane, der passer perfekt til dit temperament og din gruppe. Det tager under et minut.
+            Kan du ikke afgøre, hvor du skal begynde? 
           </p>
+          <p>Svar på fem hurtige spørgsmål, så finder vi den bane, der passer perfekt til dit temperament og din gruppe. Det tager under et minut.</p>
         </div>
 
         <div class="kort-bund">
-          <!-- .button-primary fra _buttons.scss. Farverne overskrives i .knap -->
-          <RouterLink class="button-primary knap" to="/banequiz">Start banevælger</RouterLink>
+          <!-- .button-primary + .button-pink fra _buttons.scss -->
+          <RouterLink class="button-primary button-pink" to="/banequiz">Start banevælger</RouterLink>
           <!-- .button-arrow fra _buttons.scss: tekst med pil, der rykker ved hover -->
           <a class="button-arrow" href="#bane-info">
             Se banerne
@@ -120,23 +121,6 @@ $pink: c.$forest_pink100;
   gap: s.$spacing-s;
 }
 
-// Knappen er .button-primary fra _buttons.scss (form, størrelse og skrift).
-// Her overskrives kun farverne: lyserød baggrund og sort tekst.
-// Hover er den samme som på .button-primary: lilla baggrund, her med lys tekst
-.knap {
-  background-color: $pink;
-  color: c.$primary_black100;
-  transition: background-color 0.2s, color 0.2s;
-
-  &:hover {
-    background-color: c.$secondary_purple100;
-    color: c.$primary_light25;
-  }
-}
-
+// "Start banevælger" (.button-primary + .button-pink) og
 // "Se banerne" (.button-arrow) styles helt i _buttons.scss
-.knap:focus-visible {
-  outline: 3px solid $pink;
-  outline-offset: 4px;
-}
 </style>

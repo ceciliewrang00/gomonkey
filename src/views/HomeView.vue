@@ -6,6 +6,7 @@
   import TrackPickerSection from '@/components/TrackPickerSection.vue'
   import TrackInfo from '@/components/TrackInfo.vue'
   import FaqSection from '@/components/FaqSection.vue'
+  import StenBue from '@/components/StenBue.vue'
   import Footer from '@/components/Footer.vue'
 
 </script>
@@ -15,9 +16,13 @@
   <!-- forside-klassen giver sektionerne samme indholdsbredde (se main.scss) -->
   <main class="forside">
     <HeroSection />
+    <!-- Blå bue i højre side hen over overgangen fra hero til overblikket -->
+    <StenBue side="hoejre" farve="blaa" />
     <OverviewSection />
     <TrackPickerSection />
     <BannerSection />
+    <!-- Lyserød bue i højre side hen over overgangen fra banneret til banerne -->
+    <StenBue side="hoejre" farve="pink" />
     <TrackInfo />
     <FaqSection />
   </main>

@@ -18,6 +18,44 @@
     }
 }
 
+/* Lyserød variant – til mørke baggrunde og billeder.
+   Brug sammen med .button-primary:  <a class="button-primary button-pink">
+   eller <BaseButton variant="pink">. Hover er lilla med lys tekst ligesom .button-primary */
+.button-pink {
+    background-color: c.$forest_pink100;
+    color: c.$primary_black100;
+    transition: background-color 0.2s ease, color 0.2s ease;
+
+    &:hover {
+        background-color: c.$secondary_purple100;
+        color: c.$primary_light25;
+    }
+
+    &:focus-visible {
+        outline: 3px solid c.$primary_light25;
+        outline-offset: 3px;
+    }
+}
+
+/* Lys variant – lys knap med mørk tekst til mørke baggrunde.
+   Brug sammen med .button-primary:  <a class="button-primary button-light">
+   Hover er lilla med lys tekst ligesom .button-primary */
+.button-light {
+    background-color: c.$primary_light25;
+    color: c.$primary_darkgreen;
+    transition: background-color 0.2s ease, color 0.2s ease;
+
+    &:hover {
+        background-color: c.$secondary_purple100;
+        color: c.$primary_light25;
+    }
+
+    &:focus-visible {
+        outline: 3px solid c.$primary_light25;
+        outline-offset: 3px;
+    }
+}
+
 .button-secondary {
     background-color: none;
     padding:0.5rem 1.5rem;
@@ -31,6 +69,26 @@
         background-color: c.$secondary_purple100;
         color: c.$primary_light25;
         border: solid 2px c.$secondary_purple100;
+    }
+}
+
+/* Lys variant af .button-secondary – hvid kant og hvid tekst til mørke baggrunde.
+   Brug: <a class="button-secondary button-secondary--light">
+   Ved hover bliver den lys med mørk tekst */
+.button-secondary--light {
+    border-color: c.$primary_light25;
+    color: c.$primary_light25;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+
+    &:hover {
+        background-color: c.$primary_light25;
+        border-color: c.$primary_light25;
+        color: c.$primary_darkgreen;
+    }
+
+    &:focus-visible {
+        outline: 3px solid c.$primary_light25;
+        outline-offset: 3px;
     }
 }
 
