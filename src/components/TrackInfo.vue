@@ -821,6 +821,10 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     font-size: 0.85rem;
     font-weight: 400;
     line-height: 1.45;
+    // Boblen står inde i "SVÆRHEDSGRAD"-etiketten, som har store bogstaver og ekstra
+    // bogstavafstand – det nulstilles her, så teksten er almindelig læsbar tekst
+    text-transform: none;
+    letter-spacing: normal;
     box-shadow: 0 0.5rem 1.5rem rgba(c.$primary_darkgreen, 0.25);
 }
 
