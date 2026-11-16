@@ -38,6 +38,27 @@ onMounted(async () => {
 // (i)-forklaringen ved "Sværhedsgrad": id på banen, hvis boble er åben (null = ingen)
 const aabenInfo = ref(null)
 
+/* --- Stort billede (lightbox) ---
+   Klik på en banes billede åbner det stort i en <dialog>.
+   <dialog> med showModal() giver det hele gratis: mørk baggrund, Escape lukker,
+   tastaturet bliver inde i vinduet, og fokus kommer tilbage til billedet bagefter */
+const billedDialog = ref(null)
+const stortBillede = ref(null) // Banen, hvis billede vises stort (null = lukket)
+
+function aabnBillede(bane) {
+    stortBillede.value = bane
+    billedDialog.value?.showModal()
+}
+
+function lukBillede() {
+    billedDialog.value?.close()
+}
+
+// Klik på den mørke baggrund uden for billedet lukker også
+function klikPaaDialog(event) {
+    if (event.target === billedDialog.value) lukBillede()
+}
+
 // Klik på (i) åbner boblen – klik igen lukker den
 function skiftInfo(id) {
     aabenInfo.value = aabenInfo.value === id ? null : id
@@ -131,9 +152,20 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             </div>
 
             <!-- Billede af banen -->
-            <div class="bane__billede" v-if="bane.image">
+            <!-- Billedet er en knap: klik åbner det stort -->
+            <button
+                v-if="bane.image"
+                type="button"
+                class="bane__billede"
+                :aria-label="`Se billedet af ${bane.name} i stor størrelse`"
+                @click="aabnBillede(bane)"
+            >
                 <img :src="`/${bane.image}`" :alt="bane.altImg" class="bane__img"/>
-            </div>
+                <!-- Lille forstørrelsesglas-ikon i hjørnet, så man kan se, at billedet kan åbnes -->
+                <span class="bane__zoom" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5M11 8v6M8 11h6" /></svg>
+                </span>
+            </button>
 
             <div class="bane__content">
                 <p class="bane__beskrivelse">{{ bane.description }}</p>
@@ -223,6 +255,26 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             </div>
         </div>
     </article>
+
+    <!-- Det store billede. Én dialog til alle baner – den viser den bane, man klikkede på -->
+    <dialog
+        ref="billedDialog"
+        class="billed-dialog"
+        :aria-label="stortBillede ? `Billede af ${stortBillede.name}` : 'Billede'"
+        @click="klikPaaDialog"
+        @close="stortBillede = null"
+    >
+        <figure v-if="stortBillede" class="billed-dialog__indhold">
+            <button type="button" class="button-close billed-dialog__luk" aria-label="Luk billedet" @click="lukBillede">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+            <img :src="`/${stortBillede.image}`" :alt="stortBillede.altImg" class="billed-dialog__img">
+            <figcaption class="billed-dialog__tekst">
+                <span class="billed-dialog__prik" :class="`bane--${stortBillede.id}`" aria-hidden="true"></span>
+                {{ stortBillede.name }}
+            </figcaption>
+        </figure>
+    </dialog>
 </template>
 
 <style lang="scss" scoped>
@@ -466,11 +518,23 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 .bane__content { grid-area: tekst; }
 
 /* --- Billede --- */
+// Billedet er en knap (klik åbner det stort), så browserens knap-stil nulstilles
 .bane__billede {
     position: relative;
+    display: block;
+    width: 100%;
     min-height: 16rem;
+    padding: 0;
+    border: none;
     border-radius: 1.25rem;
     overflow: hidden;
+    background: none;
+    cursor: zoom-in;
+
+    &:focus-visible {
+        outline: 3px solid c.$primary_darkgreen;
+        outline-offset: 3px;
+    }
 
     // Billedet fylder feltet, men feltets højde styres af teksten ved siden af
     .bane__img {
@@ -487,6 +551,109 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 
 .bane__kort:hover .bane__img {
     transform: scale(1.03);
+}
+
+// Forstørrelsesglasset i hjørnet – bliver tydeligere ved hover og fokus
+.bane__zoom {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: c.$primary_darkgreen;
+    color: c.$primary_light25;
+    opacity: 0.75;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+
+    svg {
+        width: 1.25rem;
+        height: 1.25rem;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+    }
+}
+
+.bane__billede:hover .bane__zoom,
+.bane__billede:focus-visible .bane__zoom {
+    opacity: 1;
+    transform: scale(1.08);
+}
+
+/* --- Det store billede (dialog) ---
+   Lyst kort midt på skærmen over en mørk, sløret baggrund */
+.billed-dialog {
+    width: min(64rem, calc(100vw - 2rem));
+    max-height: calc(100dvh - 2rem);
+    padding: 0;
+    border: none;
+    border-radius: 1.25rem;
+    background-color: c.$forest_green25;
+    box-shadow: 0 1.5rem 4rem rgba(c.$primary_black100, 0.4);
+    overflow: hidden;
+
+    // Ingen blå ramme om hele vinduet – lukkeknappen har sin egen fokusramme
+    &:focus {
+        outline: none;
+    }
+
+    &::backdrop {
+        background-color: rgba(c.$primary_black100, 0.75);
+        backdrop-filter: blur(4px);
+    }
+
+    &[open] {
+        animation: dialog-ind 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+}
+
+@keyframes dialog-ind {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.billed-dialog__indhold {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: s.$spacing-m;
+}
+
+// Lukkeknappen bruger .button-close fra _buttons.scss
+.billed-dialog__luk {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 1;
+}
+
+// Billedet fylder så meget som muligt, men aldrig mere end skærmen
+.billed-dialog__img {
+    width: 100%;
+    max-height: calc(100dvh - 10rem);
+    object-fit: contain;
+    mix-blend-mode: multiply; // Den hvide baggrund i tegningen smelter sammen med kortet
+}
+
+.billed-dialog__tekst {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: s.$spacing-xs;
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.billed-dialog__prik {
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 50%;
+    background-color: var(--bane-farve);
 }
 
 /* --- Tekst --- */
@@ -706,8 +873,13 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .bane__img {
+    .bane__img,
+    .bane__zoom {
         transition: none;
+    }
+
+    .billed-dialog[open] {
+        animation: none;
     }
 }
 </style>
