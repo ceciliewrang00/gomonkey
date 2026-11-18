@@ -38,6 +38,8 @@ export const FAKTA = [
   { key: 'obstacles', label: 'Forhindringer', kort: true },
   { key: 'glideAmount', label: 'Antal svæv', kort: true },
   { key: 'longestGlide', label: 'Længste svæv' },
+  // Kun Sort har et frit fald. Det står for sig selv, så det ikke tæller som et svæv
+  { key: 'freeFall', label: 'Frit fald', kort: true },
 ]
 
 // Giver de fakta, der skal vises for en bane – kun dem, banen faktisk har udfyldt.

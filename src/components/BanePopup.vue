@@ -96,6 +96,11 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
       <strong>Krav:</strong> {{ bane.requirements }}
     </p>
 
+    <!-- Ekstra pris oven i klatreprisen, fx frit fald på Sort. Kun hvis banen har et -->
+    <p v-if="bane.addOn" class="popup-krav">
+      <strong>Tilkøb:</strong> {{ bane.addOn }}
+    </p>
+
     <!-- Link til banens kort på forsiden (artiklen har banens id, fx /#bane-6) -->
     <RouterLink :to="{ path: '/', hash: `#${bane.id}` }" class="button-arrow popup-link">
       Læs mere om banen

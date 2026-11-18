@@ -211,6 +211,11 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                     <strong>Krav:</strong> {{ bane.requirements }}
                 </p>
 
+                <!-- Ekstra pris oven i klatreprisen, fx frit fald på Sort. Kun hvis banen har et -->
+                <p v-if="bane.addOn" class="bane__krav">
+                    <strong>Tilkøb:</strong> {{ bane.addOn }}
+                </p>
+
                 <!-- Faktabokse, fx "Banehøjde: 8 m". faktaFor giver kun de fakta, banen har udfyldt.
                      dl/dt/dd er HTML's liste til "navn: værdi" -->
                 <dl class="fakta" v-if="faktaFor(bane).length">
