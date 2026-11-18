@@ -211,12 +211,11 @@ onUnmounted(() => {
 
 .admin {
   min-height: 100vh;
-  margin-top: 2rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   padding: s.$spacing-xxl s.$spacing-m;
-  background-color: c.$forest_green25;
+  background-color: c.$forest_green50;
 
   // Øverste række: logo til venstre, knapper til højre
   .head {
@@ -270,6 +269,9 @@ onUnmounted(() => {
     display: block;
     width: 100%;
     max-width: 36rem;
+    // border-box = padding og kant regnes MED i de 100%.
+    // Uden den lægges padding og kant oven i, så feltet bliver bredere end kassen på små skærme
+    box-sizing: border-box;
     font-family: ft.$font;
     font-weight: 300;
     // clamp: skriften skalerer med skærmen, men aldrig under 1rem eller over 1.25rem
@@ -277,7 +279,7 @@ onUnmounted(() => {
     padding: 0.75rem 1rem;
     border: 2px solid c.$forest_green100;
     border-radius: 1rem;
-    background-color: white;
+    background-color: c.$primary_light25;
     color: c.$primary_black100;
 
     // Når man står i et felt, skifter kanten farve
@@ -295,10 +297,72 @@ onUnmounted(() => {
     font-weight: 600;
   }
 
+  // Etiket med et (i) ved siden af (fx "Giver højst" i quizzen)
+  .label-med-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    margin-bottom: 0.4rem;
+
+    label {
+      margin: 0;
+    }
+  }
+
+  // (i)-knap og forklaringsboble – samme udseende som ved "Sværhedsgrad" i TrackInfo.vue.
+  // position: relative, så boblen placeres i forhold til knappen
+  .info {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  // Rund knap uden baggrund – ikonet arver tekstfarven (currentColor)
+  .info__knap {
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    color: c.$primary_black50;
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:hover,
+    &[aria-expanded="true"] {
+      color: c.$primary_black100;
+    }
+
+    &:focus-visible {
+      outline: 3px solid c.$secondary_purple100;
+      outline-offset: 2px;
+    }
+  }
+
+  // Boblen over knappen, så den ikke dækker feltet. z-index lægger den øverst
+  .info__boble {
+    position: absolute;
+    bottom: calc(100% + 0.6rem);
+    left: 0;
+    z-index: 5;
+    width: min(18rem, 80vw);
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    background-color: c.$primary_darkgreen;
+    color: c.$primary_light25;
+    font-size: 0.85rem;
+    font-weight: 400;
+    line-height: 1.45;
+    box-shadow: 0 0.5rem 1.5rem rgba(c.$primary_darkgreen, 0.25);
+  }
+
   // Lys, afrundet boks om hvert afsnit
   .admin-kort {
     padding: 1.5rem;
-    background-color: c.$primary_light25;
+    background-color: c.$forest_green25;
+    border: 2px solid c.$forest_green100;
     border-radius: 1rem;
 
     li {
@@ -310,6 +374,9 @@ onUnmounted(() => {
   // Spørgsmålskortene ligger under hinanden
   .admin-liste {
     display: grid;
+    // minmax(0, 1fr) = kolonnen må gerne blive smallere end indholdet (fx lange ord eller
+    // filvælgeren). Ellers kan en lang ting skubbe hele kassen ud over skærmen
+    grid-template-columns: minmax(0, 1fr);
     gap: 1rem;
     max-width: 60rem;
   }
@@ -327,6 +394,19 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+  }
+
+  // Forhåndsvisning af banens billede i fanen "Baner".
+  // object-fit: contain = hele billedet vises, uden at det bliver strakt
+  .bane-billede {
+    width: 100%;
+    max-width: 20rem;
+    height: auto;
+    object-fit: contain;
+    // Samme grund som ved felterne: padding skal være inde i de 100%
+    box-sizing: border-box;
+    padding: 0.5rem;
+    border-radius: 0.75rem;
   }
 
   // Rækker med knapper: ligger ved siden af hinanden og ombrydes på små skærme

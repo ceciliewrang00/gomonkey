@@ -1,4 +1,5 @@
 <script setup>
+// Denne side er primærl lavet af claude (AI)
 // SIDEBAR PÅ ADMIN-SIDEN
 // En indholdsfortegnelse i venstre side: en liste med overskrifterne (h2 og h3) i den åbne fane.
 // Klikker man på en overskrift, ruller siden ned til den.
@@ -94,7 +95,8 @@ onUnmounted(() => {
 
 .admin-sidebar {
   padding: 1rem 1.25rem;
-  background-color: c.$primary_light25;
+  background-color: c.$forest_green25;
+  border: 2px solid c.$forest_green100;
   border-radius: 1rem;
   // Lange lister (fx mange quizspørgsmål) kan rulles inde i sidebaren
   max-height: 40vh;
@@ -119,7 +121,7 @@ onUnmounted(() => {
   }
 
   li {
-    margin: 0.35rem 0;
+    margin: 0.75rem 0;
     line-height: 1.3;
   }
 

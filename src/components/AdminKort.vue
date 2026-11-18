@@ -174,6 +174,30 @@ const andreLinjer = computed(() =>
     .flatMap((b) => b.segmenter.map((seg, i) => ({ noegle: `${b.id}-${i}`, punkter: seg.punkter })))
 )
 
+// Navne-skiltene på kortet. I kort-base.svg står de gamle navne ("Blå 1" osv.).
+// Det interaktive kort (InteraktivtKort.vue) skjuler dem og skriver banens rigtige navn i stedet.
+// Her tegner vi nye skilte oven på de gamle, så editoren ser ud som det rigtige kort.
+// x og y = midten af skiltet i kort-base.svg (gruppen #Banner)
+const SKILTE = [
+  { id: 'bane-1', x: 1608.74, y: 1481.98 },
+  { id: 'bane-2', x: 1551.66, y: 1348.32 },
+  { id: 'bane-3', x: 1466.39, y: 1511.55 },
+  { id: 'bane-4', x: 1142.5, y: 1606.91 },
+  { id: 'bane-6', x: 623.98, y: 1633.38 },
+  { id: 'bane-7', x: 803.05, y: 1282.63 },
+  { id: 'bounce', x: 1308.46, y: 1232.49 },
+  { id: 'bane-5', x: 1040.11, y: 1446.57 }
+]
+
+// Skiltene med navn og bredde. Bredden gættes ud fra antal bogstaver (ca. 17 pr. bogstav + luft),
+// men er mindst 120, så det gamle skilt nedenunder bliver dækket helt
+const skilte = computed(() =>
+  SKILTE.map((s) => {
+    const navn = navnFor({ id: s.id })
+    return { ...s, navn, bredde: Math.max(120, navn.length * 17 + 36) }
+  })
+)
+
 // ---------- Rediger en bane ----------
 
 // Kører, når man trykker "Rediger bane". 
@@ -222,15 +246,32 @@ const aktivLinje = ref(null)
 function tilKort(event) {
   // Find editorens SVG
   const svg = [editorSvg.value].flat()[0]
+  // Laver et punkt og giv det musens position på skærmen (clientX, clientY)
   const pt = svg.createSVGPoint()
   pt.x = event.clientX
   pt.y = event.clientY
+  //Her oversættes det, så det passer til kortets koordinater. 
+  //.getScreenCTM() er opskriften fra kortet til skærmen 
+  //.inverse() vender opskriften om, så den gør fra skærm til kort 
+  //matrixTransform() bruger opskriften på punktet.
   const p = pt.matrixTransform(svg.getScreenCTM().inverse())
+  // Vi vil ikke have punkter uden for kortet, så vi tvinger dem ind i kortets grænser
   return [Math.min(Math.max(p.x, 0), KORT_BREDDE), Math.min(Math.max(p.y, 0), KORT_HOEJDE)]
 }
 
-// Er to punkter (næsten) det samme sted? Afstanden måles med Pythagoras (Math.hypot).
-// Uden en afstand skal de være højst 0,5 fra hinanden, altså reelt samme punkt
+// Spørger: ligger punkt a og punkt b (næsten) samme sted? Giver true eller false.
+// a og b er punkter som [x, y], fx [100, 200].
+//
+// Sådan regnes afstanden ud (Pythagoras – som i matematik: a² + b² = c²):
+//   a[0] - b[0] = hvor langt de er fra hinanden vandret
+//   a[1] - b[1] = hvor langt de er fra hinanden lodret
+//   Math.hypot(...) = den skrå afstand lige imellem dem
+// Eksempel: [100, 200] og [103, 204] → vandret 3, lodret 4 → afstand 5
+//
+// afstand = hvor tæt de skal være for at tælle som "samme sted".
+// Skriver man ingen afstand, bruges 0.5 – altså reelt præcis samme punkt
+// (0.5 i stedet for 0, fordi punkterne rundes af og kan være en lille smule forskellige).
+// Magneten giver i stedet SNAP_AFSTAND (15) med, så "tæt på" tæller
 function sammePunkt(a, b, afstand = 0.5) {
   return Math.hypot(a[0] - b[0], a[1] - b[1]) <= afstand
 }
@@ -763,6 +804,19 @@ onUnmounted(() => {
               <path class="klikflade" :d="lavStier(seg.punkter)[1].d" />
             </g>
 
+            <!-- Navne-skilte i banens farve – som på det interaktive kort -->
+            <g v-for="s in skilte" :key="'skilt-' + s.id" class="skilt">
+              <rect
+                :x="s.x - s.bredde / 2"
+                :y="s.y - 26"
+                :width="s.bredde"
+                height="52"
+                rx="26"
+                :style="{ fill: `var(--kort-bane-${s.id})` }"
+              />
+              <text :x="s.x" :y="s.y">{{ s.navn }}</text>
+            </g>
+
             <!-- Stiplet linje fra sidste punkt til musen, mens man tegner -->
             <line
               v-if="tegner && tegnStart && musPunkt"
@@ -932,6 +986,21 @@ h3 {
 
 .er-aktiv .farve {
   stroke-width: 16px;
+}
+
+// Skiltene skal ikke kunne klikkes på – klik går igennem til kortet.
+// Teksten har samme skrift og farve som på det interaktive kort
+.skilt {
+  pointer-events: none;
+
+  text {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    fill: c.$primary_light25;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
 }
 
 .anden-linje {

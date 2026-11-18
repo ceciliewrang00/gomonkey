@@ -8,6 +8,9 @@
 // 1. Alle baner hentes, og der laves en formular pr. bane med banens nuværende tekster
 // 2. Man retter i formularen (det er en kopi – intet gemmes endnu)
 // 3. "Gem bane" sender ændringerne til Firebase
+//
+// Banens billede er en SVG, som ligger i Firebase som tekst i feltet "svg".
+// Man kan se billedet, downloade det som en .svg-fil og uploade en ny (se "Banens billede" længere nede)
 
 import BaseButton from '@/components/BaseButton.vue'
 import { ref, onMounted } from 'vue'
@@ -79,7 +82,12 @@ async function hentBaner() {
     baneForms.value = Object.fromEntries(
       baner.value.map((bane) => [
         bane.id,
-        Object.fromEntries(BANE_FIELDS.map((f) => [f.key, hentFelt(bane, f.key)]))
+        {
+          ...Object.fromEntries(BANE_FIELDS.map((f) => [f.key, hentFelt(bane, f.key)])),
+          // Billedet (SVG-teksten) kommer også med i formularen, så et nyt billede først gemmes,
+          // når man trykker "Gem bane" – ligesom de andre felter
+          svg: bane.svg ?? ''
+        }
       ])
     )
   } catch (e) {
@@ -118,6 +126,8 @@ function tilGem(form) {
     }
   }
   data.quizTekst = Object.keys(quizTekst).length ? quizTekst : null
+  // Har banen intet billede, sendes null i stedet for en tom tekst, så Firebase ikke får et tomt felt
+  if (!data.svg) data.svg = null
   return data
 }
 
@@ -156,6 +166,48 @@ async function gemBane(bane) {
   } finally {
     gemmerId.value = ''
   }
+}
+
+// ---------- Banens billede (SVG) ---------- lavet med hjælp fra Claude (AI)
+// Billede-beskeder under hver bane, fx "Nyt billede valgt..." (gemt under banens id)
+const billedBeskeder = ref({})
+
+// Laver SVG-teksten om til en adresse, som et <img> kan vise.
+function billedeSrc(svg) {
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
+}
+
+// DOWNLOAD: laver SVG-teksten om til en fil og får browseren til at downloade den.
+function downloadBillede(bane) {
+  const svg = baneForms.value[bane.id].svg
+  const fil = new Blob([svg], { type: 'image/svg+xml' })
+  const adresse = URL.createObjectURL(fil)
+
+  const link = document.createElement('a')
+  link.href = adresse
+  link.download = `${bane.id}.svg`
+  link.click()
+
+  URL.revokeObjectURL(adresse)
+}
+
+// UPLOAD: kører, når man har valgt en fil i "Upload nyt billede".
+// Billedet lægges kun i formularen. Det gemmes først i Firebase, når man trykker "Gem bane"
+async function uploadBillede(bane, event) {
+  const fil = event.target.files[0]
+  if (!fil) return
+
+  const tekst = await fil.text()
+
+  if (!tekst.includes('<svg')) {
+    billedBeskeder.value[bane.id] = 'Filen er ikke en SVG. Vælg en .svg-fil.'
+  } else {
+    baneForms.value[bane.id].svg = tekst
+    billedBeskeder.value[bane.id] = 'Nyt billede valgt. Tryk "Gem bane" for at gemme det.'
+  }
+
+  // Tøm feltet, så man kan vælge den samme fil igen, hvis man vil
+  event.target.value = ''
 }
 
 // Hent banerne, så snart fanen vises
@@ -214,6 +266,42 @@ onMounted(hentBaner)
           v-model="baneForms[bane.id][field.key]"
           type="text"
         />
+      </div>
+
+      <!-- Banens billede: se det, download det som .svg-fil, eller upload et nyt -->
+      <div class="felt">
+        <h4>Banens billede</h4>
+
+        <!-- Forhåndsvisning. Viser altid formularens billede – også et nyt, der ikke er gemt endnu -->
+        <img
+          v-if="baneForms[bane.id].svg"
+          :src="billedeSrc(baneForms[bane.id].svg)"
+          :alt="baneForms[bane.id].altImg || 'Billede af ' + bane.name"
+          class="bane-billede"
+        />
+        <p v-else>Banen har intet billede endnu.</p>
+
+        <div class="knapper">
+          <!-- type="button", så knappen ikke gemmer formularen -->
+          <BaseButton
+            v-if="baneForms[bane.id].svg"
+            type="button"
+            variant="secondary"
+            @click="downloadBillede(bane)"
+          >
+            Download billede (.svg)
+          </BaseButton>
+        </div>
+
+        <!-- accept = filvælgeren viser kun SVG-filer. @change kører, når man har valgt en fil -->
+        <label :for="'bane-' + indeks + '-upload'">Upload nyt billede (.svg)</label>
+        <input
+          :id="'bane-' + indeks + '-upload'"
+          type="file"
+          accept=".svg,image/svg+xml"
+          @change="uploadBillede(bane, $event)"
+        />
+        <p v-if="billedBeskeder[bane.id]" role="status">{{ billedBeskeder[bane.id] }}</p>
       </div>
 
       <div class="knapper">

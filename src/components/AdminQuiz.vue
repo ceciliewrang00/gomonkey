@@ -11,7 +11,7 @@
 // Der bruges ingen point.
 
 import BaseButton from '@/components/BaseButton.vue'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 // auth = login-forbindelsen. auth.currentUser er den, der er logget ind (eller null)
 import { auth } from '../firebase'
@@ -25,6 +25,41 @@ const NIVEAU_VALG = [
   { vaerdi: 2, tekst: 'Mellem' },
   { vaerdi: 1, tekst: 'Let' },
 ]
+
+// Hjælpeteksten i (i)'et ved "Giver højst". Står her, så den kun skal rettes ét sted
+const GIVER_HOEJST_HJAELP =
+  'Den sværeste bane, man kan få anbefalet, hvis man vælger dette svar. ' +
+  'Fx kan "Jeg har aldrig klatret" give højst Let. Quizzen bruger det laveste af alle svarene, ' +
+  'så ét svar med Let giver altid en Let bane. Vælg "Svær (ingen begrænsning)", ' +
+  'hvis svaret ikke skal holde anbefalingen nede.'
+
+// ---------- Info-boblen ved "Giver højst" ----------
+// Samme løsning som ved "Sværhedsgrad" i TrackInfo.vue.
+// Kun én boble kan være åben ad gangen, så vi gemmer bare en nøgle for den åbne boble
+// (fx 'nyt-3' eller 'rediger-2'). null = ingen er åben
+const aabenInfo = ref(null)
+
+// Klik på (i) åbner boblen – klik igen lukker den
+function skiftInfo(noegle) {
+  aabenInfo.value = aabenInfo.value === noegle ? null : noegle
+}
+
+// Lukker boblen, når man med tastaturet (Tab) går videre fra (i)-knappen.
+// relatedTarget = det element, man går hen til. Ligger det ikke inde i boblen, lukker vi den
+function lukVedFokusUd(event) {
+  if (!event.currentTarget.contains(event.relatedTarget)) {
+    aabenInfo.value = null
+  }
+}
+
+// Lukker boblen, når man klikker et andet sted på siden.
+// closest('.info') = "ligger det, man klikkede på, inde i en info-boble?" Hvis ikke, lukkes den.
+// (Den ovenfor er ikke nok alene, fordi Safari ikke flytter fokus, når man klikker på en knap)
+function lukVedKlikUdenfor(event) {
+  if (aabenInfo.value && !event.target.closest('.info')) {
+    aabenInfo.value = null
+  }
+}
 
 // Laver tallet om til et ord i oversigten: 1 → 'Let', 2 → 'Mellem', 3 → 'Svær'.
 // Er der intet tal, vises en streg '–'
@@ -338,7 +373,10 @@ async function sletSpoergsmaal(sp) {
 // Hent spørgsmålene, så snart fanen vises
 onMounted(() => {
   hentSpoergsmaal()
+  // Lyt efter klik på hele siden, så boblen kan lukke – og stop igen, når man forlader fanen
+  document.addEventListener('click', lukVedKlikUdenfor)
 })
+onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 </script>
 
 <template>
@@ -401,8 +439,33 @@ onMounted(() => {
           <!-- "Giver højst" kan kun rettes på spørgsmål, der styrer anbefalingen (type 'niveau').
                v-model.number = gem valget som et tal (3) og ikke som tekst ("3") -->
           <div v-if="redigerer.type === 'niveau'">
-            <label :for="'rediger-niveau-' + sp.id + '-' + svar.id">Giver højst</label>
-            <select :id="'rediger-niveau-' + sp.id + '-' + svar.id" v-model.number="svar.maksNiveau">
+            <div class="label-med-info">
+              <label :for="'rediger-niveau-' + sp.id + '-' + svar.id">Giver højst</label>
+              <!-- (i)-knap: klik åbner en lille boble med forklaringen. Esc, Tab væk eller klik udenfor lukker den -->
+              <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
+                <button
+                  type="button"
+                  class="info__knap"
+                  aria-label="Hvad betyder Giver højst?"
+                  :aria-expanded="aabenInfo === 'rediger-' + svar.id"
+                  :aria-controls="'info-' + 'rediger-' + svar.id"
+                  @click="skiftInfo('rediger-' + svar.id)"
+                >
+                  <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+                    <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+                    <circle cx="10" cy="6.2" r="1.15" fill="currentColor" />
+                    <rect x="9.1" y="8.6" width="1.8" height="6" rx="0.9" fill="currentColor" />
+                  </svg>
+                </button>
+                <span v-if="aabenInfo === 'rediger-' + svar.id" :id="'info-' + 'rediger-' + svar.id" class="info__boble">
+                  {{ GIVER_HOEJST_HJAELP }}
+                </span>
+              </span>
+            </div>
+            <select
+              :id="'rediger-niveau-' + sp.id + '-' + svar.id"
+              v-model.number="svar.maksNiveau"
+            >
               <option v-for="v in NIVEAU_VALG" :key="v.vaerdi" :value="v.vaerdi">{{ v.tekst }}</option>
             </select>
           </div>
@@ -454,7 +517,29 @@ onMounted(() => {
       <label :for="'nyt-svar-gruppe-' + svar.id">Tekst, når man svarer for en gruppe (valgfri)</label>
       <input :id="'nyt-svar-gruppe-' + svar.id" v-model="svar.tekstGruppe" type="text" />
 
-      <label :for="'nyt-niveau-' + svar.id">Giver højst</label>
+      <div class="label-med-info">
+        <label :for="'nyt-niveau-' + svar.id">Giver højst</label>
+        <!-- (i)-knap: klik åbner en lille boble med forklaringen. Esc, Tab væk eller klik udenfor lukker den -->
+        <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
+          <button
+            type="button"
+            class="info__knap"
+            aria-label="Hvad betyder Giver højst?"
+            :aria-expanded="aabenInfo === 'nyt-' + svar.id"
+            :aria-controls="'info-' + 'nyt-' + svar.id"
+            @click="skiftInfo('nyt-' + svar.id)"
+          >
+            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+              <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <circle cx="10" cy="6.2" r="1.15" fill="currentColor" />
+              <rect x="9.1" y="8.6" width="1.8" height="6" rx="0.9" fill="currentColor" />
+            </svg>
+          </button>
+          <span v-if="aabenInfo === 'nyt-' + svar.id" :id="'info-' + 'nyt-' + svar.id" class="info__boble">
+            {{ GIVER_HOEJST_HJAELP }}
+          </span>
+        </span>
+      </div>
       <select :id="'nyt-niveau-' + svar.id" v-model.number="svar.maksNiveau">
         <option v-for="v in NIVEAU_VALG" :key="v.vaerdi" :value="v.vaerdi">{{ v.tekst }}</option>
       </select>
