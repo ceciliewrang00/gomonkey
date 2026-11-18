@@ -38,6 +38,14 @@ const SPOERGSMAAL = [
     ],
   },
   {
+    sp: 'Hvilke seler findes der, og passer de til mit barn?',
+    svar: ['Vi har seler i størrelser til både børn og voksne. Selen passer, hvis man er mindst 110 cm høj og vejer under 120 kg. Vores instruktører finder den rigtige størrelse til jer og tjekker, at den sidder rigtigt, før I går op i træerne. Selen er med i prisen.'],
+  },
+  {
+    sp: 'Hvilke baner skal man have sele på?',
+    svar: ['Man har sele på alle klatrebanerne, fra Grøn til Sort. Kun på Bounce skal man ikke have sele på, fordi nettet har høje vægge hele vejen rundt.'],
+  },
+  {
     sp: 'Hvem er instruktørerne?',
     svar: ['Alle vores guider er uddannede klatreinstruktører og kender udstyret, redningsprocedurerne og sikkerheden ud og ind. De er også uddannet i førstehjælp og hjælper gerne med et par opmuntrende ord undervejs.'],
   },
@@ -56,14 +64,14 @@ const SPOERGSMAAL = [
   {
     sp: 'Hvor gammel skal man være?',
     svar: [
-      'Det afhænger af banen. De letteste baner er for børn fra 4 år og 95 cm. Se kravene ved ',
+      'Det afhænger af banen. På de letteste klatrebaner skal man være mindst 110 cm høj. På Bounce er der ingen krav. Se kravene ved ',
       { tekst: 'hver bane', href: '#bane-info' },
       '.',
     ],
   },
   {
     sp: 'Skal der en voksen med?',
-    svar: ['Det afhænger af alderen:'],
+    svar: ['Det afhænger af alderen (se nedenfor). Den voksne behøver ikke klatre med, men kan blive på jorden og følge med derfra. Det er gratis at se på. Vores instruktører holder øje med banerne og hjælper, hvis nogen sidder fast eller vil ned.'],
     liste: [
       '6–10 år: Der skal være 1 voksen med pr. 4 børn.',
       '11–16 år: Der skal være en voksen med.',

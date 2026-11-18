@@ -7,7 +7,7 @@
   //
   // Rækkefølgen oppefra:
   // AppHeader        – logo, menu og "BOOK"-knap (sticky i toppen)
-  // HeroSection      – stort billede med wire, badges og vejret
+  // HeroSection      – stort billede med wire og badges
   // OverviewSection  – kortet over parken + banernes farver (link til /kort)
   // TrackPickerSection – "Find din bane" (link til quizzen på /banequiz)
   // BannerSection    – "Skru' op for modet" med bookingknap

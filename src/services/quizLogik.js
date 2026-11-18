@@ -12,11 +12,13 @@
 //    Tænk på hvert svar som et "loft" – et højeste niveau, svaret tillader.
 //    Det LAVESTE loft bestemmer. Eksempel: højden tillader Svær (3), men man er utryg
 //    ved højder (1) → så bliver det Let (1).
-//      - Højden: 110–139 cm → Let,  140–159 cm → Mellem,  160+ cm → Svær
+//      - Højden: det højeste niveau blandt de baner, man er høj nok til.
+//        Hver banes højdekrav læses fra feltet "Krav" i Firebase (fx "Minimum 120 cm høj.").
+//        Fx 120–139 cm → Mellem, men kun Blå og Lilla (Lyserød kræver 140 cm)
 //      - Alle andre svar har et tal "maksNiveau" (1, 2 eller 3) i Firebase, som kan
 //        rettes i admin. Fx "aldrig prøvet" = 1, "helt fint med højder" = 3.
 //    Der gives ingen point.
-// 3. På det niveau anbefales den LETTESTE bane (fx Grøn frem for Gul),
+// 3. På det niveau anbefales den LETTESTE bane, man er høj nok til (fx Grøn frem for Gul),
 //    og den næste bane nævnes som "næste skridt".
 //
 // Banerne (navn, rækkefølge, sværhedsgrad) hentes fra Firebase via services/baner.js
@@ -31,12 +33,29 @@
 
 import { trinFor, harSvaerhedsgrad, NIVEAUER } from './niveau.js'
 
-// Hvor høj man mindst skal være (i cm) for hvert niveau (fra gomonkey.dk).
-// Ændrer GoMonkey kravene, skal tallene rettes her
+// Reserve-krav (i cm) for hvert niveau. Det rigtige krav læses fra hver banes "Krav"-felt
+// i Firebase (se kravFor). Tallene her bruges kun, hvis der ikke står et tal i feltet.
+// KRAV.let er også grænsen for, om man kan klatre overhovedet (under 110 cm = kun Bounce)
 export const KRAV = {
   let: 110,
   mellem: 140,
   svaer: 160,
+}
+
+// Hvor høj man mindst skal være (i cm) for at komme på en bestemt bane.
+// Tallet læses fra banens "Krav" i Firebase, fx "Minimum 120 cm høj." → 120.
+// /(\d+)\s*cm/ er et søgemønster: et tal efterfulgt af "cm".
+// Bounce har ingen krav (0). Står der intet tal, bruges reserve-kravet for banens niveau
+export function kravFor(bane) {
+  if (!harSvaerhedsgrad(bane)) return 0
+  const fundet = String(bane.requirements ?? '').match(/(\d+)\s*cm/)
+  if (fundet) return Number(fundet[1])
+  return [KRAV.let, KRAV.mellem, KRAV.svaer][trinFor(bane) - 1]
+}
+
+// Er man høj nok til banen?
+function hoejNok(bane, hoejde) {
+  return hoejde >= kravFor(bane)
 }
 
 // Frit fald-banen (Sort). Den anbefales aldrig som første bane, men får sin egen besked
@@ -68,12 +87,25 @@ function klatreHoejde(svar) {
   return svar.hoejde?.minimumHoejde
 }
 
-// Alle baner på et bestemt niveau (1, 2 eller 3), fra letteste til sværeste.
-// Bounce og Sort (frit fald) er ikke med – de er ikke startbaner
-function banerPaaNiveau(baner, niveau) {
+// Alle startbaner: klatrebanerne uden Bounce og Sort (frit fald), fra letteste til sværeste.
+// Med en højde fås kun dem, man er høj nok til
+function startbaner(baner, hoejde) {
   return baner.filter(
-    (b) => harSvaerhedsgrad(b) && b.id !== FRIT_FALD_ID && trinFor(b) === niveau
+    (b) => harSvaerhedsgrad(b) && b.id !== FRIT_FALD_ID && (hoejde === undefined || hoejNok(b, hoejde))
   )
+}
+
+// Alle startbaner på et bestemt niveau (1, 2 eller 3), fra letteste til sværeste.
+// Med en højde fås kun dem, man er høj nok til (fx Blå og Lilla, men ikke Lyserød ved 125 cm)
+function banerPaaNiveau(baner, niveau, hoejde) {
+  return startbaner(baner, hoejde).filter((b) => trinFor(b) === niveau)
+}
+
+// Det højeste niveau, højden giver adgang til (1, 2 eller 3).
+// Math.max(...) finder det største tal. Er man ikke høj nok til nogen bane, bliver det 1
+function niveauForHoejde(baner, hoejde) {
+  const mulige = startbaner(baner, hoejde).map(trinFor)
+  return mulige.length ? Math.max(...mulige) : 1
 }
 
 // Laver en liste af baner om til en pæn sætning, fx "Blå, Lilla og Lyserød".
@@ -188,26 +220,35 @@ function grundFor(id, niveau, svar) {
 // (vigtigste først). Spørgsmål, der ikke står her (fx nye fra admin), kommer sidst
 const BEGRUNDELSE_PRIORITET = ['hoejde', 'tryghed', 'erfaring', 'oplevelse']
 
+// Højdens loft. Den har ikke et maksNiveau i Firebase, så den regnes ud fra banernes krav:
+// det højeste niveau blandt de baner, man er høj nok til.
+// Grunden nævner det laveste krav, man ikke når, fx
+// "Du er under 140 cm, så Lyserød, Rød og Sort er ikke mulige endnu."
+function hoejdeLoft(svar, baner) {
+  const hoejde = klatreHoejde(svar)
+  const hvemHoejde = subjekt(svar, 'hoejde')
+  const niveau = niveauForHoejde(baner, hoejde)
+
+  // Klatrebanerne, man ikke er høj nok til endnu (Sort er med her, men ikke Bounce)
+  const forHoeje = baner.filter((b) => harSvaerhedsgrad(b) && !hoejNok(b, hoejde))
+  const naesteKrav = forHoeje.length ? Math.min(...forHoeje.map(kravFor)) : null
+
+  let grund = ''
+  if (naesteKrav !== null) {
+    grund = niveau === 1
+      ? `${hvemHoejde} er under ${naesteKrav} cm, så de lette baner er de eneste klatrebaner lige nu.`
+      : `${hvemHoejde} er under ${naesteKrav} cm, så ${navneliste(forHoeje)} er ikke mulige endnu.`
+  }
+  return { kilde: 'hoejde', niveau, grund }
+}
+
 // Laver en liste med et loft for hvert svar. Ét loft ser sådan ud:
 //   { kilde: 'tryghed', niveau: 1, grund: 'Du har det ikke helt godt med højder ...' }
 // kilde  = hvilket spørgsmål loftet kommer fra
 // niveau = det højeste niveau, svaret tillader (1, 2 eller 3)
 // grund  = teksten, der vises, hvis netop dette loft er det, der bestemmer
-function lofter(svar) {
-  const hoejde = klatreHoejde(svar)
-  const hvemHoejde = subjekt(svar, 'hoejde')
-
-  // Højden er altid med. Den regnes ud her, fordi den ikke har et maksNiveau i Firebase.
-  // "a ? b : c ? d : e" læses: er a sandt, så b – ellers er c sandt, så d – ellers e
-  const liste = [
-    {
-      kilde: 'hoejde',
-      niveau: hoejde < KRAV.mellem ? 1 : hoejde < KRAV.svaer ? 2 : 3,
-      grund: hoejde < KRAV.mellem
-        ? `${hvemHoejde} er under ${KRAV.mellem} cm, så de lette baner er de eneste klatrebaner lige nu.`
-        : `${hvemHoejde} er under ${KRAV.svaer} cm, så de svære baner er ikke mulige endnu.`,
-    },
-  ]
+function lofter(svar, baner) {
+  const liste = [hoejdeLoft(svar, baner)]
 
   // Gå alle svar igennem. Har svaret et maksNiveau (1–3) fra Firebase, bliver det et loft
   for (const [id, valgt] of Object.entries(svar)) {
@@ -223,25 +264,25 @@ function lofter(svar) {
 // Hvorfor: hos GoMonkey starter alle førstegangsklatrere på en let bane – men bagefter
 // må de tage alle baner, de er høje nok til. Så kan vi fortælle, hvilken bane der passer
 // BAGEFTER (fx Rød for en tryg voksen). Math.min(...) finder det laveste loft
-export function niveauUdenErfaring(svar) {
-  const andre = lofter(svar).filter((l) => l.kilde !== 'erfaring')
+export function niveauUdenErfaring(svar, baner) {
+  const andre = lofter(svar, baner).filter((l) => l.kilde !== 'erfaring')
   return Math.min(...andre.map((l) => l.niveau))
 }
 
 // Er det KUN reglen om førstegangsklatrere, der gør anbefalingen let?
 // Ja → giv det niveau, man ville have fået uden reglen. Nej → giv null (= intet)
-function foerstegangUdenRegel(anbefaling, svar) {
+function foerstegangUdenRegel(anbefaling, svar, baner) {
   if (!anbefaling || anbefaling.niveau < 1) return null
   if (Number(svar.erfaring?.maksNiveau) !== 1) return null
-  const niveau = niveauUdenErfaring(svar)
+  const niveau = niveauUdenErfaring(svar, baner)
   return niveau > anbefaling.niveau ? niveau : null
 }
 
-// Den letteste bane på et niveau (uden Sort). Findes der ingen på niveauet,
+// Den letteste bane på et niveau, man er høj nok til (uden Sort). Findes der ingen på niveauet,
 // prøver løkken niveauet under (n-- = træk 1 fra), indtil den finder en
-function lettesteBanePaa(baner, niveau) {
+function lettesteBanePaa(baner, niveau, hoejde) {
   for (let n = niveau; n >= 1; n--) {
-    const bane = banerPaaNiveau(baner, n)[0]
+    const bane = banerPaaNiveau(baner, n, hoejde)[0]
     if (bane) return bane
   }
   return null
@@ -279,12 +320,12 @@ export function beregnBane(svar, baner) {
 
   // TRIN 2: Det laveste loft bestemmer niveauet.
   // Math.min(...liste) = det mindste tal i listen
-  const alleLofter = lofter(svar)
+  const alleLofter = lofter(svar, baner)
   const niveau = Math.min(...alleLofter.map((l) => l.niveau))
 
-  // TRIN 3: Den letteste bane på niveauet. Findes der ingen, går vi et niveau ned
+  // TRIN 3: Den letteste bane på niveauet, man er høj nok til. Findes der ingen, går vi et niveau ned
   for (let n = niveau; n >= 1; n--) {
-    const muligheder = banerPaaNiveau(baner, n)
+    const muligheder = banerPaaNiveau(baner, n, hoejde)
     if (muligheder.length) {
       return {
         bane: muligheder[0],
@@ -422,9 +463,9 @@ export function lavVidere(anbefaling, svar, baner) {
 
   // Førstegangsklatrere, der ellers ville passe til en sværere bane:
   // efter den lette startbane må man tage alle baner, man er høj nok til
-  const udenErfaring = foerstegangUdenRegel(anbefaling, svar)
+  const udenErfaring = foerstegangUdenRegel(anbefaling, svar, baner)
   if (udenErfaring) {
-    const senere = lettesteBanePaa(baner, udenErfaring)
+    const senere = lettesteBanePaa(baner, udenErfaring, hoejde)
     if (senere && senere.id !== bane.id) {
       const f = former(svar)
       return `Når ${f.subj} har prøvet ${bane.name}, må ${f.igen} tage alle baner, ${f.igen} er ${f.hoej} nok til. Ud fra ${f.dine} passer ${senere.name} godt bagefter.`
@@ -433,16 +474,13 @@ export function lavVidere(anbefaling, svar, baner) {
 
   if (niveau === 0) {
     const foerste = banerPaaNiveau(baner, 1)[0]
-    return foerste ? `Når man er ${KRAV.let} cm, er ${foerste.name} det første skridt op i træerne.` : ''
+    return foerste ? `Når man er ${kravFor(foerste)} cm, er ${foerste.name} det første skridt op i træerne.` : ''
   }
 
   // Find de baner, man er høj nok til, og tag den, der kommer lige efter den anbefalede
   // (findIndex finder den anbefalede banes plads i listen, + 1 = den næste)
-  const maksNiveau = hoejde < KRAV.mellem ? 1 : hoejde < KRAV.svaer ? 2 : 3
-  const startbaner = baner.filter(
-    (b) => harSvaerhedsgrad(b) && b.id !== FRIT_FALD_ID && trinFor(b) <= maksNiveau
-  )
-  const naeste = startbaner[startbaner.findIndex((b) => b.id === bane.id) + 1]
+  const mulige = startbaner(baner, hoejde)
+  const naeste = mulige[mulige.findIndex((b) => b.id === bane.id) + 1]
   if (!naeste) return ''
 
   const tid = trinFor(naeste) > niveau ? 'Når du er klar til mere' : 'Går det godt'
@@ -480,11 +518,22 @@ export function lavGruppeBesked(anbefaling, svar, baner) {
   }
 
   if (svar.hvem?.hvem === 'gruppeBoern' && anbefaling && anbefaling.niveau < 3) {
-    const mellem = navneliste(banerPaaNiveau(baner, 2))
-    const svaer = navneliste(banerPaaNiveau(baner, 3))
-    linjer.push(
-      `Anbefalingen passer til den laveste og mest utrygge, der skal klatre. De større og mere erfarne i gruppen kan fortsætte på ${mellem} (fra ${KRAV.mellem} cm) og ${svaer} (fra ${KRAV.svaer} cm).`
-    )
+    // Mellem- og svære startbaner samlet efter højdekrav,
+    // fx "Blå og Lilla (fra 120 cm), Lyserød (fra 140 cm) og Rød (fra 160 cm)"
+    const grupper = []
+    for (const b of startbaner(baner).filter((b) => trinFor(b) >= 2)) {
+      const krav = kravFor(b)
+      const gruppe = grupper.find((g) => g.krav === krav)
+      if (gruppe) gruppe.baner.push(b)
+      else grupper.push({ krav, baner: [b] })
+    }
+    const dele = grupper.map((g) => `${navneliste(g.baner)} (fra ${g.krav} cm)`)
+    const tekst = dele.length <= 1 ? (dele[0] ?? '') : `${dele.slice(0, -1).join(', ')} og ${dele.at(-1)}`
+    if (tekst) {
+      linjer.push(
+        `Anbefalingen passer til den laveste og mest utrygge, der skal klatre. De større og mere erfarne i gruppen kan fortsætte på ${tekst}.`
+      )
+    }
   }
 
   return linjer
@@ -523,7 +572,7 @@ export function lavFritfaldBesked(anbefaling, svar, baner) {
 
   // Førstegangsklatrere, der ellers ville passe til de svære baner:
   // Sort er en mulighed, når de har prøvet den lette startbane
-  if (foerstegangUdenRegel(anbefaling, svar) === 3) {
+  if (foerstegangUdenRegel(anbefaling, svar, baner) === 3) {
     const f = former(svar)
     return `${navn} er en mulighed, når ${f.subj} har prøvet ${anbefaling.bane.name} først. Den slutter med et frit fald fra 16 meter – altid sammen med en instruktør.`
   }

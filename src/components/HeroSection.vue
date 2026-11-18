@@ -6,20 +6,14 @@
 //
 // Data:
 //  - Banerne fra Firebase (services/baner.js) – bruges kun til at tælle dem, fx "8 klatrebaner"
-//  - Vejret lige nu fra Open-Meteo (services/vejr.js) – vises i én af badgene
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { hentBaner } from '@/services/baner.js'
-import { hentVejr } from '@/services/vejr.js'
 
-import { BOOK_URL } from '@/services/api.js'
 import heroBillede from '@/assets/images/gomonkey_bane.webp'
 import abeSvaev from '@/assets/images/Abe.svg'
 
 // Alle baner fra Firebase (tom liste, indtil de er hentet)
 const baner = ref([])
-
-// Vejret lige nu ved parken, fx { ikon: '☀️', grader: 18 } – null, indtil det er hentet
-const vejr = ref(null)
 
 onMounted(async () => {
   try {
@@ -29,26 +23,10 @@ onMounted(async () => {
   }
 })
 
-// Vejret hentes for sig, så banerne ikke skal vente på det (og omvendt)
-onMounted(async () => {
-  vejr.value = await hentVejr()
-})
-
-// Når vejr-badgen dukker op, skal den også placeres på wiren
-watch(vejr, async () => {
-  await nextTick()
-  opdaterVedScroll()
-})
-
-// Titlen i badgen:
-// vejr-badgen viser temperaturen, fx "6°" – de andre deres egen titel eller antallet af baner
+// Titlen i badgen: badgens egen titel, eller antallet af baner, hvis titel er null
 function titelTekst(trisse) {
-  if (trisse.vejr) return `${vejr.value.grader}°`
   return trisse.titel ?? `${baner.value.length || 8} klatrebaner`
 }
-
-// Vejr-badgen vises først, når vejret er hentet (og slet ikke, hvis det ikke kan hentes)
-const synligeTrisser = computed(() => TRISSER.filter((t) => !t.vejr || vejr.value))
 
 // Referencer til elementer i templaten (ref="heroEl" osv.), så vi kan måle og flytte dem
 const heroEl = ref(null)
@@ -61,11 +39,9 @@ const wireEl = ref(null)
 // titel: null = antallet af baner fra Firebase, fx "8 klatrebaner"
 // snor: hvor langt badget hænger under wiren (længere = lavere)
 // vip: hvor skævt badget hænger, som om det har sat i sving (0deg = lige)
-// vejr: true = badgen viser vejret lige nu (se services/vejr.js)
 // abe: true = i stedet for en badge hænger GoMonkey-aben på hovedet i halen fra wiren
 const TRISSER = [
   { id: 'abe', abe: true, start: 0.17, slut: 0.25, vip: '0deg' },
-  { id: 'vejr', vejr: true, under: 'i skoven lige nu', start: 0.66, slut: 0.68, snor: '3rem', vip: '-5deg' },
   { id: 'svaev', titel: '126 m svæv', under: 'parkens længste', start: 0.78, slut: 0.8, snor: '8.5rem', vip: '8deg' },
   { id: 'baner', titel: null, under: 'Næste stop: trætoppene', start: 0.91, slut: 0.93, snor: '5.25rem', vip: '-2deg' },
 ]
@@ -152,7 +128,7 @@ onUnmounted(() => {
 
     <!-- Badges, der hænger i trisser på wiren. Teksterne står i TRISSER i scriptet -->
     <div
-      v-for="trisse in synligeTrisser"
+      v-for="trisse in TRISSER"
       :key="trisse.id"
       ref="trisseEls"
       :data-trisse="trisse.id"
@@ -191,7 +167,8 @@ onUnmounted(() => {
       <!-- .double-button og knapperne kommer fra main.scss og _buttons.scss -->
       <div class="double-button hero__knapper">
         <a href="#baner" class="button-primary button-pink">Find din bane</a>
-        <a :href="BOOK_URL" class="button-secondary button-secondary--light">Se oversigtskort</a>
+        <!-- RouterLink til kortsiden (/kort), ligesom "Se det fulde kort" længere nede -->
+        <RouterLink to="/kort" class="button-secondary button-secondary--light">Se oversigtskort</RouterLink>
       </div>
 
       <ul class="hero__fakta">
@@ -507,7 +484,6 @@ onUnmounted(() => {
 
   // Kun "klatrebaner"-badget vises her – ellers ville de ligge oven på hinanden
   .hero__trisse--svaev,
-  .hero__trisse--vejr,
   .hero__trisse--abe {
     display: none;
   }
