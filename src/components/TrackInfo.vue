@@ -9,13 +9,29 @@
 
 // ref = en værdi som Vue holder øje med. onMounted = kører, når siden er vist.
 // onUnmounted = kører, når siden forlades (bruges til at fjerne klik-lytteren igen)
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 // Banerne og reglerne for niveauer står i services/baner.js, så alle sider viser det samme
 import { hentBaner, NIVEAUER, trinFor, niveauFor, harSvaerhedsgrad, faktaFor } from '@/services/baner.js'
 
 // Tom liste til banerne. Siden opdateres, når listen får data
 const baner = ref([])
+
+// Kun klatrebanerne (alle undtagen Bounce), sorteret fra let til svær.
+// Bruges til numrene 01, 02, 03 ..., så Bounce ikke får et nummer
+const klatrebaner = computed(() => baner.value.filter(harSvaerhedsgrad))
+
+// Rækkefølgen på siden: klatrebanerne først, Bounce til sidst,
+// fordi Bounce ikke er en klatrebane men et ekstra tilbud
+const visteBaner = computed(() => [
+    ...klatrebaner.value,
+    ...baner.value.filter((bane) => !harSvaerhedsgrad(bane)),
+])
+
+// Banens nummer som "01", "02" ... (padStart sætter et 0 foran, så 1 bliver 01)
+function nummerFor(bane) {
+    return String(klatrebaner.value.indexOf(bane) + 1).padStart(2, '0')
+}
 
 // true mens vi venter på databasen
 const loading = ref(true)
@@ -156,7 +172,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     <!-- Ét kort pr. bane (v-for gentager article) -->
     <article
         v-else
-        v-for="(bane, index) in baner"
+        v-for="bane in visteBaner"
         :key="bane.id"
         :id="bane.id"
         :class="[bane.class, `bane--${bane.id}`]"
@@ -166,8 +182,8 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             <!-- Overskriften står i sin egen række over teksten,
                  så billedet kun flugter med teksten under den -->
             <div class="bane__top">
-                <!-- 01, 02, 03 ... i banens farve. padStart(2, '0') sætter et 0 foran, så 1 bliver 01 -->
-                <span class="bane__nr" aria-hidden="true">{{ String(index + 1).padStart(2, '0') }}</span>
+                <!-- 01, 02, 03 ... i banens farve. Kun klatrebaner får et nummer, ikke Bounce -->
+                <span v-if="harSvaerhedsgrad(bane)" class="bane__nr" aria-hidden="true">{{ nummerFor(bane) }}</span>
                 <h2 class="bane__navn">{{ bane.name }}</h2>
             </div>
 
