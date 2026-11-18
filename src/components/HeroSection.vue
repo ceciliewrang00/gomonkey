@@ -11,7 +11,6 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { hentBaner } from '@/services/baner.js'
 import { hentVejr } from '@/services/vejr.js'
 
-import { BOOK_URL } from '@/services/api.js'
 import heroBillede from '@/assets/images/gomonkey_bane.webp'
 import abeSvaev from '@/assets/images/Abe.svg'
 
@@ -191,7 +190,8 @@ onUnmounted(() => {
       <!-- .double-button og knapperne kommer fra main.scss og _buttons.scss -->
       <div class="double-button hero__knapper">
         <a href="#baner" class="button-primary button-pink">Find din bane</a>
-        <a :href="BOOK_URL" class="button-secondary button-secondary--light">Se oversigtskort</a>
+        <!-- RouterLink til kortsiden (/kort), ligesom "Se det fulde kort" længere nede -->
+        <RouterLink to="/kort" class="button-secondary button-secondary--light">Se oversigtskort</RouterLink>
       </div>
 
       <ul class="hero__fakta">
