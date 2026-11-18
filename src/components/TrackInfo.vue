@@ -52,12 +52,11 @@ const aabenInfo = ref(null)
 const billedDialog = ref(null) // selve <dialog>-elementet (ref="billedDialog" i templaten)
 const stortBillede = ref(null) // Banen, hvis billede vises stort (null = lukket)
 
-// Har banen en SVG-tegning i Firebase ("svg"), vises den.
-// Ellers bruges det gamle billede ("image") fra public-mappen.
-// SVG-teksten laves om til en data-adresse, så den kan vises i et almindeligt <img>
+// Banens tegning ligger som SVG-tekst i Firebase ("svg").
+// Teksten laves om til en data-adresse, så den kan vises i et almindeligt <img>
+// (så kan SVG'en ikke køre kode på siden, og alt-teksten virker stadig)
 function billedeSrc(bane) {
-    if (bane.svg) return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(bane.svg)
-    return `/${bane.image}`
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(bane.svg)
 }
 
 // Åbn vinduet med banens billede. ?. = kun hvis dialogen findes
@@ -175,7 +174,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             <!-- Billede af banen -->
             <!-- Billedet er en knap: klik åbner det stort -->
             <button
-                v-if="bane.svg || bane.image"
+                v-if="bane.svg"
                 type="button"
                 class="bane__billede"
                 :aria-label="`Se billedet af ${bane.name} i stor størrelse`"
