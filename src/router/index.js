@@ -1,10 +1,18 @@
+// ROUTEREN – bestemmer, hvilken side der vises ud fra adressen
+// Den slås til i main.js, og siden vises i <RouterView /> i App.vue.
+// Links mellem siderne laves med <RouterLink to="/kort"> i stedet for <a href>,
+// så siden skifter uden at hele browseren genindlæser.
+
 import { createRouter, createWebHistory } from 'vue-router'
+
+// De fire sider (views). Hver side samler en række komponenter fra src/components
 import HomeView from '../views/HomeView.vue'
 import AdminView from '@/views/AdminView.vue'
 import QuizView from '@/views/QuizView.vue'
 import KortView from '@/views/KortView.vue'
 
 const router = createRouter({
+  // createWebHistory giver "pæne" adresser som /kort (uden # i adressen)
   history: createWebHistory(import.meta.env.BASE_URL),
   // Bestemmer scroll-positionen ved sideskift.
   // Bruger man browserens tilbage/frem, huskes den gamle position (savedPosition).
@@ -35,23 +43,28 @@ const router = createRouter({
     }
     return { top: 0 }
   },
+  // Listen over sider: path = adressen, component = den side, der vises
   routes: [
     {
+      // Forsiden
       path: '/',
       name: 'home',
       component: HomeView,
     },
     {
+      // Banevælgeren (quizzen) – linkes fra "Start banevælger" på forsiden
       path: '/banequiz',
       name: 'quiz',
       component: QuizView
     },
     {
+      // Det interaktive kort – linkes fra "Se det fulde kort" på forsiden
       path: '/kort',
       name: 'kort',
       component: KortView
     },
     {
+      // Admin – kræver login. Der er ikke noget link til den, man skriver adressen selv
       path: '/admin',
       name: 'admin',
       component: AdminView

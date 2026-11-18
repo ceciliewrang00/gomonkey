@@ -1,4 +1,9 @@
 <script setup>
+// SIDEFODEN
+// Nederst på forsiden (HomeView). Der er ingen data fra Firebase – alle links står i
+// listerne herunder, og templaten laver et link for hvert punkt med v-for.
+// Vil du tilføje eller rette et link, så gør det i listerne.
+
 // Links i de to kolonner til højre
 const lokationer = [
   { navn: 'Forest Gladsaxe', href: '#' },
@@ -43,6 +48,7 @@ const sociale = [
   },
 ]
 
+// Årstallet i "© 2026 GoMonkey ApS" – tages fra datoen i dag, så det aldrig skal rettes
 const aar = new Date().getFullYear()
 </script>
 

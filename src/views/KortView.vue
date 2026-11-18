@@ -1,17 +1,24 @@
 <script setup>
-// Kortsiden. Samler filteret og kortet (før lå det i App.vue)
+// KORTSIDEN (adressen /kort, se src/router/index.js)
+// Siden består af to dele: filteret til venstre (KortFilter.vue) og kortet (InteraktivtKort.vue).
+// De to kan ikke tale direkte sammen. Derfor går beskeden gennem denne fil:
+//   1. Man sætter et flueben i filteret
+//   2. Filteret sender de valgte baner op hertil med emit ('filter-changed')
+//   3. Vi gemmer dem i nuvaerendeFilter
+//   4. nuvaerendeFilter sendes ned i kortet som prop (:filter), og kortet toner de andre baner ned
 import { ref } from 'vue'
 import InteraktivtKort from '@/components/InteraktivtKort.vue'
 import KortFilter from '@/components/KortFilter.vue'
 
-// Id på den bane, man har klikket på i kortet
+// Id på den bane, man har klikket på i kortet (kortet sender det med emit 'bane-valgt').
+// Det gemmes her, så siden kan bruge det – lige nu vises popup'en dog inde i selve kortet
 const valgtBaneId = ref(null)
 
-// 'alle' eller en liste af bane-id'er. Filteret sender den, kortet modtager den
+// Hvilke baner filteret viser: 'alle' – eller en liste af bane-id'er, fx ['bane-1', 'bane-3']
 const nuvaerendeFilter = ref('alle')
 
-// Kaldes, når KortFilter sender 'filter-changed'.
-// Gemmer det nye filter, og så sender Vue det automatisk videre til kortet
+// Kører, når filteret sender beskeden 'filter-changed' med de valgte baner.
+// Vi gemmer dem – og fordi kortet får nuvaerendeFilter som prop, opdateres kortet af sig selv
 function haandterFilterAendring(nytFilter) {
   nuvaerendeFilter.value = nytFilter
 }
@@ -19,7 +26,7 @@ function haandterFilterAendring(nytFilter) {
 
 <template>
   <!-- Siden er delt i to: filteret til venstre og kortet til højre.
-       Dataflow: KortFilter → (emit) → KortView → (prop) → InteraktivtKort -->
+       Vejen for beskeden: KortFilter → (emit, op) → KortView → (prop, ned) → InteraktivtKort -->
   <main class="kort-app">
     <!-- Filter. @filter-changed lytter efter beskeden fra filteret -->
     <KortFilter @filter-changed="haandterFilterAendring" />
@@ -35,7 +42,8 @@ function haandterFilterAendring(nytFilter) {
   </main>
 </template>
 
-<!-- IKKE scoped, for kortets SVG bliver sat ind med JavaScript og ville ikke få scoped-klasser.
+<!-- IKKE scoped. Kortets SVG bliver sat ind med JavaScript (ikke via templaten),
+     og så virker scoped-styles ikke på den.
      Alt ligger under .kort-app, så intet rammer resten af sitet (admin, forside osv.).
      Farverne kommer fra _colors.scss, så kortet passer til resten af siderne -->
 <style lang="scss">
@@ -99,11 +107,12 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 
   // ---------- Banefarver ----------
 
-  // Farverne kommer fra $kort-bane-farver i _colors.scss.
-  // 1) Hver farve bliver en CSS-variabel, fx --kort-bane-bane-1.
-  //    BanePopup.vue bruger dem til stregen og prikken i popup'en.
+  // Farverne kommer fra listen $kort-bane-farver i _colors.scss.
+  // @each er en løkke i SCSS: den kører én gang for hver bane i listen.
+  // 1) Hver farve bliver en CSS-variabel, fx --kort-bane-bane-1: <farve>.
+  //    Kortet, filteret og BanePopup.vue bruger variablerne, så farven er ens overalt.
   // 2) Banens farvede streg på kortet får samme farve.
-  //    Hvert stykke bane har tre streger: lys kant, farve (nr. 2) og skygge.
+  //    Hvert stykke bane har tre streger: lys kant, farve (nr. 2) og reb (se kortStier.js).
   //    Reglen her er stærkere end SVG'ens egne klasser (fx .st27), så den vinder
   @each $id, $farve in c.$kort-bane-farver {
     --kort-bane-#{$id}: #{$farve};
@@ -426,9 +435,9 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 }
 
 // Knapper på kortsiden bruger samme skrift som resten af siden.
-// Hele selektoren står i :where(), så reglen har styrke 0 og ALLE klasser vinder over den
-// – også globale klasser som .button-primary fra _buttons.scss.
-// (Stod den som .kort-app :where(button), talte .kort-app med, og så tabte .button-primary)
+// :where() gør reglen så "svag" som muligt, så alle andre regler vinder over den
+// – også knap-klasserne som .button-primary fra _buttons.scss.
+// (Uden :where() ville denne regel vinde og ødelægge knappernes skrift)
 :where(.kort-app button) {
   font: inherit;
 }

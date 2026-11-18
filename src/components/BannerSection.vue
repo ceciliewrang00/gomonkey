@@ -1,4 +1,7 @@
 <script setup>
+// BANNER – "Skru' op for modet"
+// Et stort banner på forsiden (HomeView) mellem "Find din bane" og banekortene.
+// Kun tekst og en bookingknap – ingen data fra Firebase.
 import BaseButton from './BaseButton.vue'
 
 // Link til booking – står ét sted i services/api.js

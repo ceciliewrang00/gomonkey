@@ -1,24 +1,34 @@
 <script setup>
 // KORTFILTER
-// Sidebaren til venstre for kortet, hvor man vælger, hvilke baner der skal fremhæves.
-// Banerne hentes fra Firebase og vises i én samlet liste.
-// Alle baner er synlige med det samme, og kortet opdateres, så snart man sætter et flueben
-// (de valgte bane-id'er sendes til KortView.vue med emit).
+// Listen til venstre for kortet, hvor man sætter flueben ved de baner, man vil se.
+// Så snart man sætter et flueben, sendes de valgte baner op til KortView.vue (med emit),
+// som giver dem videre til kortet. Der er ingen "Anvend"-knap.
 // På mobil er filteret skjult bag en "Filtre"-knap og glider ind fra venstre.
+//
+// Data kommer to steder fra:
+//  - Firebase "mapfilter": listen af baner i filteret + deres korte undertekst (fx "Tarzan spring")
+//  - Firebase "baner" (via baner.js): banens navn og sværhedsgrad – så der står det samme
+//    som på forsiden og i popup'en
 
 import { ref, watch, onMounted } from 'vue'
+
+// useRoute giver adgang til adressen i browseren (bruges til ?bane=... herunder)
 import { useRoute } from 'vue-router'
 
-// Databaseadresserne står samlet i api.js
+// Adressen på "mapfilter" i Firebase
 import { KORTFILTER_URL } from '@/services/api.js'
-// Banernes navn og sværhedsgrad kommer fra de fælles banedata (samme som forsiden og popup'en)
+
+// hentBaner henter banerne fra "baner". "as hentFaellesBaner" giver den et andet navn her,
+// fordi denne fil selv har en funktion, der hedder hentBaner.
+// niveauFor laver sværhedsgraden om til et ord, fx "Mellem"
 import { hentBaner as hentFaellesBaner, niveauFor } from '@/services/baner.js'
 
-// Beskeden, der sendes op til KortView.vue med det nye filter
+// Beskeden 'filter-changed', der sendes op til KortView.vue med de valgte baner
 const emit = defineEmits(['filter-changed'])
 
-// Kommer man fra "Se på kortet" på forsiden, står banens id i adressen, fx /kort?bane=bane-6.
-// Så er den bane valgt fra start. Flere baner kan skrives med komma: ?bane=bane-1,bane-2
+// Kommer man fra et link som /kort?bane=bane-6, er den bane valgt fra start.
+// Flere baner kan skrives med komma: ?bane=bane-1,bane-2.
+// split(',') deler teksten ved kommaerne, og filter(Boolean) fjerner tomme stykker
 const route = useRoute()
 const fraAdressen = String(route.query.bane ?? '').split(',').filter(Boolean)
 
@@ -35,86 +45,79 @@ const banerListe = ref([])
 const indlaeser = ref(true)
 
 
+// ---------- Hent data ----------
 
-//---------------------------------HENT DATA----------------------------------------------------------------------------
-
-//Gemmer adressen til Firebase-databasen, så den kan genbruges i API-kaldet
+// Den fulde adresse til "mapfilter" i Firebase
 const databaseUrl = `${KORTFILTER_URL}.json`
 
-
-// API-kald med fetch(), som henter data fra ekstern database
+// Henter banerne til filteret
 async function hentBaner() {
   try {
+    // 1. Hent listen fra "mapfilter"
     const response = await fetch(databaseUrl)
 
-// Svaret fra API'et omdannes til JSON-format,
-// Det gør så dataene kan bruges som JavaScript-objekter i komponenten
+    // Svaret kommer som tekst. .json() laver det om til JavaScript-data, vi kan bruge
     const data = await response.json()
 
-    // Navn og sværhedsgrad hentes fra de fælles banedata, så filteret siger det samme
-    // som forsiden og popup'en (fx "Sort" = "Svær"). Fra "mapfilter" bruges kun den
-    // korte undertekst (fx "Tarzan spring" eller "Frit fald – tilkøb 30 kr.")
+    // 2. Hent navn og sværhedsgrad fra "baner", så filteret siger det samme som
+    // forsiden og popup'en. Fejler det, bruges bare teksterne fra "mapfilter"
     let faelles = []
     try {
       faelles = await hentFaellesBaner()
     } catch (e) {
       console.error('Banernes navne kunne ikke hentes:', e)
     }
+    // 3. En lille funktion, der sætter de to sammen for én bane:
+    // finder banen i "baner" og bruger dens navn og sværhedsgrad.
+    // Findes banen ikke dér (fx en ny bane fra admin), bruges teksterne fra "mapfilter"
     const medFaellesData = (item) => {
       const bane = faelles.find((b) => b.id === item.id)
       if (!bane) return item
       return { ...item, titel: bane.name, svaerhed: niveauFor(bane) }
     }
 
-//-------------------------------------------------------------------------------------------------------------
-
-
-//-------------------------------------DATA ER MODTAGET------------------------------------------------------------------------
- // Når data er hentet:
-  // Tjekkes der først om der faktisk er modtaget data fra databasen
+    // 4. Gem listen. Firebase kan sende den på to måder:
     if (data) {
-
-  // Hvis data kommer som et array, fjernes eventuelle tomme værdier
       if (Array.isArray(data)) {
+        // Som en liste: fjern tomme pladser (dem, hvor en bane er slettet)
         banerListe.value = data.filter(item => item !== null && item !== undefined).map(medFaellesData)
-
-  // Hvis data kommer som et objekt, omdannes det til et array
       } else {
+        // Som et objekt: lav det om til en liste
         banerListe.value = Object.values(data).map(medFaellesData)
       }
     }
 
-    // Hvis API-kaldet fejler vises der en fejlbesked i konsollen
+  // Gik noget galt, skrives fejlen i konsollen (F12 i browseren)
   } catch (fejl) {
     console.error('Fejl ved hentning af banedata fra Firebase:', fejl)
-//-------------------------------------------------------------------------------------------------------------
 
-//-------------------------------------------------------------------------------------------------------------
-
-  // Kører altid til sidst, uanset om API-kaldet lykkedes eller fejlede.
-  // Stopper loading-tilstanden, så brugeren ikke længere ser "Henter baner..."
+  // finally kører altid til sidst – så "Henter baner..." forsvinder, uanset hvad
   } finally {
     indlaeser.value = false
   }
 }
-// onMounted kører automatisk, når komponenten bliver vist på siden.
-// Her kaldes hentBaner(), så banedataene hentes med det samme,
+
+// Hent banerne, så snart filteret vises på siden
 onMounted(() => {
   hentBaner()
 })
-//-------------------------------------------------------------------------------------------------------------
 
 
-//-----------------------------------FILTER FUNKTIONERNE--------------------------------------------------------------------------
+// ---------- Når man sætter flueben ----------
 
-// Kortet opdateres med det samme, når valget ændrer sig – der er ingen "Anvend"-knap.
-// Er intet valgt, sendes 'alle', så alle baner vises
-// immediate: true = sendes også med det samme, så en bane fra adressen vises på kortet fra start
+// watch holder øje med valgteFiltre. Hver gang listen ændrer sig, sendes den til KortView.vue.
+// Er intet valgt, sendes 'alle', så alle baner vises.
+// [...valgte] sender en kopi af listen.
+// immediate: true = send også én gang med det samme, så en bane fra adressen (?bane=)
+// er valgt på kortet fra start
 watch(valgteFiltre, (valgte) => {
   emit('filter-changed', valgte.length === 0 ? 'alle' : [...valgte])
 }, { immediate: true })
 
-// Sætter eller fjerner flueben ved én bane
+// Kører, når man klikker på en bane. checked = true, hvis der nu er flueben.
+// Flueben: læg banen i listen (hvis den ikke allerede er der).
+// Intet flueben: lav en ny liste uden banen.
+// Vi laver en NY liste i stedet for at ændre den gamle, så watch opdager ændringen
 function vaelgBane(id, checked) {
   if (checked) {
     if (!valgteFiltre.value.includes(id)) {
@@ -130,7 +133,8 @@ function nulstilFilter() {
   valgteFiltre.value = []
 }
 
-//Funktion der skifter status for mobilmenuen mellem åben og lukket, alt efter hvad den er i forvejen
+// "Filtre"-knappen på mobil: åbner filteret, hvis det er lukket, og lukker det, hvis det er åbent
+// (! vender true til false og omvendt)
 function togglerFilter() {
   erAaben.value = !erAaben.value
 }
@@ -145,7 +149,8 @@ function togglerFilter() {
 
 <template>
   <div class="filter-wrapper">
-    <!-- Knappen "Filtre" (kun på mobil). Tallet viser, hvor mange baner der er valgt -->
+    <!-- Knappen "Filtre" (kun på mobil). Tallet viser, hvor mange baner der er valgt.
+         aria-expanded fortæller skærmlæsere, om filteret er åbent -->
     <button type="button" class="mobil-filter-knap" :aria-expanded="erAaben" @click="togglerFilter">
       <span>Filtre</span>
       <span v-if="valgteFiltre.length > 0" class="filter-badge">{{ valgteFiltre.length }}</span>
@@ -195,7 +200,9 @@ function togglerFilter() {
             </div>
           </label>
 
-          <!-- Én række pr. bane. Hele rækken er en <label>, så man kan klikke hvor som helst på den -->
+          <!-- Én række pr. bane. Hele rækken er en <label>, så man kan klikke hvor som helst på den.
+               :checked = der er flueben, hvis banen er i listen.
+               @change sender banens id og om der nu er flueben ($event.target.checked) -->
           <label
             v-for="bane in banerListe"
             :key="bane.id"

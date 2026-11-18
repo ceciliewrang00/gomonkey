@@ -1,4 +1,12 @@
 <script setup>
+// HERO – den store sektion øverst på forsiden (HomeView)
+// Et baggrundsbillede, en wire (en buet SVG-streg) hen over billedet og nogle badges,
+// der hænger i "trisser" på wiren. Når man scroller ned, glider trisserne lidt hen ad wiren,
+// og billedet bevæger sig langsommere end siden (parallakse-effekt).
+//
+// Data:
+//  - Banerne fra Firebase (services/baner.js) – bruges kun til at tælle dem, fx "8 klatrebaner"
+//  - Vejret lige nu fra Open-Meteo (services/vejr.js) – vises i én af badgene
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { hentBaner } from '@/services/baner.js'
 import { hentVejr } from '@/services/vejr.js'
@@ -7,6 +15,7 @@ import { BOOK_URL } from '@/services/api.js'
 import heroBillede from '@/assets/images/gomonkey_bane.webp'
 import abeSvaev from '@/assets/images/Abe.svg'
 
+// Alle baner fra Firebase (tom liste, indtil de er hentet)
 const baner = ref([])
 
 // Vejret lige nu ved parken, fx { ikon: '☀️', grader: 18 } – null, indtil det er hentet
@@ -20,6 +29,7 @@ onMounted(async () => {
   }
 })
 
+// Vejret hentes for sig, så banerne ikke skal vente på det (og omvendt)
 onMounted(async () => {
   vejr.value = await hentVejr()
 })
@@ -40,6 +50,7 @@ function titelTekst(trisse) {
 // Vejr-badgen vises først, når vejret er hentet (og slet ikke, hvis det ikke kan hentes)
 const synligeTrisser = computed(() => TRISSER.filter((t) => !t.vejr || vejr.value))
 
+// Referencer til elementer i templaten (ref="heroEl" osv.), så vi kan måle og flytte dem
 const heroEl = ref(null)
 const billedeEl = ref(null)
 const wireEl = ref(null)
@@ -58,9 +69,14 @@ const TRISSER = [
   { id: 'svaev', titel: '126 m svæv', under: 'parkens længste', start: 0.78, slut: 0.8, snor: '8.5rem', vip: '8deg' },
   { id: 'baner', titel: null, under: 'Næste stop: trætoppene', start: 0.91, slut: 0.93, snor: '5.25rem', vip: '-2deg' },
 ]
+// Alle trisse-elementerne på siden (ref="trisseEls" i v-for giver en liste)
 const trisseEls = ref([])
 
+// true, hvis brugeren har slået "reducér bevægelse" til i sit styresystem.
+// Så står billedet og trisserne stille
 let roligBevaegelse = false
+
+// Id på den opdatering, der venter på at blive tegnet (se vedScroll)
 let ventendeFrame = null
 
 // Flytter hver trisse hen til sit punkt på wiren.
@@ -78,6 +94,8 @@ function placerTrisser(fremskridt) {
   })
 }
 
+// Regner ud, hvor langt man har scrollet ned gennem hero (fremskridt: 0 = toppen, 1 = forbi),
+// og flytter billedet og trisserne derefter
 function opdaterVedScroll() {
   ventendeFrame = null
   const hero = heroEl.value
@@ -85,6 +103,7 @@ function opdaterVedScroll() {
 
   const scroll = window.scrollY
   const hoejde = hero.offsetHeight
+  // Er hero scrollet helt ud af syne, er der ingen grund til at flytte noget
   if (scroll > hoejde) return
 
   const fremskridt = Math.min(Math.max(scroll / hoejde, 0), 1)
@@ -92,15 +111,20 @@ function opdaterVedScroll() {
   if (!roligBevaegelse && billedeEl.value) {
     // Desktop: billedet er skubbet 6 % til højre. Mobil: ingen forskydning (se CSS)
     const forskydning = window.matchMedia('(max-width: 767px)').matches ? '0%' : '6%'
+    // Billedet flyttes 25 % af scroll-afstanden ned, så det ser ud til at bevæge sig langsommere
     billedeEl.value.style.transform = `translate3d(${forskydning}, ${scroll * 0.25}px, 0)`
   }
   placerTrisser(roligBevaegelse ? 0 : fremskridt)
 }
 
+// Kører, hver gang man scroller eller ændrer vinduets størrelse.
+// scroll kan ske mange gange i sekundet, så vi beder browseren om at køre opdaterVedScroll
+// én gang ved næste skærmopdatering (requestAnimationFrame) i stedet for hver eneste gang
 function vedScroll() {
   if (!ventendeFrame) ventendeFrame = requestAnimationFrame(opdaterVedScroll)
 }
 
+// Når hero er vist: tjek "reducér bevægelse", placér trisserne og begynd at lytte efter scroll
 onMounted(() => {
   roligBevaegelse = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   opdaterVedScroll()
@@ -108,6 +132,7 @@ onMounted(() => {
   window.addEventListener('resize', vedScroll)
 })
 
+// Når man forlader forsiden, fjernes lytterne igen, så de ikke kører videre på andre sider
 onUnmounted(() => {
   window.removeEventListener('scroll', vedScroll)
   window.removeEventListener('resize', vedScroll)

@@ -1,50 +1,57 @@
-// QUIZLOGIK
-// Alle regler for banevælgeren samlet ét sted, så QuizSide.vue kun skal vise dem.
+// QUIZLOGIK – hjernen bag banevælgeren
+// Her står ALLE reglerne for, hvilken bane quizzen anbefaler.
+// QuizSide.vue viser bare spørgsmålene og resultatet – den regner ikke selv.
 //
 // Målet er en FORSIGTIG anbefaling: hellere en bane for let end for svær.
 // Man kan altid tage en sværere bane bagefter – men en for svær første bane
 // kan ødelægge hele oplevelsen.
 //
-// Sådan regnes anbefalingen ud (beregnBane):
-// 1. Under 110 cm: kun Bounce.
-// 2. Ellers findes det højeste NIVEAU, man må starte på (1 = Let, 2 = Mellem, 3 = Svær).
-//    Hvert svar sætter et loft, og det LAVESTE loft vinder:
-//      - Højde: 110–139 cm → Let,  140–159 cm → Mellem,  160+ cm → Svær
-//      - Alle andre svar har et felt "maksNiveau" i Firebase (1, 2 eller 3), som kan
-//        rettes i admin. Fx erfaring "aldrig prøvet" = 1, tryghed "helt fint" = 3.
-//    Der bruges ingen point.
-// 3. Inden for niveauet anbefales den LETTESTE bane (fx Grøn frem for Gul),
+// Sådan findes anbefalingen (i funktionen beregnBane):
+// 1. Er man under 110 cm, kan man kun komme på Bounce (trampolinen).
+// 2. Ellers finder vi det højeste NIVEAU, man må starte på (1 = Let, 2 = Mellem, 3 = Svær).
+//    Tænk på hvert svar som et "loft" – et højeste niveau, svaret tillader.
+//    Det LAVESTE loft bestemmer. Eksempel: højden tillader Svær (3), men man er utryg
+//    ved højder (1) → så bliver det Let (1).
+//      - Højden: 110–139 cm → Let,  140–159 cm → Mellem,  160+ cm → Svær
+//      - Alle andre svar har et tal "maksNiveau" (1, 2 eller 3) i Firebase, som kan
+//        rettes i admin. Fx "aldrig prøvet" = 1, "helt fint med højder" = 3.
+//    Der gives ingen point.
+// 3. På det niveau anbefales den LETTESTE bane (fx Grøn frem for Gul),
 //    og den næste bane nævnes som "næste skridt".
 //
-// Banerne (navn, beskrivelse, rækkefølge, sværhedsgrad) kommer fra de fælles banedata
-// i Firebase (services/baner.js) – ikke fra tekster her. Så passer anbefalingen altid
-// med forsiden og kortet, også hvis banerne skifter navn, farve eller rækkefølge.
+// Banerne (navn, rækkefølge, sværhedsgrad) hentes fra Firebase via services/baner.js
+// og står ikke her. Så passer anbefalingen altid med forsiden og kortet,
+// også hvis en bane skifter navn.
 //
-// Filen importerer kun niveau.js (relativt og uden Firebase), så den kan testes
-// direkte med node: node scripts/testQuiz.mjs
+// Filen bruger kun niveau.js (ingen Firebase), så reglerne kan testes uden browser:
+// node scripts/testQuiz.mjs
+//
+// Ordet "svar" går igen i hele filen. Det er alle brugerens svar samlet i ét objekt:
+// { hvem: {...}, hoejde: {...}, erfaring: {...}, ... } – ét felt pr. spørgsmål
 
 import { trinFor, harSvaerhedsgrad, NIVEAUER } from './niveau.js'
 
-// Højdekrav pr. niveau (fra gomonkey.dk og banernes krav i Firebase).
-// Ændrer GoMonkey kravene, skal tallene her også ændres
+// Hvor høj man mindst skal være (i cm) for hvert niveau (fra gomonkey.dk).
+// Ændrer GoMonkey kravene, skal tallene rettes her
 export const KRAV = {
   let: 110,
   mellem: 140,
   svaer: 160,
 }
 
-// Frit fald-banen (Sort). Den anbefales aldrig som startbane, men omtales for sig
+// Frit fald-banen (Sort). Den anbefales aldrig som første bane, men får sin egen besked
 const FRIT_FALD_ID = 'bane-7'
 
-/* --- Små hjælpere --- */
+/* --- Små hjælpe-funktioner --- */
+// svar.hvem?.hvem: ?. betyder "hvis svar.hvem findes" – ellers giver det undefined i stedet for en fejl
 
-// Er svaret på "Hvem skal klatre?" en gruppe?
+// Har man svaret, at man er en gruppe (med børn eller voksne)?
 export function erGruppe(svar) {
   const hvem = svar.hvem?.hvem
   return hvem === 'gruppeBoern' || hvem === 'gruppeVoksne'
 }
 
-// Er der børn med? (Bruges til reglerne om voksne.)
+// Er der børn med? (Så skal reglerne om voksne med børn vises)
 function boernMed(svar) {
   const hvem = svar.hvem?.hvem
   return hvem === 'barn' || hvem === 'gruppeBoern'
@@ -56,20 +63,22 @@ export function smaaIGruppen(svar) {
   return erGruppe(svar) && svar.smaaBoern?.smaaMed === true
 }
 
-// Højden på den laveste, der skal klatre.
+// Højden (i cm) på den laveste person, der skal klatre
 function klatreHoejde(svar) {
   return svar.hoejde?.minimumHoejde
 }
 
-// Banerne på et niveau (1, 2 eller 3), fra letteste til sværeste.
-// Sort (frit fald) er ikke med – den er ikke en startbane
+// Alle baner på et bestemt niveau (1, 2 eller 3), fra letteste til sværeste.
+// Bounce og Sort (frit fald) er ikke med – de er ikke startbaner
 function banerPaaNiveau(baner, niveau) {
   return baner.filter(
     (b) => harSvaerhedsgrad(b) && b.id !== FRIT_FALD_ID && trinFor(b) === niveau
   )
 }
 
-// Navne som tekst, fx "Blå, Lilla og Lyserød" – eller "Grøn eller Gul" med bindeord 'eller'
+// Laver en liste af baner om til en pæn sætning, fx "Blå, Lilla og Lyserød".
+// Med bindeord 'eller' fås fx "Grøn eller Gul".
+// slice(0, -1) = alle undtagen den sidste, at(-1) = den sidste
 function navneliste(baner, bindeord = 'og') {
   const navne = baner.map((b) => b.name)
   if (navne.length <= 1) return navne[0] ?? ''
@@ -77,9 +86,14 @@ function navneliste(baner, bindeord = 'og') {
 }
 
 /* --- Spørgsmålene --- */
+// Et spørgsmål kan have tre udgaver af sin tekst i Firebase:
+//   tekst       = til "du"          (fx "Hvor høj er du?")
+//   tekstBarn   = til en forælder    (fx "Hvor højt er dit barn?")
+//   tekstGruppe = til en gruppe      (fx "Hvor høj er den laveste?")
+// Funktionerne herunder vælger den rigtige ud fra svaret på "Hvem skal klatre?"
 
-// Vælger spørgsmålsteksten ud fra, hvem der skal klatre.
-// Findes der ingen særlig tekst, bruges den almindelige "du"-tekst.
+// Vælger spørgsmålets tekst.
+// Findes der ingen særlig tekst til barn/gruppe, bruges den almindelige "du"-tekst
 export function visTekst(sp, svar) {
   const hvem = svar.hvem?.hvem
   if (hvem === 'barn' && sp.tekstBarn) return sp.tekstBarn
@@ -98,8 +112,9 @@ export function visSvarTekst(svarItem, svar) {
   return svarItem.tekst
 }
 
-// Vælger en tekst, der enten er en streng eller et objekt { mig, barn, gruppe },
-// ud fra hvem der skal klatre. Mangler barn- eller gruppe-teksten, bruges "mig"
+// Det samme, men for tekster, der kan være enten bare én tekst
+// eller et objekt med tre udgaver { mig, barn, gruppe }.
+// Mangler barn- eller gruppe-udgaven, bruges "mig"
 function vaelgForHvem(tekst, svar) {
   if (!tekst) return ''
   if (typeof tekst === 'string') return tekst
@@ -118,9 +133,13 @@ export function visHjaelp(sp, svar) {
   return sp.hjaelp ?? ''
 }
 
-// Afgør, om et spørgsmål skal vises lige nu.
-// visHvis: spørgsmålet vises kun ved bestemte svar på et andet spørgsmål.
-// svarId = ét bestemt svar, svarIder = en liste af svar.
+// Skal dette spørgsmål vises lige nu? Giver true eller false.
+// Nogle spørgsmål har "visHvis" i Firebase: de vises KUN, hvis man har svaret
+// noget bestemt på et andet spørgsmål. Fx vises "Hvor meget vejer du?" kun,
+// hvis man har sagt ja til frit fald.
+//   visHvis.spoergsmaalId = det spørgsmål, der skal kigges på
+//   visHvis.svarId        = det ene svar, der får spørgsmålet frem
+//   visHvis.svarIder      = eller: en liste af svar, der får det frem
 export function skalVises(sp, svar) {
   // Er den laveste, der skal klatre, under 110 cm, kan man kun komme på Bounce.
   // Så springer vi resten af spørgsmålene over og går direkte til resultatet.
@@ -130,22 +149,25 @@ export function skalVises(sp, svar) {
     return false
   }
 
+  // Ingen visHvis = spørgsmålet vises altid
   if (!sp.visHvis) {
     return true
   }
+  // Hvad har man svaret på det andet spørgsmål – og er det et af de tilladte svar?
   const valgt = svar[sp.visHvis.spoergsmaalId]?.id
   const tilladte = sp.visHvis.svarIder ?? [sp.visHvis.svarId]
   return tilladte.includes(valgt)
 }
 
-/* --- Lofterne (det højeste niveau hvert svar tillader) --- */
+/* --- Lofterne (det højeste niveau, hvert svar tillader) --- */
 
-// Begrundelser til de faste spørgsmål, når netop det svar holder anbefalingen nede.
-// Nye spørgsmål fra admin får den generelle tekst
+// Teksten, der forklarer, HVORFOR et svar holdt anbefalingen nede.
+// Fx "Du har ikke klatret før, og ...". Der er særlige tekster til erfaring, tryghed og oplevelse.
+// Nye spørgsmål, man har lavet i admin, får en generel tekst
 function grundFor(id, niveau, svar) {
-  const hvem = subjekt(svar, 'andet')
-  // "også selvom man er tryg ved højder" kun, når brugeren faktisk er tryg (tryghed over niveau 1).
-  // Ellers modsiger den linjen om, at man ikke har det godt med højder
+  const hvem = subjekt(svar, 'andet') // "Du", "Dit barn" eller "Nogle i gruppen"
+  // Tilføjelsen "også selvom man er tryg ved højder" kommer kun med, hvis man faktisk ER tryg.
+  // Ellers ville den sige det modsatte af en anden begrundelse
   const trygTillaeg = svar.tryghed?.maksNiveau > 1 ? ' – også selvom man er tryg ved højder' : ''
   const tekster = {
     erfaring: niveau === 1
@@ -158,20 +180,25 @@ function grundFor(id, niveau, svar) {
       ? 'Ønsket om en rolig og tryg tur passer bedst til de lette baner.'
       : 'Svarene peger på en mellembane frem for de sværeste baner.',
   }
+  // ?? = brug teksten til højre, hvis der ikke findes en til venstre
   return tekster[id] ?? 'Et af svarene peger på en lettere start.'
 }
 
-// Rækkefølgen, begrundelserne vises i, når flere lofter holder anbefalingen nede.
-// Spørgsmål, der ikke står her (fx nye fra admin), kommer sidst
+// Holder flere svar anbefalingen nede, vises begrundelserne i denne rækkefølge
+// (vigtigste først). Spørgsmål, der ikke står her (fx nye fra admin), kommer sidst
 const BEGRUNDELSE_PRIORITET = ['hoejde', 'tryghed', 'erfaring', 'oplevelse']
 
-// Hvert loft er 1 (Let), 2 (Mellem) eller 3 (Svær) med en begrundelse,
-// som vises, hvis netop det loft er det, der bestemmer anbefalingen.
-// kilde = hvilket spørgsmål loftet kommer fra (bruges til prioriteten ovenfor)
+// Laver en liste med et loft for hvert svar. Ét loft ser sådan ud:
+//   { kilde: 'tryghed', niveau: 1, grund: 'Du har det ikke helt godt med højder ...' }
+// kilde  = hvilket spørgsmål loftet kommer fra
+// niveau = det højeste niveau, svaret tillader (1, 2 eller 3)
+// grund  = teksten, der vises, hvis netop dette loft er det, der bestemmer
 function lofter(svar) {
   const hoejde = klatreHoejde(svar)
   const hvemHoejde = subjekt(svar, 'hoejde')
 
+  // Højden er altid med. Den regnes ud her, fordi den ikke har et maksNiveau i Firebase.
+  // "a ? b : c ? d : e" læses: er a sandt, så b – ellers er c sandt, så d – ellers e
   const liste = [
     {
       kilde: 'hoejde',
@@ -182,7 +209,7 @@ function lofter(svar) {
     },
   ]
 
-  // Alle besvarede spørgsmål, hvor svaret har et maksNiveau (fra Firebase)
+  // Gå alle svar igennem. Har svaret et maksNiveau (1–3) fra Firebase, bliver det et loft
   for (const [id, valgt] of Object.entries(svar)) {
     const niveau = Number(valgt?.maksNiveau)
     if (niveau >= 1 && niveau <= 3) {
@@ -192,17 +219,17 @@ function lofter(svar) {
   return liste
 }
 
-// Det niveau, svarene peger på, hvis man ser bort fra erfaring.
-// Bruges til førstegangsklatrere: hos GoMonkey starter alle, der ikke har klatret før,
-// på en let bane – men bagefter må man tage alle baner, man er høj nok til.
-// Så kan vi fortælle, hvilken bane der passer bagefter (fx Rød for en tryg voksen)
+// Hvilket niveau ville man få, hvis vi IKKE talte "har du klatret før?" med?
+// Hvorfor: hos GoMonkey starter alle førstegangsklatrere på en let bane – men bagefter
+// må de tage alle baner, de er høje nok til. Så kan vi fortælle, hvilken bane der passer
+// BAGEFTER (fx Rød for en tryg voksen). Math.min(...) finder det laveste loft
 export function niveauUdenErfaring(svar) {
   const andre = lofter(svar).filter((l) => l.kilde !== 'erfaring')
   return Math.min(...andre.map((l) => l.niveau))
 }
 
-// Er det kun GoMonkeys regel om førstegangsklatrere, der holder anbefalingen nede?
-// Giver niveauet uden erfaring, hvis det er højere end anbefalingen – ellers null
+// Er det KUN reglen om førstegangsklatrere, der gør anbefalingen let?
+// Ja → giv det niveau, man ville have fået uden reglen. Nej → giv null (= intet)
 function foerstegangUdenRegel(anbefaling, svar) {
   if (!anbefaling || anbefaling.niveau < 1) return null
   if (Number(svar.erfaring?.maksNiveau) !== 1) return null
@@ -210,7 +237,8 @@ function foerstegangUdenRegel(anbefaling, svar) {
   return niveau > anbefaling.niveau ? niveau : null
 }
 
-// Den letteste bane på et niveau (uden Sort). Findes der ingen, prøves niveauet under
+// Den letteste bane på et niveau (uden Sort). Findes der ingen på niveauet,
+// prøver løkken niveauet under (n-- = træk 1 fra), indtil den finder en
 function lettesteBanePaa(baner, niveau) {
   for (let n = niveau; n >= 1; n--) {
     const bane = banerPaaNiveau(baner, n)[0]
@@ -219,7 +247,8 @@ function lettesteBanePaa(baner, niveau) {
   return null
 }
 
-// Ordene i sætninger om førstegangsklatrere, så de passer til "Hvem skal klatre?"
+// Små ord, der skifter efter "Hvem skal klatre?", så sætningerne lyder rigtigt.
+// Fx "når DU har prøvet ..." / "når DIT BARN har prøvet ..." / "når I har prøvet ..."
 function former(svar) {
   const hvem = svar.hvem?.hvem
   if (hvem === 'barn') return { subj: 'dit barn', igen: 'det', hoej: 'højt', dine: 'svarene' }
@@ -229,14 +258,17 @@ function former(svar) {
 
 /* --- Anbefalingen --- */
 
-// Beregner den anbefalede startbane.
-// svar = brugerens svar, baner = banerne fra Firebase (hentBaner), sorteret fra let til svær.
-// Returnerer et objekt { bane, niveau, begraensninger } eller null, hvis noget mangler.
+// HOVEDFUNKTIONEN: finder den anbefalede første bane.
+// Får: svar = alle brugerens svar, baner = banerne fra Firebase (sorteret fra let til svær).
+// Giver: { bane, niveau, begraensninger } – eller null, hvis der mangler svar.
+//   bane           = den anbefalede bane
+//   niveau         = 0 (Bounce), 1, 2 eller 3
+//   begraensninger = de lofter, der holdt anbefalingen nede (bruges til "hvorfor"-teksten)
 export function beregnBane(svar, baner) {
   const hoejde = klatreHoejde(svar)
   if (hoejde === undefined || !baner?.length) return null
 
-  // TRIN 1: Under 110 cm – kun Bounce
+  // TRIN 1: Under 110 cm – kun Bounce (den eneste bane uden sværhedsgrad)
   if (hoejde < KRAV.let) {
     const bounce = baner.find((b) => !harSvaerhedsgrad(b))
     return bounce ? { bane: bounce, niveau: 0, begraensninger: [] } : null
@@ -245,7 +277,8 @@ export function beregnBane(svar, baner) {
   // Mangler et af de vigtige svar, kan vi ikke anbefale noget
   if (svar.erfaring === undefined || svar.tryghed === undefined) return null
 
-  // TRIN 2: Det laveste loft bestemmer niveauet
+  // TRIN 2: Det laveste loft bestemmer niveauet.
+  // Math.min(...liste) = det mindste tal i listen
   const alleLofter = lofter(svar)
   const niveau = Math.min(...alleLofter.map((l) => l.niveau))
 
@@ -256,7 +289,8 @@ export function beregnBane(svar, baner) {
       return {
         bane: muligheder[0],
         niveau: n,
-        // De lofter, der holdt anbefalingen nede (vises som begrundelse)
+        // De lofter, der holdt anbefalingen nede (vises som begrundelse).
+        // Ved Svær (3) blev man ikke holdt nede, så der er ingen
         begraensninger: alleLofter.filter((l) => l.niveau === niveau && niveau < 3),
       }
     }
@@ -272,7 +306,11 @@ const NIVEAU_TEKST = {
   3: 'En af parkens mest udfordrende baner med høj puls og flot udsigt.',
 }
 
-// Gør et faktatal fra Firebase pænt, fx "1,5 - 8 m." → "1,5–8 m" og "4 stk" → "4"
+// Gør et faktatal fra Firebase pænt, fx "1,5 - 8 m." → "1,5–8 m" og "4 stk" → "4".
+// Hver .replace fjerner/bytter noget (det mellem / / er et regex – et søgemønster):
+//   /\.$/       = et punktum til sidst → fjernes
+//   /\s*-\s*/g  = en bindestreg med mellemrum omkring → bliver til en tankestreg "–"
+//   /\s*stk$/   = "stk" til sidst → fjernes
 function pyntTal(tekst) {
   return String(tekst ?? '').trim()
     .replace(/\.$/, '')
@@ -280,7 +318,8 @@ function pyntTal(tekst) {
     .replace(/\s*stk$/, '')
 }
 
-// En sætning med banens fakta, fx "Grøn er 1,5 m oppe og 30 m lang, med 4 forhindringer og 1 svæv."
+// Bygger en sætning af banens fakta, fx "Grøn er 1,5 m oppe og 30 m lang, med 4 forhindringer og 1 svæv."
+// Fakta, som banen ikke har (tom eller 0), springes over
 function faktaSaetning(bane) {
   const hoejde = pyntTal(bane.trackHeight)
   const laengde = pyntTal(bane.trackLength)
@@ -301,11 +340,13 @@ function faktaSaetning(bane) {
   return ekstra.length ? `${start}, med ${ekstra.join(' og ')}.` : `${start}.`
 }
 
-// Titel og tekst til resultatet.
-// Har banen en "quizTekst" i Firebase (rettes i admin), bruges den. Den kan være en
-// streng eller et objekt { mig, barn, gruppe }, så teksten passer til, hvem der klatrer.
-// Ellers bygges en neutral tekst af banens fakta + en sætning om niveauet.
-// (Banens almindelige beskrivelse bruges ikke her – den er ofte skrevet til børn,
+// Overskrift og tekst til resultatet, fx "Start på Grøn".
+// Teksten vælges sådan:
+//  1. Har banen en "quizTekst" i Firebase (rettes i admin), bruges den.
+//     Den kan have tre udgaver { mig, barn, gruppe }, så den passer til, hvem der klatrer.
+//  2. Er det Bounce (niveau 0), bruges en fast tekst om trampolinen.
+//  3. Ellers bygges teksten af banens fakta + en sætning om niveauet.
+// (Banens almindelige beskrivelse bruges ikke – den er ofte skrevet til børn,
 //  og voksne, der føler sig talt ned til, vælger en sværere bane alligevel)
 export function lavResultat(anbefaling, svar = {}) {
   if (!anbefaling) return null
@@ -329,8 +370,9 @@ export function lavResultat(anbefaling, svar = {}) {
   }
 }
 
-// Finder, hvem en begrundelse handler om, så sætningen passer til svaret på "Hvem skal klatre?".
-// emne = 'hoejde' eller 'andet'.
+// Hvem handler sætningen om? Giver "Du", "Dit barn" eller noget om gruppen,
+// så teksten passer til svaret på "Hvem skal klatre?".
+// emne = 'hoejde' (så handler det om den laveste i gruppen) eller 'andet'
 function subjekt(svar, emne) {
   const hvem = svar.hvem?.hvem
   if (hvem === 'barn') return 'Dit barn'
@@ -341,7 +383,7 @@ function subjekt(svar, emne) {
   return 'Du'
 }
 
-// Kort liste med grundene til anbefalingen
+// Listen "Derfor anbefaler vi ..." i resultatet (højst 2 grunde + en fast sidste linje)
 export function lavBegrundelse(anbefaling, svar) {
   if (!anbefaling) return []
   const { niveau, begraensninger } = anbefaling
@@ -354,8 +396,9 @@ export function lavBegrundelse(anbefaling, svar) {
     return ['Svarene viser erfaring fra høje baner, tryghed ved højder og lyst til udfordring højt oppe.']
   }
 
-  // Kun de lofter, der faktisk holder anbefalingen nede – højst 2,
-  // i prioriteten højde > tryghed > erfaring > oplevelse
+  // Sortér grundene efter BEGRUNDELSE_PRIORITET (højde > tryghed > erfaring > oplevelse).
+  // prioritet giver et lofts plads i den liste. Står det ikke i listen (-1), kommer det sidst.
+  // new Set fjerner tekster, der står to gange, og slice(0, 2) tager kun de 2 første
   const prioritet = (l) => {
     const i = BEGRUNDELSE_PRIORITET.indexOf(l.kilde)
     return i === -1 ? BEGRUNDELSE_PRIORITET.length : i
@@ -369,7 +412,9 @@ export function lavBegrundelse(anbefaling, svar) {
   return unikke
 }
 
-// Næste skridt efter startbanen: den næste bane i rækkefølgen, hvis man er høj nok til den
+// Sætningen om "næste skridt": hvilken bane man kan prøve efter den første.
+// Det er den næste bane i rækkefølgen – men kun, hvis man er høj nok til den.
+// Giver en tom tekst '', hvis der ingen næste bane er
 export function lavVidere(anbefaling, svar, baner) {
   if (!anbefaling) return ''
   const { bane, niveau } = anbefaling
@@ -391,6 +436,8 @@ export function lavVidere(anbefaling, svar, baner) {
     return foerste ? `Når man er ${KRAV.let} cm, er ${foerste.name} det første skridt op i træerne.` : ''
   }
 
+  // Find de baner, man er høj nok til, og tag den, der kommer lige efter den anbefalede
+  // (findIndex finder den anbefalede banes plads i listen, + 1 = den næste)
   const maksNiveau = hoejde < KRAV.mellem ? 1 : hoejde < KRAV.svaer ? 2 : 3
   const startbaner = baner.filter(
     (b) => harSvaerhedsgrad(b) && b.id !== FRIT_FALD_ID && trinFor(b) <= maksNiveau
@@ -411,6 +458,7 @@ export function lavFoerstegangsInfo(anbefaling, svar, baner) {
 
   const lette = navneliste(banerPaaNiveau(baner, 1), 'eller') || 'en let bane'
   const f = former(svar)
+  // Samme ord med stort forbogstav, fordi det står først i en sætning ("du" → "Du")
   const Subj = f.subj.charAt(0).toUpperCase() + f.subj.slice(1)
 
   return {
@@ -443,9 +491,10 @@ export function lavGruppeBesked(anbefaling, svar, baner) {
 }
 
 // Ekstra besked om frit fald (Sort).
-// Vises kun, hvis spørgsmålet om frit fald er blevet vist og besvaret.
+// Vises kun, hvis man har fået og svaret på spørgsmålet om frit fald.
+// Svarenes id'er i Firebase: ff1 = nej, ff3 = ja, ff2 = det mellemste svar (se teksten i admin).
 // Vigtigt: kun dem, der får en svær bane (niveau 3), opfordres til at prøve Sort.
-// Alle andre får en neutral besked, så begyndere ikke føler sig opfordret til parkens sværeste bane
+// Alle andre får en neutral besked, så begyndere ikke føler sig presset til parkens sværeste bane
 export function lavFritfaldBesked(anbefaling, svar, baner) {
   const fritfald = svar.fritfald?.id
   const sort = baner?.find((b) => b.id === FRIT_FALD_ID)
@@ -495,5 +544,5 @@ export function lavGodtAtVide(svar) {
   return linjer
 }
 
-// Niveauernes navne (Let, Mellem, Svær) – fx til admin
+// Bare navnene på niveauerne: ['Let', 'Mellem', 'Svær'] – bruges fx i admin
 export const NIVEAU_NAVNE = NIVEAUER.map((n) => n.navn)

@@ -1,17 +1,32 @@
 <script setup>
-// Rediger baner (infosiden). Vises i AdminView, når man er logget ind.
-// Udseendet kommer fra de fælles styles i AdminView.vue
+// ADMIN: FANEN "BANER"
+// Her retter man teksterne og tallene om hver bane (Firebase "baner").
+// Det, man gemmer her, vises på forsidens banekort, i popup'en på kortet og i quizzen.
+// Filen vises i AdminView.vue under fanen "Baner". Udseendet kommer fra AdminView.vue.
+//
+// Sådan virker det:
+// 1. Alle baner hentes, og der laves en formular pr. bane med banens nuværende tekster
+// 2. Man retter i formularen (det er en kopi – intet gemmes endnu)
+// 3. "Gem bane" sender ændringerne til Firebase
 
 import BaseButton from '@/components/BaseButton.vue'
 import { ref, onMounted } from 'vue'
+
+// Adressen på "baner" i Firebase + hentToken, som giver beviset på, at man er logget ind
 import { BANER_URL, hentToken } from '@/services/api.js'
 
-// Felter i bane-formularen. Vil du kunne rette et nyt felt, så tilføj en linje her
+// Felterne i formularen. Hver linje bliver til ét felt på siden:
+//   key   = feltets navn i Firebase
+//   label = teksten over feltet
+//   type  = 'text' (lille felt), 'textarea' (stort felt) eller 'select' (dropdown)
+// Vil du kunne rette et nyt felt, så tilføj bare en linje her
 const BANE_FIELDS = [
   { key: 'name', label: 'Navn', type: 'text' },
   { key: 'description', label: 'Beskrivelse', type: 'textarea' },
-  // Teksten i banevælgerens resultat. Skal være neutral, så voksne ikke føler sig talt ned til.
-  // Tom = quizzen bygger selv en tekst ud fra banens fakta. Gemmes som quizTekst { mig, barn, gruppe }
+  // Teksten i quizzens resultat. Den skal være neutral, så voksne ikke føler sig talt ned til.
+  // Lader man den stå tom, laver quizzen selv en tekst ud fra banens fakta.
+  // Der er tre udgaver: til "du", til en forælder og til en gruppe.
+  // Punktummet i "quizTekst.mig" betyder: feltet "mig" inde i "quizTekst"
   { key: 'quizTekst.mig', label: 'Banevælger: tekst i resultatet', type: 'textarea' },
   { key: 'quizTekst.barn', label: 'Banevælger: tekst, når man svarer for sit barn (valgfri)', type: 'textarea' },
   { key: 'quizTekst.gruppe', label: 'Banevælger: tekst til grupper (valgfri)', type: 'textarea' },
@@ -29,34 +44,38 @@ const BANE_FIELDS = [
 // Alle baner fra databasen
 const baner = ref([])
 
-// Én kopi pr. bane, så alle formularer kan vises på én gang.
-// Nøglen er banens id. Man retter i kopien, til man trykker "Gem"
+// Formularernes indhold – én kopi pr. bane, så alle formularer kan vises på én gang.
+// Ser sådan ud: { 'bane-1': { name: 'Grøn', description: '...', ... }, 'bane-2': {...} }
+// Man retter i kopien, og intet ændres i Firebase, før man trykker "Gem bane"
 const baneForms = ref({})
 
-// Beskeder pr. bane, fx "Banen er gemt." (nøglen er banens id)
+// Besked under hver bane, fx "Banen er gemt." – også gemt under banens id
 const baneBeskeder = ref({})
 
-// Id på banen, der gemmes lige nu ('' = ingen)
+// Id på banen, der gemmes lige nu ('' = ingen). Så kan knappen vise "Gemmer..."
 const gemmerId = ref('')
 
 // Vises, mens banerne hentes, eller hvis de ikke kunne hentes
 const indlaeser = ref(true)
 const fejlbesked = ref('')
 
-// Henter alle baner fra Firebase (GET-kald, kræver ikke login)
+// Henter alle baner fra Firebase. At LÆSE kræver ikke login – kun at gemme
 async function hentBaner() {
   try {
     const res = await fetch(`${BANER_URL}.json`)
 
-    // fetch melder ikke selv fejl ved fx 401 eller 404, så vi tjekker
+    // fetch siger ikke selv fra, hvis serveren svarer med en fejl (fx 404), så vi tjekker res.ok
     if (!res.ok) throw new Error(`Fejl ${res.status}`)
 
     const data = await res.json()
 
-    // Firebase giver et objekt. Vi laver det til en liste med navnet som id
+    // Firebase giver et objekt { 'bane-1': {...}, ... }. Vi laver det om til en liste,
+    // hvor hver bane har sit id med: [{ id: 'bane-1', ... }, ...]
     baner.value = Object.entries(data ?? {}).map(([id, bane]) => ({ id, ...bane }))
 
-    // Fylder en formular ud pr. bane. Mangler banen et felt, bliver det ''
+    // Lav en udfyldt formular pr. bane: for hvert felt i BANE_FIELDS hentes banens værdi.
+    // Mangler banen et felt, bliver det tomt ('').
+    // Object.fromEntries laver en liste af par [nøgle, værdi] om til et objekt
     baneForms.value = Object.fromEntries(
       baner.value.map((bane) => [
         bane.id,
@@ -71,8 +90,10 @@ async function hentBaner() {
   }
 }
 
-// Læser et felt fra banen. "quizTekst.barn" betyder feltet barn inde i quizTekst.
-// quizTekst kan også være en almindelig tekst – så hører den til "mig"
+// Henter værdien af ét felt fra banen.
+// Almindelige felter (fx "name") læses bare direkte.
+// "quizTekst.barn" betyder feltet "barn" inde i "quizTekst" – så split('.') deler det i to.
+// Er quizTekst gemt som én almindelig tekst (gammel måde), hører den til "mig"
 function hentFelt(bane, key) {
   if (!key.startsWith('quizTekst.')) return bane[key] ?? ''
   const del = key.split('.')[1]
@@ -81,8 +102,10 @@ function hentFelt(bane, key) {
   return qt?.[del] ?? ''
 }
 
-// Laver formularen om til det, der gemmes: de tre quizTekst-felter samles i ét
-// objekt { mig, barn, gruppe }. Tomme felter udelades, og er alle tomme, slettes quizTekst (null)
+// Laver formularen om til det, der skal gemmes i Firebase.
+// De tre quizTekst-felter samles i ét objekt: quizTekst: { mig, barn, gruppe }.
+// Tomme quiz-tekster tages ikke med. Er alle tre tomme, sættes quizTekst til null,
+// og så sletter Firebase feltet
 function tilGem(form) {
   const data = {}
   const quizTekst = {}
@@ -98,9 +121,10 @@ function tilGem(form) {
   return data
 }
 
-// Gemmer rettelserne i Firebase. Kræver login.
-// Tokenet (loginbeviset) sendes med i adressen (?auth=...), så databasen ved,
-// at det er en admin. encodeURIComponent gør teksten sikker at bruge i en adresse
+// "Gem bane": sender rettelserne til Firebase. Kræver login.
+// Beviset på login (token) sættes bag på adressen (?auth=...), så databasen ved,
+// at det er en admin, der gemmer.
+// encodeURIComponent laver tegn som mellemrum og & om, så de ikke ødelægger adressen
 async function gemBane(bane) {
   baneBeskeder.value[bane.id] = ''
   gemmerId.value = bane.id
@@ -109,7 +133,8 @@ async function gemBane(bane) {
     const token = await hentToken()
     const data = tilGem(baneForms.value[bane.id])
 
-    // PATCH ændrer kun de felter, vi sender. PUT ville slette resten
+    // PATCH = ret kun de felter, vi sender med. (PUT ville erstatte hele banen og slette resten).
+    // JSON.stringify laver objektet om til tekst, som kan sendes over nettet
     const res = await fetch(
       `${BANER_URL}/${encodeURIComponent(bane.id)}.json?auth=${encodeURIComponent(token)}`,
       {
@@ -121,7 +146,7 @@ async function gemBane(bane) {
 
     if (!res.ok) throw new Error(`Fejl ${res.status}`)
 
-    // Opdaterer listen på siden, så den passer med databasen (fx navnet i overskriften)
+    // Kopiér de gemte værdier over i banen på siden, så fx overskriften viser det nye navn
     Object.assign(bane, data)
 
     baneBeskeder.value[bane.id] = 'Banen er gemt.'
@@ -133,7 +158,7 @@ async function gemBane(bane) {
   }
 }
 
-// Henter banerne, når komponenten vises
+// Hent banerne, så snart fanen vises
 onMounted(hentBaner)
 </script>
 
@@ -146,7 +171,8 @@ onMounted(hentBaner)
   <p v-else-if="baner.length === 0">Der er ingen baner endnu.</p>
 
   <div v-else class="admin-liste">
-    <!-- Ét kort pr. bane, med formularen åben fra starten -->
+    <!-- Én formular pr. bane, åben fra starten.
+         @submit.prevent = kør gemBane, når man trykker "Gem bane", uden at siden genindlæses -->
     <form
       v-for="(bane, indeks) in baner"
       :key="bane.id"
@@ -155,7 +181,8 @@ onMounted(hentBaner)
     >
       <h3>{{ bane.name }}</h3>
 
-      <!-- Ét felt pr. post i BANE_FIELDS -->
+      <!-- Ét felt pr. linje i BANE_FIELDS.
+           v-model forbinder feltet med formularens kopi, så det man skriver, havner i baneForms -->
       <div v-for="field in BANE_FIELDS" :key="field.key" class="felt">
         <!-- :for og :id hænger sammen, så et klik på teksten går til feltet.
              indeks gør id'et unikt, fordi der er en formular pr. bane -->

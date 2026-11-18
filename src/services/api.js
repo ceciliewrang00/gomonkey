@@ -1,23 +1,25 @@
-// Samlet sted for alle databaseadresser, så de kun står ét sted.
-// Ændrer adressen sig (fx hvis databaserne samles), rettes det kun her.
+// API – alle adresser til databasen samlet ét sted
+// Skal en adresse ændres, rettes den kun her – så følger alle filer, der bruger den, med.
 
-// Firebase-loginforbindelsen fra vores egen fil
+// Login-forbindelsen fra vores egen fil (src/firebase.js)
 import { auth } from '../firebase'
 
+// Adressen på vores database i Firebase
 const BANER_DB = 'https://gomonkey-baner-default-rtdb.europe-west1.firebasedatabase.app'
 
-// ".json" sætter vi på, når adressen bruges
-export const BANER_URL = `${BANER_DB}/baner`
-export const KORTBANER_URL = `${BANER_DB}/kortbaner`
-export const KORTFILTER_URL = `${BANER_DB}/mapfilter`
-export const SPOERGSMAAL_URL = `${BANER_DB}/spoergsmaal`
+// De fire "mapper" i databasen. ".json" sættes på, når adressen bruges, fx `${BANER_URL}.json`
+export const BANER_URL = `${BANER_DB}/baner`            // banerne: navn, beskrivelse, fakta
+export const KORTBANER_URL = `${BANER_DB}/kortbaner`    // hvor banerne går på kortet
+export const KORTFILTER_URL = `${BANER_DB}/mapfilter`   // teksterne i kortfiltret
+export const SPOERGSMAAL_URL = `${BANER_DB}/spoergsmaal` // quizzens spørgsmål
 
-// Link til booking. Bruges af alle "Book"-knapper (hero, banner, quiz).
-// RET her, når I får en direkte bookingside – så skifter alle knapperne
+// Linket til booking. Bruges af alle "Book"-knapper (hero, banner, header, quiz).
+// Ret det her, når I får en rigtig bookingside – så skifter alle knapperne på én gang
 export const BOOK_URL = 'https://gomonkey.dk'
 
-// Henter loginbeviset (token), som databasen bruger til at tjekke reglerne.
-// Kræver, at brugeren er logget ind
+// Henter "adgangskortet" (token): et bevis på, at man er logget ind.
+// Det sendes med, når admin gemmer noget, og databasens regler tjekker det.
+// Virker kun, når man er logget ind
 export async function hentToken() {
   return await auth.currentUser.getIdToken()
 }

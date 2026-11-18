@@ -1,10 +1,16 @@
-// Importerer funktionen, der forbinder appen med Firebase.
+// FIREBASE – forbindelsen til vores Firebase-projekt
+// Firebase er den online tjeneste, hvor vores database og login ligger.
+// Filen bruges KUN til login (i admin). Data hentes med almindelig fetch (se services/api.js).
+
+// Funktionen, der forbinder appen med Firebase
 import { initializeApp } from 'firebase/app'
 
-// Importerer funktionen, der giver adgang til Firebase-login.
+// Funktionen, der giver adgang til Firebase-login
 import { getAuth } from 'firebase/auth'
 
-// Her skal indstillingerne fra din Firebase-webapp stå.
+// Projektets indstillinger, kopieret fra Firebase-hjemmesiden.
+// Det er IKKE en hemmelig kode – den fortæller bare, hvilket projekt vi forbinder til.
+// Det er reglerne i databasen, der bestemmer, hvem der må gemme noget
 const firebaseConfig = {
   apiKey: "AIzaSyDMnisSSwIUsSZl6tXNM6bhFSZ2tdDP7JA",
   authDomain: "gomonkey-baner.firebaseapp.com",
@@ -16,8 +22,9 @@ const firebaseConfig = {
 };
 
 
-// Starter forbindelsen med projektets indstillinger.
+// Start forbindelsen med indstillingerne ovenfor
 const firebaseApp = initializeApp(firebaseConfig)
 
-// Gør loginfunktionen tilgængelig for vores andre filer.
+// "auth" er login-delen. Den eksporteres, så AdminView kan logge ind,
+// og api.js kan hente beviset (token) på, at man er logget ind
 export const auth = getAuth(firebaseApp)

@@ -1,66 +1,92 @@
 <script setup>
-// Rediger det interaktive kort og kortfiltret. Vises i AdminView under fanen "Kort".
-// Udseendet kommer fra de fælles styles i AdminView.vue (+ lidt til kort-editoren herunder)
-//
-// Data:
-//  - Firebase "kortbaner": banens forløb. Hver bane har en liste af linjer (segmenter),
-//    og hver linje har to punkter [x, y] i kortets koordinater. Kortet tegner stregerne ud fra dem.
-//  - Firebase "mapfilter": teksterne i kortfiltret (undertekst, og navn/sværhedsgrad for nye baner)
-//  - Firebase "baner": kun læst her, så vi kan vise banens navn
+// Filen vises i AdminView.vue, når man klikker på fanen "Kort".
 
+// Hent vores egen knap
 import BaseButton from '@/components/BaseButton.vue'
+
+// Værktøjer fra Vue:
+//  ref         = en værdi, Vue holder øje med – ændrer den sig, opdateres siden af sig selv
+//  computed    = en værdi, der regnes ud fra andre værdier og regnes ud igen, når de ændrer sig
+//  onMounted   = kør noget, når fanen er vist på siden 
+//  onUnmounted = kør noget, når fanen forsvinder igen 
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+
+// Adresserne i Firebase + hentToken, som giver os "adgangskortet", når vi er logget ind
 import { KORTBANER_URL, KORTFILTER_URL, hentToken } from '@/services/api.js'
+
+// Henter banerne (med navne) fra Firebase "baner"
 import { hentBaner } from '@/services/baner.js'
+
+// Henter banernes linjer fra Firebase "kortbaner"
 import { hentKortbanerFraFirebase } from '@/services/kortApi.js'
+
+// Laver to punkter om til de tre streger, en bane tegnes med (kant, farve, reb)
 import { lavStier } from '@/utils/kortStier.js'
 
-// Kortets størrelse – samme viewBox som i public/kort-base.svg
+
+// Kort-tegningen (public/kort-base.svg) er 1683,78 bred og 1810,98 høj i sine egne enheder.
+// Giver vi det ikke en størrelse, vil linjerne blive placeret forkert 
 const KORT_BREDDE = 1683.78
 const KORT_HOEJDE = 1810.98
 
-// Slipper man et punkt tættere end dette på et andet punkt, sættes det oven i det,
-// så linjerne hænger sammen
+
+// Slipper man et punkt tæt på et andet punkt, hopper det hen og sætter sig oven i det, så hænger linjerne sammen, selv om man ikke rammer helt præcist.
+// 15 er i kortets enheder (samme som ovenfor), ikke pixels.
 const SNAP_AFSTAND = 15
 
-const SVAERHED_VALG = ['For alle', 'Let', 'Mellem', 'Svær', 'Ekspert']
+// Valgmulighederne i dropdown'en "Sværhedsgrad i kortfiltret"
+const SVAERHED_VALG = ['For alle', 'Let', 'Mellem', 'Svær']
 
-// Alle kortbaner: { id, type, navn, farve, segmenter: [{ slot, punkter: [[x, y], [x, y]] }] }
+// ---------- Værdier, som siden viser ----------
+
+// Alle baner på kortet. 
+// Hver linje har et startpunkt og et slutpunkt
 const kortbaner = ref([])
 
-// Kortfiltrets poster med deres plads i Firebase-listen (indeks), så vi kan gemme på den rigtige
+// Teksterne fra kortfiltret, i Firebase ligger de som en nummereret liste
 const filterPoster = ref([])
 
-// Banerne fra fanen "Baner" (kun til navne)
+// Banerne fra Firebase "baner".
+// Vi bruger dem KUN til at vise banens rigtige navn, fx "Kaskaden" i stedet for "bane-3",
 const faellesBaner = ref([])
 
+// Til beskeder på siden:
+// indlaeser  = true, mens data hentes 
 const indlaeser = ref(true)
+// fejlbesked = hvis data ikke kunne hentes
 const fejlbesked = ref('')
+// besked     = fx "Banen er gemt."
 const besked = ref('')
 
-// Kopien af den bane, der redigeres lige nu (null = ingen)
+// Den bane, man er ved at rette lige nu (null = man retter ikke noget).
 const redigerer = ref(null)
+
+// true, mens der gemmes (så knappen viser "Gemmer..." og ikke kan trykkes igen)
 const gemmerRedigering = ref(false)
 
-// Id på banen, der slettes lige nu ('' = ingen)
+// Id på banen, der er ved at blive slettet, så knappen kan vise "Sletter..."
 const sletterId = ref('')
 
-// Formularen til en ny bane
+// Formularen "Opret ny bane" nederst på siden
 const nyBane = ref(tomNyBane())
-const opretter = ref(false)
-const opretBesked = ref('')
+const opretter = ref(false)    // true, mens den nye bane gemmes
+const opretBesked = ref('')    // fx "Skriv et navn til banen."
 
+// Giver en tom formular – bruges ved start og efter en bane er oprettet
 function tomNyBane() {
   return { navn: '', undertekst: '', type: 'bane', svaerhed: 'Let', farve: '#CED0C0' }
 }
 
 // ---------- Hent data ----------
 
+// Henter alt fra de tre steder i Firebase, når siden åbnes
 async function hentAlt() {
   indlaeser.value = true
   fejlbesked.value = ''
 
   try {
+    // Promise.all = hent alle tre på samme tid, og vent til de alle er færdige.
+    // Fejler "baner", bruges bare en tom liste (.catch), så siden stadig virker
     const [geometri, filterSvar, baner] = await Promise.all([
       hentKortbanerFraFirebase(),
       fetch(`${KORTFILTER_URL}.json`).then((r) => {
@@ -70,29 +96,42 @@ async function hentAlt() {
       hentBaner().catch(() => [])
     ])
 
+    //Gemmer de baner vi lige har hentet i en variabel. 
     faellesBaner.value = baner
 
+    //Tager kortbaner, rydder dem op i hver enkelt, og gemmer dem i kortbaner.
+    //geometri er listen af baner fra kortbaner, altså hvor banerne går på kortet. 
+    // .map går listen igennem og kører tilRedigerbar funktionen, så vi ender med en ny liste med banerne
     kortbaner.value = geometri.map(tilRedigerbar)
 
-    // mapfilter er en liste i Firebase. Vi husker hver posts nummer (indeks)
+    //Gemmer kortets teskter sammen med hver banes nummer og bruger et tomt array, hvis der ikke er nogen tekster i Firebase
     filterPoster.value = Object.entries(filterSvar ?? {})
       .filter(([, post]) => post)
       .map(([indeks, post]) => ({ indeks, ...post }))
+
+  // Gik noget galt under hentningen, vises en fejlbesked på siden, og fejlen skrives i konsollen
   } catch (e) {
     fejlbesked.value = 'Kortets data kunne ikke hentes.'
     console.error(e)
+
+  // finally kører altid til sidst – så "Henter kortet..." forsvinder, uanset om det gik godt
   } finally {
     indlaeser.value = false
   }
 }
 
-// Gør en bane klar til redigering: kun punkter, ingen færdige streger.
-// Firebase kan give lister som objekter, så de laves om til lister
+// Rydder op i en bane fra Firebase
 function tilRedigerbar(bane) {
+  //    bane.segmenter ?? {} = brug en tom liste, hvis banen ingen linjer har (fx Bounce)
+  //    Object.values        = laver Firebase-objektet om til en almindelig liste
   const segmenter = Object.values(bane.segmenter ?? {}).map((seg) => ({
+    // slot: linjens faste plads i kort-base.svg. Nye linjer fra admin har ingen (null)
     slot: seg.slot ?? null,
+    // Kopiér hvert punkt til et NYT [x, y]. Så ændrer det ikke de originale data, når man trækker i punkterne i editoren
     punkter: seg.punkter.map(([x, y]) => [x, y])
   }))
+
+  // 2. Den færdige bane. ?? = brug værdien til højre, hvis feltet mangler
   return {
     id: bane.id,
     type: bane.type ?? 'bane',
@@ -102,27 +141,33 @@ function tilRedigerbar(bane) {
   }
 }
 
-// ---------- Hjælpere til visning ----------
+// ---------- Små hjælpe-funktioner ----------
 
+// Finder banen med dette id i "baner". Giver undefined, hvis den ikke findes
 function faellesFor(id) {
   return faellesBaner.value.find((b) => b.id === id)
 }
 
+// Finder kortfilter-teksterne for banen med dette id
 function filterFor(id) {
   return filterPoster.value.find((p) => p.id === id)
 }
 
-// Navnet fra fanen "Baner", ellers fra kortet, ellers fra filtret, ellers id'et
+// Finder banens navn, uanset hvor det er gemt, og viser id'et, hvis der ikke er noget navn.
+// Navnet ligger forskellige steder, alt efter om det er en fast bane eller en ny bane lavet i admin
+
 function navnFor(bane) {
   return faellesFor(bane.id)?.name || bane.navn || filterFor(bane.id)?.titel || bane.id
 }
 
-// Banens farve i editoren. Faste baner har farven i _colors.scss (CSS-variabel herunder)
+// Banens farve. De faste baner har deres farve i _colors.scss.
+// Nye baner har ikke den variabel, så de bruger deres egen farve
 function farveFor(bane) {
   return `var(--kort-bane-${bane.id}, ${bane.farve || '#CED0C0'})`
 }
 
-// Alle andre banes linjer vises svagt i editoren, så man kan se, hvor de går
+// Vi samler de baner som ikke har samme id som den bane der redigeres i en liste med flatMap.
+// Vi bruger computed, så listen regnes ud igen, hvis vi redigerer en anden bane.
 const andreLinjer = computed(() =>
   kortbaner.value
     .filter((b) => b.id !== redigerer.value?.id)
@@ -131,38 +176,51 @@ const andreLinjer = computed(() =>
 
 // ---------- Rediger en bane ----------
 
+// Kører, når man trykker "Rediger bane". 
 function startRedigering(bane) {
+  // finder teksterne i kortfilteret 
   const post = filterFor(bane.id)
+  // Fjerner beskeden, hvis man har rettet en anden bane før
   besked.value = ''
+  //Vi laver en kopi af banen, som vi kan rette i.
+  // Vi bruger tilRedigerbar, så vi får en ny liste med linjerne, som vi kan trække i uden at ændre de originale data.
   redigerer.value = {
     ...tilRedigerbar(bane),
+    // navnet
     navn: bane.navn || post?.titel || '',
+    // Underteksten til fileret
     undertekst: post?.undertekst ?? '',
+    // Sværhedsgraden 
     svaerhed: post?.svaerhed ?? 'Let',
+    // Farven
     farve: bane.farve || '#CED0C0',
-    // Faste baner har navn og sværhedsgrad under fanen "Baner"
+    
+    //retunere en true eller false alt efter om det er en ny bane eller en fast bane,
+    // da det ikke er alle felter som vises ved faste baner.
     harFaelles: Boolean(faellesFor(bane.id))
   }
-  aktivLinje.value = null
-  stopTegning()
+  aktivLinje.value = null // Fremhæver den linje man har valgt, men ingen linje er valgt endnu, så vi sætter den til null
+  stopTegning() // Stopper med at tegne, hvis man var i gang med det
 }
 
+// "Annuller": smid kopien væk. Da det kun var en kopi, er intet ændret
 function annullerRedigering() {
-  redigerer.value = null
+  redigerer.value = null 
   besked.value = ''
   stopTegning()
 }
 
 // ---------- Kort-editoren ----------
 
+// Kortet i editoren
 const editorSvg = ref(null)
 
-// Den linje, man har klikket på (null = ingen). Kan fjernes med "Fjern valgt linje"
+// Nummeret på den linje, man har klikket på (null = ingen). Den kan så fjernes med "Fjern valgt linje"
 const aktivLinje = ref(null)
 
-// Laver musens/fingerens placering om til kortets koordinater
+//oversætter musens position på skærmen til en position på kortet.
 function tilKort(event) {
-  // Editoren ligger inde i v-for, så Vue giver en liste. Der er kun én åben ad gangen
+  // Find editorens SVG
   const svg = [editorSvg.value].flat()[0]
   const pt = svg.createSVGPoint()
   pt.x = event.clientX
@@ -171,11 +229,14 @@ function tilKort(event) {
   return [Math.min(Math.max(p.x, 0), KORT_BREDDE), Math.min(Math.max(p.y, 0), KORT_HOEJDE)]
 }
 
+// Er to punkter (næsten) det samme sted? Afstanden måles med Pythagoras (Math.hypot).
+// Uden en afstand skal de være højst 0,5 fra hinanden, altså reelt samme punkt
 function sammePunkt(a, b, afstand = 0.5) {
   return Math.hypot(a[0] - b[0], a[1] - b[1]) <= afstand
 }
 
-// Alle punkter på kortet (alle baner), så nye punkter kan sætte sig fast i dem
+// En lang liste med ALLE punkter på kortet – fra alle baner, også den man retter.
+// Bruges til "magneten": et nyt punkt kan sætte sig fast i et hvilket som helst af dem
 function allePunkter() {
   return [
     ...kortbaner.value.filter((b) => b.id !== redigerer.value.id).flatMap((b) => b.segmenter),
@@ -183,21 +244,25 @@ function allePunkter() {
   ].flatMap((seg) => seg.punkter)
 }
 
-// Ligger der et punkt tæt på, bruges det i stedet – så linjerne hænger sammen.
-// undtagen = punkter, der ikke tæller med (dem, man selv trækker i)
+// "MAGNETEN". Ligger der et andet punkt tæt på (inden for SNAP_AFSTAND), bruges det punkt i stedet.
+// Ellers bruges punktet, som det er (rundet af til 2 decimaler).
+// undtagen = punkter, der ikke må tælle med – fx det punkt, man selv trækker i,
+// ellers ville det bare sætte sig fast i sig selv
 function fastgoer(punkt, undtagen = []) {
   const naer = allePunkter().find((p) => !undtagen.includes(p) && sammePunkt(p, punkt, SNAP_AFSTAND))
   return naer ? [naer[0], naer[1]] : [Math.round(punkt[0] * 100) / 100, Math.round(punkt[1] * 100) / 100]
 }
 
+// "Fjern valgt linje": tager linjen ud af listen (splice fjerner 1 ting på den plads)
 function fjernAktivLinje() {
   redigerer.value.segmenter.splice(aktivLinje.value, 1)
   aktivLinje.value = null
 }
 
 // ---------- Tegn nye linjer ----------
-// Tryk "Tegn linjer", og klik på kortet fra platform til platform.
-// Hvert klik laver en linje fra det forrige punkt, så banen tegnes som en kæde
+// Sådan tegner man: tryk "Tegn linjer", og klik på kortet fra platform til platform.
+// Første klik = startpunkt. Hvert klik derefter laver en linje fra det forrige punkt
+// til det nye. Så bliver banen en kæde af linjer: A→B, B→C, C→D ...
 
 // true, mens man tegner
 const tegner = ref(false)
@@ -208,27 +273,35 @@ const tegnStart = ref(null)
 // Hvor musen er lige nu – til den stiplede linje, der viser, hvor næste linje kommer
 const musPunkt = ref(null)
 
+// "Tegn linjer"
 function startTegning() {
   tegner.value = true
   tegnStart.value = null
   aktivLinje.value = null
 }
 
+// "Færdig" (eller Esc) – stop med at tegne og nulstil
 function stopTegning() {
   tegner.value = false
   tegnStart.value = null
   musPunkt.value = null
 }
 
-// Starter tegningen fra et nyt sted (fx en ny gren af banen), uden at stoppe
+// "Start et nyt sted": glem det sidste punkt, så næste klik bliver et nyt startpunkt.
+// Bruges, hvis banen deler sig, eller man vil tegne et andet stykke
 function nyStart() {
   tegnStart.value = null
 }
 
+// Kører ved hvert klik på kortet – men gør kun noget, mens man tegner
 function klikPaaKort(event) {
   if (!tegner.value) return
+
+  // Hvor på kortet blev der klikket? (og sæt det fast i et punkt i nærheden)
   const punkt = fastgoer(tilKort(event))
 
+  // Har vi et startpunkt, laves en ny linje fra det til klikket.
+  // (Ikke hvis man klikker samme sted to gange – så ville linjen have længden 0)
   if (tegnStart.value && !sammePunkt(tegnStart.value, punkt)) {
     redigerer.value.segmenter.push({ slot: null, punkter: [tegnStart.value, punkt] })
   }
@@ -236,35 +309,46 @@ function klikPaaKort(event) {
   tegnStart.value = [punkt[0], punkt[1]]
 }
 
-// Fortryder den sidste linje. Under tegning starter man igen fra dens begyndelse
+// "Fortryd sidste linje": fjerner den sidste linje (pop = tag den sidste ud af listen).
+// Er man i gang med at tegne, fortsætter man fra der, hvor den fjernede linje startede
 function fortrydLinje() {
   const sidste = redigerer.value.segmenter.pop()
   if (tegner.value && sidste) tegnStart.value = [...sidste.punkter[0]]
   aktivLinje.value = null
 }
 
-// Esc stopper tegningen
+// Tryk Esc for at stoppe med at tegne (lytteren sættes på i onMounted nederst)
 function tastatur(event) {
   if (event.key === 'Escape' && tegner.value) stopTegning()
 }
 
 // ---------- Træk i punkter ----------
+// Når man ikke tegner, kan man flytte banen ved at trække i de hvide prikker.
+// grib = man trykker på en prik, flyt = man trækker, slip = man giver slip
 
-// Punkterne, der trækkes i lige nu. Ligger flere linjer i samme punkt (fx en platform),
-// flytter de med hinanden, så banen hænger sammen
+// De punkter, man trækker i lige nu. Det kan være flere på én gang:
+// hvor to linjer mødes (fx ved en platform), ligger der to punkter oven i hinanden.
+// De skal flytte sig sammen, ellers ville linjerne blive revet fra hinanden
 let trukne = []
 
+// Man trykker på en prik. linje = hvilken linje, ende = 0 (start) eller 1 (slut)
 function grib(linje, ende, event) {
-  // Under tegning er et klik på et punkt bare et klik på kortet
+  // Mens man tegner, skal et klik på en prik bare tælle som et klik på kortet
   if (tegner.value) return
   event.preventDefault()
+
+  // Punktet, man trykkede på – og alle andre punkter, der ligger præcis samme sted
   const greb = redigerer.value.segmenter[linje].punkter[ende]
   trukne = redigerer.value.segmenter.flatMap((seg) => seg.punkter.filter((p) => sammePunkt(p, greb)))
   aktivLinje.value = linje
-  // Bliver ved med at få bevægelser, selv om musen kommer uden for punktet
+  // "Hold fast i musen": prikken bliver ved med at følge musen,
+  // selv hvis man trækker hurtigt, og musen kommer uden for prikken
   event.target.setPointerCapture(event.pointerId)
 }
 
+// Musen bevæger sig over kortet.
+// Mens man tegner: husk hvor musen er (til den stiplede linje).
+// Mens man trækker i en prik: flyt prikken (og dem oven i den) hen til musen
 function flyt(event) {
   if (tegner.value) {
     musPunkt.value = tilKort(event)
@@ -278,7 +362,8 @@ function flyt(event) {
   }
 }
 
-// Når man slipper, sættes punktet oven i et punkt i nærheden (på alle baner)
+// Man giver slip. Er der et andet punkt tæt på (også på andre baner), hopper prikken
+// hen og sætter sig fast i det ("magneten"). Derefter trækker man ikke i noget længere
 function slip() {
   if (trukne.length === 0) return
   const [x, y] = fastgoer(trukne[0], trukne)
@@ -291,7 +376,9 @@ function slip() {
 
 // ---------- Gem ----------
 
-// Det, der gemmes i "kortbaner". Kun punkter – stregerne tegnes på kortet
+// Laver den bane, der skal gemmes i Firebase "kortbaner".
+// Vi gemmer kun punkterne (rundet af til 2 decimaler) – selve stregerne regner kortet ud,
+// når det vises. "slot" er med, hvis linjen hører til en fast plads i kort-base.svg
 function kortbaneTilGem(r) {
   const data = {
     id: r.id,
@@ -301,7 +388,8 @@ function kortbaneTilGem(r) {
       punkter: seg.punkter.map(([x, y]) => [Math.round(x * 100) / 100, Math.round(y * 100) / 100])
     }))
   }
-  // Navn og farve gemmes kun på nye baner – faste baner har dem i "Baner" og _colors.scss
+  // Navn og farve gemmes kun for NYE baner.
+  // De faste baner har deres navn under fanen "Baner" og deres farve i _colors.scss
   if (!r.harFaelles) {
     data.navn = r.navn.trim()
     data.farve = r.farve
@@ -309,6 +397,9 @@ function kortbaneTilGem(r) {
   return data
 }
 
+// Sender data til Firebase. Bruges af både gem og opret.
+// token = beviset på, at man er logget ind – uden det afviser Firebase at gemme.
+// metode: 'PUT' = erstat det hele, 'PATCH' = ret kun de felter, vi sender med
 async function skrivFirebase(url, metode, data) {
   const token = await hentToken()
   const res = await fetch(`${url}.json?auth=${encodeURIComponent(token)}`, {
@@ -319,7 +410,11 @@ async function skrivFirebase(url, metode, data) {
   if (!res.ok) throw new Error(`Fejl ${res.status}`)
 }
 
-// Gemmer kortfiltrets tekster. Findes banen ikke i filtret, lægges den sidst i listen
+// Gemmer banens tekster i kortfiltret (Firebase "mapfilter").
+// To situationer:
+//  - Banen findes allerede i listen → ret den på dens plads (PATCH til fx mapfilter/2)
+//  - Banen findes ikke (en ny bane) → find det højeste nummer i listen, og læg den på
+//    nummeret efter (fx 7 → 8). Så kommer den sidst i listen
 async function gemFilter(id, felter) {
   const post = filterFor(id)
   if (post) {
@@ -332,20 +427,26 @@ async function gemFilter(id, felter) {
   }
 }
 
-// Tjekker en hex-farvekode, fx "#b8433f" eller "#b43". Mangler # foran, sættes den på.
-// Giver null, hvis koden ikke er gyldig
+// Tjekker, om det man har skrevet, er en rigtig farvekode (hex), fx "#b8433f" eller "#b43".
+// Har man glemt # foran, sætter vi den på.
+// Er koden god, gives den tilbage med små bogstaver. Er den ikke god, gives null.
+// Selve tjekket er et regex: # efterfulgt af præcis 3 eller 6 tegn fra 0-9 og a-f
 function rensFarve(tekst) {
   const kode = String(tekst ?? '').trim()
   const medHaven = kode.startsWith('#') ? kode : '#' + kode
   return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(medHaven) ? medHaven.toLowerCase() : null
 }
 
+// Fejlbeskeden ved en forkert farve (bruges to steder, så den står her én gang)
 const FARVE_FEJL = 'Skriv farven som en hex-kode, fx #b8433f.'
 
+// "Gem ændringer": tjek formularen, og gem så banen i Firebase
 async function gemRedigering() {
   const r = redigerer.value
   besked.value = ''
 
+  // TJEK FØRST: nye baner skal have et navn og en gyldig farve.
+  // (Faste baner har deres navn og farve andre steder, så dem tjekker vi ikke)
   if (!r.harFaelles && !r.navn.trim()) {
     besked.value = 'Banen skal have et navn.'
     return
@@ -364,9 +465,12 @@ async function gemRedigering() {
   try {
     const data = kortbaneTilGem(r)
 
-    // PUT erstatter hele banen, så slettede linjer også forsvinder
+    // 1) Gem linjerne i "kortbaner".
+    // PUT erstatter HELE banen. Det er vigtigt: har man fjernet en linje,
+    // forsvinder den også i Firebase (med PATCH ville den gamle blive liggende)
     await skrivFirebase(`${KORTBANER_URL}/${encodeURIComponent(r.id)}`, 'PUT', data)
 
+    // 2) Gem teksterne i kortfiltret. Undertekst altid – titel og sværhedsgrad kun for nye baner
     const filterFelter = { undertekst: r.undertekst.trim() }
     if (!r.harFaelles) {
       filterFelter.titel = r.navn.trim()
@@ -374,7 +478,7 @@ async function gemRedigering() {
     }
     await gemFilter(r.id, filterFelter)
 
-    // Opdaterer listen på siden
+    // 3) Opdatér listen på siden, så den viser det, vi lige har gemt (uden at hente alt igen)
     const indeks = kortbaner.value.findIndex((b) => b.id === r.id)
     kortbaner.value[indeks] = tilRedigerbar(data)
 
@@ -390,11 +494,13 @@ async function gemRedigering() {
 
 // ---------- Slet bane ----------
 
-// Fjerner banen fra kortet ("kortbaner") og fra kortfiltret ("mapfilter").
-// Faste baner har også tekster under fanen "Baner" – de bliver liggende
+// "Slet bane": fjerner banen fra kortet ("kortbaner") og fra kortfiltret ("mapfilter").
+// Er det en fast bane, ligger den også under fanen "Baner" – den del bliver IKKE slettet
 async function sletBane(bane) {
   besked.value = ''
 
+  // Spørg først, om man er sikker (window.confirm viser en boks med OK/Annuller).
+  // Trykker man Annuller, stopper vi her
   const navn = navnFor(bane)
   const advarsel = faellesFor(bane.id)
     ? `Vil du slette "${navn}" fra kortet og kortfiltret?\n\nTeksterne under fanen "Baner" bliver liggende.`
@@ -403,21 +509,26 @@ async function sletBane(bane) {
 
   sletterId.value = bane.id
   try {
+    // En lille funktion, der sletter det, der ligger på en adresse i Firebase
     const token = await hentToken()
     const slet = async (url) => {
       const res = await fetch(`${url}.json?auth=${encodeURIComponent(token)}`, { method: 'DELETE' })
       if (!res.ok) throw new Error(`Fejl ${res.status}`)
     }
 
+    // 1) Slet banens linjer
     await slet(`${KORTBANER_URL}/${encodeURIComponent(bane.id)}`)
 
-    // mapfilter er en liste. Den slettede plads bliver tom, og kortfiltret springer tomme over
+    // 2) Slet banens tekster i kortfiltret (på dens nummer, fx mapfilter/2).
+    // Pladsen bliver bare tom – de andre baner beholder deres numre,
+    // og kortfiltret springer tomme pladser over
     const post = filterFor(bane.id)
     if (post) {
       await slet(`${KORTFILTER_URL}/${post.indeks}`)
       filterPoster.value = filterPoster.value.filter((p) => p !== post)
     }
 
+    // 3) Fjern banen fra listen på siden (og luk redigeringen, hvis den var åben)
     kortbaner.value = kortbaner.value.filter((b) => b.id !== bane.id)
     if (redigerer.value?.id === bane.id) redigerer.value = null
 
@@ -432,7 +543,9 @@ async function sletBane(bane) {
 
 // ---------- Opret bane ----------
 
-// Nyt id: bane-8, bane-9 osv. (et højere nummer end de eksisterende)
+// Finder på et id til en ny bane. Vi kigger på alle id'er som "bane-7", tager tallet ud,
+// finder det højeste og lægger 1 til. Er højeste bane-7, bliver den nye bane-8.
+// (Id'er uden tal, fx "bounce", springes over)
 function nytId() {
   const numre = kortbaner.value
     .map((b) => Number(b.id.match(/^bane-(\d+)$/)?.[1]))
@@ -440,9 +553,13 @@ function nytId() {
   return `bane-${Math.max(0, ...numre) + 1}`
 }
 
+// "Opret bane": tjek formularen, gem den nye bane (uden linjer endnu) og åbn den,
+// så man kan tegne dens linjer med det samme
 async function opretBane() {
   opretBesked.value = ''
   const ny = nyBane.value
+
+  // Tjek: navn og gyldig farve
 
   if (!ny.navn.trim()) {
     opretBesked.value = 'Skriv et navn til banen.'
@@ -458,11 +575,13 @@ async function opretBane() {
 
   opretter.value = true
   try {
+    // Gem banen i "kortbaner" (med en tom liste af linjer) og dens tekster i kortfiltret
     const id = nytId()
     const data = kortbaneTilGem({ ...ny, id, segmenter: [], harFaelles: false })
     await skrivFirebase(`${KORTBANER_URL}/${id}`, 'PUT', data)
     await gemFilter(id, { titel: ny.navn.trim(), undertekst: ny.undertekst.trim(), svaerhed: ny.svaerhed })
 
+    // Vis den nye bane i listen, og tøm formularen
     const bane = tilRedigerbar(data)
     kortbaner.value.push(bane)
     nyBane.value = tomNyBane()
@@ -478,11 +597,13 @@ async function opretBane() {
   }
 }
 
+// Når fanen åbnes: hent data, og begynd at lytte efter Esc-tasten
 onMounted(() => {
   hentAlt()
   window.addEventListener('keydown', tastatur)
 })
 
+// Når fanen lukkes: stop med at lytte efter tasten igen
 onUnmounted(() => {
   window.removeEventListener('keydown', tastatur)
 })

@@ -1,18 +1,20 @@
-// VEJR – det aktuelle vejr ved parken
-// Hentes fra Open-Meteo (open-meteo.com): en gratis vejrtjeneste, der ikke kræver konto eller nøgle.
-// Bruges i hero, hvor badgen på wiren viser fx "☀️ 18° i skoven lige nu".
+// VEJR – vejret lige nu ved parken
+// Hentes fra Open-Meteo (open-meteo.com): en gratis vejrtjeneste, der ikke kræver login eller nøgle.
+// Bruges i hero på forsiden, hvor en badge på wiren viser fx "☀️ 18° i skoven lige nu".
 
-// Parkens placering: Stærmosegårdsvej 57, Odense (ved Rosengårdscentret)
+// Parkens placering på kortet (Stærmosegårdsvej 57, Odense)
 const BREDDEGRAD = 55.37
 const LAENGDEGRAD = 10.43
 
+// Adressen, vi spørger om vejret på. Vi beder om: temperatur, vejrkode, og om det er dag
 const VEJR_URL =
   'https://api.open-meteo.com/v1/forecast' +
   `?latitude=${BREDDEGRAD}&longitude=${LAENGDEGRAD}` +
   '&current=temperature_2m,weather_code,is_day&timezone=Europe%2FCopenhagen'
 
-// Oversætter vejrkoden (WMO-kode) til et ikon.
-// Koderne er beskrevet på open-meteo.com/en/docs under "Weather variable documentation"
+// Vejrtjenesten svarer med et tal (en vejrkode), fx 0 = klart vejr, 61 = regn.
+// Her oversættes tallet til et ikon. Om natten vises måne/sky i stedet for sol.
+// Listen over koder står på open-meteo.com/en/docs under "Weather variable documentation"
 function ikonFor(kode, erDag) {
   if (kode === 0) return erDag ? '☀️' : '🌙' // Klart
   if (kode <= 2) return erDag ? '🌤️' : '☁️' // Let skyet
@@ -23,18 +25,18 @@ function ikonFor(kode, erDag) {
   return '⛈️' // Torden
 }
 
-// Henter vejret lige nu. Giver fx { ikon: '☀️', grader: 18 }.
-// Fejler noget (fx ingen internet), gives null – så viser badgen bare sin almindelige tekst
+// Henter vejret lige nu og giver fx { ikon: '☀️', grader: 18 }.
+// Går noget galt (fx intet internet), gives null – så viser hero bare ikke vejr-badgen
 export async function hentVejr() {
   try {
     const res = await fetch(VEJR_URL)
     if (!res.ok) throw new Error(`Fejl ${res.status}`)
     const data = await res.json()
-    const nu = data.current
+    const nu = data.current // vejret lige nu
 
     return {
       ikon: ikonFor(nu.weather_code, nu.is_day === 1),
-      grader: Math.round(nu.temperature_2m),
+      grader: Math.round(nu.temperature_2m), // rundet til hele grader
     }
   } catch (e) {
     console.error('Vejret kunne ikke hentes', e)

@@ -1,4 +1,11 @@
-
+<!--
+  FIND DIN BANE
+  Sektion på forsiden (HomeView) med et billede og et kort med tekst.
+  Den har intet script, fordi der ikke er nogen data eller logik – kun to links:
+  - "Start banevælger" går til quizzen på /banequiz (QuizView → QuizSide.vue)
+  - "Se banerne" ruller ned til banekortene (#bane-info i TrackInfo.vue)
+  id="baner" bruges af "Find din bane"-knappen i hero (href="#baner")
+-->
 <template>
   <section id="baner" class="baner-section">
     <div class="baner-container">

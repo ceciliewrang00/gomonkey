@@ -1,10 +1,17 @@
 <script setup>
+// BANEKORTENE PÅ FORSIDEN
+// Øverst en forklaring af sværhedsgraden (Let/Mellem/Svær), og derunder ét stort kort pr. bane
+// med billede, beskrivelse, krav, faktatal og en sværhedsbjælke.
+// Alt om banerne hentes fra Firebase "baner" via services/baner.js – det samme, som
+// popup'en på kortet og quizzen bruger.
+// Hvert kort har banens id som id (fx id="bane-6"), så andre sider kan linke direkte til det
+// med /#bane-6 (fx "Læs mere om banen" på kortet og "Se Grøn" i quizzen).
+
 // ref = en værdi som Vue holder øje med. onMounted = kører, når siden er vist.
 // onUnmounted = kører, når siden forlades (bruges til at fjerne klik-lytteren igen)
 import { ref, onMounted, onUnmounted } from 'vue'
 
-// Banerne og reglerne for niveauer står i services/baner.js,
-// så hero-sektionen (banestigen) bruger præcis de samme data
+// Banerne og reglerne for niveauer står i services/baner.js, så alle sider viser det samme
 import { hentBaner, NIVEAUER, trinFor, niveauFor, harSvaerhedsgrad, faktaFor } from '@/services/baner.js'
 
 // Tom liste til banerne. Siden opdateres, når listen får data
@@ -26,60 +33,66 @@ onMounted(async () => {
         error.value = 'Banerne kunne ikke hentes. Prøv igen senere.'
         console.error(e)
     } finally {
-        // Uanset om det gik godt eller dårligt, er vi færdige med at vente
-        //Altså fjerner vi teksten med at banerne hentes
+        // Uanset om det gik godt eller dårligt, er vi færdige med at vente,
+        // så teksten "Henter baner..." fjernes
         loading.value = false
     }
 })
 
-// Faktaboksene (faktaFor) og niveauerne står i services/baner.js,
-// så popup'en på kortet viser præcis de samme tal og ord
-
-// (i)-forklaringen ved "Sværhedsgrad": id på banen, hvis boble er åben (null = ingen)
+// ---------- Info-boblen ved "Sværhedsgrad" ----------
+// Ved hver bane står der "Sværhedsgrad (i)". Klik på (i) åbner en lille boble med en forklaring.
+// Kun én boble kan være åben ad gangen, så vi gemmer bare id'et på banen, hvis boble er åben
+// (null = ingen er åben)
 const aabenInfo = ref(null)
 
-/* --- Stort billede (lightbox) ---
-   Klik på en banes billede åbner det stort i en <dialog>.
-   <dialog> med showModal() giver det hele gratis: mørk baggrund, Escape lukker,
-   tastaturet bliver inde i vinduet, og fokus kommer tilbage til billedet bagefter */
-const billedDialog = ref(null)
+/* ---------- Stort billede ----------
+   Klik på en banes billede åbner det stort i et vindue oven på siden.
+   Vi bruger HTML's eget <dialog>-element. Med showModal() får vi det hele gratis:
+   mørk baggrund, Escape lukker, og tastaturet bliver inde i vinduet */
+const billedDialog = ref(null) // selve <dialog>-elementet (ref="billedDialog" i templaten)
 const stortBillede = ref(null) // Banen, hvis billede vises stort (null = lukket)
 
+// Åbn vinduet med banens billede. ?. = kun hvis dialogen findes
 function aabnBillede(bane) {
     stortBillede.value = bane
     billedDialog.value?.showModal()
 }
 
+// Luk vinduet
 function lukBillede() {
     billedDialog.value?.close()
 }
 
-// Klik på den mørke baggrund uden for billedet lukker også
+// Klik på den mørke baggrund uden for billedet lukker også.
+// Klikker man på billedet, er event.target billedet. Klikker man udenfor, er det selve dialogen
 function klikPaaDialog(event) {
     if (event.target === billedDialog.value) lukBillede()
 }
 
-// Klik på (i) åbner boblen – klik igen lukker den
+// Klik på (i) åbner boblen – klik igen lukker den.
+// Er denne banes boble åben, sættes den til null (lukket). Ellers sættes den til banens id (åben)
 function skiftInfo(id) {
     aabenInfo.value = aabenInfo.value === id ? null : id
 }
 
-// Lukker boblen, når fokus forlader (i)-knappen og boblen (fx med Tab).
-// relatedTarget er det element, der får fokus bagefter
+// Lukker boblen, når man med tastaturet (Tab) går videre fra (i)-knappen og boblen.
+// relatedTarget = det element, man går hen til. Ligger det ikke inde i boblen, lukker vi den
 function lukVedFokusUd(event) {
     if (!event.currentTarget.contains(event.relatedTarget)) {
         aabenInfo.value = null
     }
 }
 
-// Lukker boblen ved klik et andet sted på siden.
-// (Safari giver ikke knapper fokus ved klik, så focusout alene er ikke nok)
+// Lukker boblen, når man klikker et andet sted på siden.
+// closest('.info') = "ligger det, man klikkede på, inde i en info-boble?" Hvis ikke, lukkes den.
+// (Den ovenfor er ikke nok alene, fordi Safari ikke flytter fokus, når man klikker på en knap)
 function lukVedKlikUdenfor(event) {
     if (aabenInfo.value && !event.target.closest('.info')) {
         aabenInfo.value = null
     }
 }
 
+// Lyt efter klik på hele siden, mens forsiden er vist – og stop igen, når man forlader den
 onMounted(() => document.addEventListener('click', lukVedKlikUdenfor))
 onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 </script>
@@ -146,7 +159,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             <!-- Overskriften står i sin egen række over teksten,
                  så billedet kun flugter med teksten under den -->
             <div class="bane__top">
-                <!-- 01, 02, 03 ... i banens farve -->
+                <!-- 01, 02, 03 ... i banens farve. padStart(2, '0') sætter et 0 foran, så 1 bliver 01 -->
                 <span class="bane__nr" aria-hidden="true">{{ String(index + 1).padStart(2, '0') }}</span>
                 <h2 class="bane__navn">{{ bane.name }}</h2>
             </div>
@@ -175,7 +188,8 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                     <strong>Krav:</strong> {{ bane.requirements }}
                 </p>
 
-                <!-- Faktabokse -->
+                <!-- Faktabokse, fx "Banehøjde: 8 m". faktaFor giver kun de fakta, banen har udfyldt.
+                     dl/dt/dd er HTML's liste til "navn: værdi" -->
                 <dl class="fakta" v-if="faktaFor(bane).length">
                     <div v-for="f in faktaFor(bane)" :key="f.key" class="fakta__boks">
                         <dt>{{ f.label }}</dt>
@@ -223,7 +237,8 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                     </div>
                     <!-- Bjælke med tre trin: 1 fyldt = Let, 2 = Mellem, 3 = Svær.
                          Præcis samme bjælke og farve som i forklaringen øverst.
-                         Bounce har ingen sværhedsgrad: bjælken vises, men ingen trin er fyldt -->
+                         Bounce har ingen sværhedsgrad: bjælken vises, men ingen trin er fyldt.
+                         role="meter" og aria-value... fortæller skærmlæsere, hvor svær banen er -->
                     <div
                         class="trin-bjaelke"
                         role="meter"

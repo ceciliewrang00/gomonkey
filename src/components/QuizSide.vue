@@ -1,17 +1,21 @@
 <script setup>
 // QUIZSIDE (BANEVÆLGEREN)
-// Gæsten svarer på spørgsmål ét ad gangen og får til sidst en anbefalet startbane.
+// Gæsten svarer på spørgsmål ét ad gangen og får til sidst en anbefalet første bane.
+// Vises på /banequiz (via QuizView.vue).
 //
-// Overblik:
-// 1. onMounted (nederst i scriptet) henter spørgsmål og baner fra Firebase.
-// 2. Brugerens svar gemmes i valgteSvar som { spørgsmåls-id: valgt svar }.
-// 3. Nogle spørgsmål vises kun ved bestemte svar (visHvis), fx frit fald.
-//    synligeSpoergsmaal er listen over de spørgsmål, der skal vises lige nu.
-// 4. Selve reglerne for anbefalingen ligger i services/quizLogik.js.
-//    Hvert svar har et "maksNiveau" (Let/Mellem/Svær), som kan ændres af admin i AdminQuiz.vue.
-// 5. Templaten viser enten indlæsning, fejl, ét spørgsmål eller resultatet.
+// Sådan hænger det sammen:
+// 1. Når siden åbnes (onMounted nederst), hentes spørgsmål og baner fra Firebase.
+// 2. Brugerens svar gemmes i valgteSvar: { 'hoejde': {...valgt svar}, 'erfaring': {...}, ... }
+// 3. Nogle spørgsmål vises kun ved bestemte svar (visHvis), fx vægt kun ved ja til frit fald.
+//    synligeSpoergsmaal = de spørgsmål, der skal vises lige nu.
+// 4. Denne fil REGNER ikke selv. Alle reglerne står i services/quizLogik.js,
+//    og her kalder vi bare funktionerne derfra.
+// 5. Templaten viser én af fire ting: "henter...", en fejl, ét spørgsmål eller resultatet.
+//
+// computed = en værdi, der regnes ud fra andre værdier og automatisk regnes ud igen,
+// når de ændrer sig. Fx skifter aktivtSpoergsmaal af sig selv, når aktivtIndeks ændres.
 
-// Importerer værktøjer til data, beregninger og opstart.
+// ref = en værdi Vue holder øje med. computed = se ovenfor. onMounted = kør, når siden er vist
 import { ref, computed, onMounted } from 'vue'
 
 // Databaseadresserne står samlet i api.js
@@ -37,31 +41,32 @@ import {
 import { hentBaner } from '@/services/baner.js'
 
 
-// Gemmer svarene under hvert spørgsmåls id.
+// Brugerens svar, gemt under hvert spørgsmåls id. Starter tom: {}
 const valgteSvar = ref({})
 
 // Gemmer spørgsmålene, som hentes fra Firebase.
 const spoergsmaal = ref([])
 
-// Gemmer placeringen for det spørgsmål, brugeren er nået til.
-// 0 betyder det første spørgsmål, fordi lister tæller fra 0.
+// Nummeret på det spørgsmål, brugeren er nået til.
+// 0 = det første spørgsmål, fordi lister i JavaScript tæller fra 0.
 const aktivtIndeks = ref(0)
 
-// Holder styr på, om resultatsiden skal vises.
+// true = vis resultatet i stedet for spørgsmålene
 const visResultat = ref(false)
 
-// Beregner, hvilke spørgsmål der skal vises ud fra brugerens svar.
-// skalVises tjekker visHvis (se quizLogik.js).
+// De spørgsmål, der skal vises lige nu. filter beholder kun dem, hvor skalVises siger ja
+// (skalVises tjekker visHvis og højden – se quizLogik.js).
+// Ændrer man et svar, regnes listen automatisk ud igen
 const synligeSpoergsmaal = computed(() => {
   return spoergsmaal.value.filter((sp) => skalVises(sp, valgteSvar.value))
 })
 
-// Finder det spørgsmål, der skal vises lige nu.
+// Det ene spørgsmål, der vises lige nu: plads nr. aktivtIndeks i listen over synlige spørgsmål
 const aktivtSpoergsmaal = computed(() => {
   return synligeSpoergsmaal.value[aktivtIndeks.value]
 })
 
-// Spørgsmålsteksten tilpasset "mig", "mit barn" eller "gruppe".
+// Spørgsmålets tekst, tilpasset "du", "dit barn" eller "gruppe" (se visTekst i quizLogik.js)
 const aktivTekst = computed(() => {
   if (!aktivtSpoergsmaal.value) {
     return ''
@@ -77,7 +82,8 @@ const aktivHjaelp = computed(() => {
   return visHjaelp(aktivtSpoergsmaal.value, valgteSvar.value)
 })
 
-// Beregner, hvor langt brugeren er nået gennem spørgsmålene.
+// Hvor langt man er nået, i procent (til bjælken øverst).
+// Fx spørgsmål 2 af 5 = (1 + 1) / 5 * 100 = 40 %. På resultatet er det altid 100 %
 const fremdrift = computed(() => {
   if (synligeSpoergsmaal.value.length === 0) {
     return 0
@@ -96,7 +102,7 @@ const indlaeser = ref(true)
 // Gemmer en fejlbesked. Starter uden en besked.
 const fejlbesked = ref('')
 
-// Kontrollerer, om alle synlige spørgsmål er besvaret.
+// true, hvis ALLE synlige spørgsmål har et svar (every = "gælder det for hver eneste?")
 const alleBesvaret = computed(() => {
   return (
     synligeSpoergsmaal.value.length > 0 &&
@@ -107,7 +113,11 @@ const alleBesvaret = computed(() => {
 // Banerne fra Firebase, sorteret fra let til svær
 const baner = ref([])
 
-// Beregner den anbefalede bane: { bane, niveau, begraensninger }. Reglerne står i quizLogik.js.
+// ---------- Resultatet ----------
+// Alt herunder er computed og kalder en funktion i quizLogik.js.
+// De regnes først ud, når alle spørgsmål er besvaret
+
+// Den anbefalede bane: { bane, niveau, begraensninger } (se beregnBane i quizLogik.js)
 const anbefaletBane = computed(() => {
   if (!alleBesvaret.value) {
     return null
@@ -115,10 +125,10 @@ const anbefaletBane = computed(() => {
   return beregnBane(valgteSvar.value, baner.value)
 })
 
-// Titel og tekst til den anbefalede bane (banens egen beskrivelse fra Firebase).
+// Overskrift og tekst til resultatet, fx "Start på Grøn" (se lavResultat i quizLogik.js)
 const resultat = computed(() => lavResultat(anbefaletBane.value, valgteSvar.value))
 
-// Kort liste med grundene til anbefalingen.
+// Listen "Derfor anbefaler vi den"
 const begrundelse = computed(() => {
   if (!anbefaletBane.value) {
     return []
@@ -126,7 +136,7 @@ const begrundelse = computed(() => {
   return lavBegrundelse(anbefaletBane.value, valgteSvar.value)
 })
 
-// Næste skridt efter startbanen.
+// Sætningen om, hvilken bane man kan tage bagefter
 const videre = computed(() => lavVidere(anbefaletBane.value, valgteSvar.value, baner.value))
 
 // Ekstra beskeder til grupper (en liste, som kan være tom).
@@ -150,13 +160,15 @@ const foerstegangsInfo = computed(() =>
 // Regler, som er gode at kende før besøget (fx voksne med børn og max. vægt).
 const godtAtVide = computed(() => lavGodtAtVide(valgteSvar.value))
 
-// Henter spørgsmålene til quizzen.
+// ---------- Hent data og knapper ----------
+
+// Henter spørgsmålene til quizzen fra Firebase
 async function hentSpoergsmaal() {
   try {
-    // 1. HENT: Ber Firebase hente spørgsmålene med fetch.
+    // 1. HENT: Beder Firebase om spørgsmålene med fetch.
     const response = await fetch(`${SPOERGSMAAL_URL}.json`)
 
-    // 2. TJEK: Lykkedes kaldet? Hvis ikke, send til catch.
+    // 2. TJEK: Gik det godt? Hvis ikke, "kaster" vi en fejl (throw), og så hopper koden til catch.
     if (!response.ok) {
       throw new Error('Firebase svarede med status ' + response.status)
     }
@@ -179,13 +191,14 @@ async function hentSpoergsmaal() {
   }
 }
 
-// Modtager spørgsmålets id og hele den valgte svarmulighed.
+// Kører, når man klikker på et svar. Får spørgsmålets id og hele det valgte svar.
 function vaelgSvar(spoergsmaalId, svar) {
-  // Gemmer en kopi af det valgte svar.
+  // Gem en kopi af svaret ({ ...svar } kopierer alle felterne)
   valgteSvar.value[spoergsmaalId] = { ...svar }
 
-  // Fjerner svar på spørgsmål, som ikke længere skal vises.
-  // Fx hvis brugeren går tilbage og ændrer "Mest muligt adrenalin" til "En rolig tur".
+  // Ryd op: har det nye svar gjort, at et andet spørgsmål ikke skal vises mere,
+  // så slettes svaret på det spørgsmål også – ellers ville det tælle med i resultatet.
+  // Fx hvis man går tilbage og skifter fra "ja" til "nej" til frit fald.
   for (const sp of spoergsmaal.value) {
     if (!skalVises(sp, valgteSvar.value)) {
       delete valgteSvar.value[sp.id]
@@ -193,7 +206,8 @@ function vaelgSvar(spoergsmaalId, svar) {
   }
 }
 
-// Går videre, når det aktuelle spørgsmål er besvaret.
+// "Næste": gå videre til næste spørgsmål – eller til resultatet, hvis det var det sidste.
+// Har man ikke svaret endnu, sker der ingenting (return)
 function naesteSpoergsmaal() {
   const sp = aktivtSpoergsmaal.value
 
@@ -208,14 +222,15 @@ function naesteSpoergsmaal() {
   }
 }
 
-// Går tilbage til det forrige spørgsmål.
+// "Tilbage": gå ét spørgsmål tilbage (men ikke længere end til det første)
 function forrigeSpoergsmaal() {
   if (aktivtIndeks.value > 0) {
     aktivtIndeks.value -= 1
   }
 }
 
-// Starter en ny quiz med de spørgsmål, der allerede er hentet.
+// "Start forfra": slet alle svar og gå til første spørgsmål.
+// Spørgsmålene er allerede hentet, så de skal ikke hentes igen
 function startForfra() {
   valgteSvar.value = {}
   aktivtIndeks.value = 0
@@ -232,7 +247,8 @@ async function hentQuizBaner() {
   }
 }
 
-// Starter hentningen, når quizsiden er klar.
+// Når quizsiden vises: hent spørgsmål og baner på samme tid (Promise.all),
+// og vent, til begge er færdige, før "Henter spørgsmål..." forsvinder
 onMounted(async () => {
   indlaeser.value = true
   await Promise.all([hentSpoergsmaal(), hentQuizBaner()])
@@ -273,7 +289,7 @@ onMounted(async () => {
     <!-- Vises, mens spørgsmål og baner hentes. -->
     <p v-if="indlaeser" class="quiz-status">Henter spørgsmål...</p>
 
-    <!-- Vises, hvis et API-kald mislykkes. -->
+    <!-- Vises, hvis data ikke kunne hentes. -->
     <p v-else-if="fejlbesked" class="quiz-status">{{ fejlbesked }}</p>
 
     <!-- Vises, hvis databasen er tom. -->
@@ -415,8 +431,9 @@ onMounted(async () => {
 
       <!-- Placerer svarmulighederne i en lodret liste. -->
       <div class="quiz-svar">
-        <!-- Opretter en knap pr. svar og markerer det valgte svar. -->
-        <!-- Klik gemmer svaret til det aktive spørgsmål. -->
+        <!-- Én knap pr. svar. Klik gemmer svaret (vaelgSvar).
+             aria-pressed = true på det valgte svar. CSS'en bruger det til at farve knappen,
+             og skærmlæsere siger "valgt" -->
         <button
           v-for="svarItem in aktivtSpoergsmaal.svar"
           :key="svarItem.id"
@@ -449,7 +466,7 @@ onMounted(async () => {
           Tilbage
         </button>
 
-        <!-- Kræver et svar, før brugeren kan gå videre. -->
+        <!-- "Næste" er grå (disabled), indtil man har valgt et svar. -->
         <button
           type="button"
           class="button-primary quiz-naeste"
@@ -471,7 +488,8 @@ onMounted(async () => {
 </template>
 
 <style scoped lang="scss">
-/* .. går én mappe op fra views til src, hvor assets ligger. */
+/* Henter farver, flex-hjælpere og afstande fra de fælles style-filer.
+   .. går én mappe op (fra components til src), hvor assets ligger. */
 @use '../assets/styles/colors' as c;
 @use '@/assets/styles/flex' as f;
 @use '@/assets/styles/spacings' as s;

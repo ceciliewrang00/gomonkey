@@ -1,11 +1,16 @@
 <script setup>
 // POPUP PÅ KORTET
-// Viser den bane, man har klikket på. Alle tekster og tal kommer fra Firebase via
-// services/baner.js – de samme data som banekortene på forsiden (TrackInfo.vue).
+// Boksen, der dukker op, når man klikker på en bane på kortet (InteraktivtKort.vue).
+// Den viser banens navn, beskrivelse, sværhedsgrad, fakta og krav.
+// Alle tekster og tal kommer fra Firebase via services/baner.js – de samme data
+// som banekortene på forsiden (TrackInfo.vue).
 import { computed } from 'vue'
+
+// GoMonkey-aben, der bruges som "trin" i sværhedsgraden (3 aber)
 import logoUrl from '@/assets/images/gomonkey-logo.svg'
 import { trinFor, niveauFor, harSvaerhedsgrad, faktaFor } from '@/services/baner.js'
 
+// bane = den bane, der skal vises. Den sendes ind fra InteraktivtKort.vue (:bane="valgtBane")
 const props = defineProps({
   bane: {
     type: Object,
@@ -13,6 +18,7 @@ const props = defineProps({
   }
 })
 
+// 'luk' = beskeden, der sendes til kortet, når man trykker på krydset. Kortet lukker så popup'en
 defineEmits(['luk'])
 
 // Niveauet med ord (Let, Mellem, Svær – eller "For alle" for Bounce) og som trin 1–3
@@ -27,7 +33,7 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
 <template>
   <!-- --bane-farve bruges til farvestregen i toppen og prikken ved navnet.
        Farven kommer fra $kort-bane-farver i _colors.scss (via --kort-bane-<id> i KortView.vue).
-       Findes den ikke, bruges farven fra popup.json, og ellers en grå -->
+       Findes den ikke (fx en ny bane fra admin), bruges banens egen farve, og ellers en grå -->
   <div
     class="bane-popup"
     role="dialog"

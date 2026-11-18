@@ -1,10 +1,13 @@
 <script setup>
-// STEN-BUE
-// En stor bue (sten4.svg fra public), der sidder hen over overgangen mellem to sektioner.
-// Placeres i HomeView mellem de to sektioner. Kun pynt, så skærmlæsere springer den over.
+// STEN-BUE – ren pynt
+// En stor farvet bue (formen fra public/sten4.svg), der hænger hen over overgangen
+// mellem to sektioner på forsiden. Den sættes ind i HomeView.vue mellem to sektioner.
+// aria-hidden="true" i templaten = skærmlæsere springer den over, da den kun er pynt.
 //
-// side:  'venstre' eller 'hoejre' – hvilken kant buen sidder ved (den er lidt skåret af kanten)
-// farve: 'pink' eller 'blaa'
+// Props (det, man giver den med i HomeView):
+//   side:  'venstre' eller 'hoejre' – hvilken kant buen sidder ved (den er lidt skåret af kanten)
+//   farve: 'pink' eller 'blaa'
+// De bliver til klasser, fx sten-bue--hoejre og sten-bue__form--pink, som CSS'en styler
 defineProps({
   side: { type: String, default: 'hoejre' },
   farve: { type: String, default: 'pink' },

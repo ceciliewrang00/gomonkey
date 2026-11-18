@@ -1,37 +1,49 @@
 <script setup>
-// Administration af quizzen: spørgsmål og svar.
-// Hvert svar har et "maksNiveau": den sværeste bane, svaret tillader
-// (1 = Let, 2 = Mellem, 3 = Svær). Det laveste svar bestemmer anbefalingen (se quizLogik.js).
-// Quizzen bruger ingen point.
-// Vises i AdminView, når man er logget ind.
-// Udseendet kommer fra de fælles styles i AdminView.vue
+// ADMIN: FANEN "QUIZ"
+// Her retter man quizzens spørgsmål og svar (Firebase "spoergsmaal").
+// Man kan: se alle spørgsmål, rette et spørgsmål, slette et og oprette et nyt.
+// Filen vises i AdminView.vue under fanen "Quiz". Udseendet kommer fra AdminView.vue.
+//
+// Det vigtige ved hvert svar er "Giver højst" (i koden: maksNiveau).
+// Det er den sværeste bane, svaret tillader: 1 = Let, 2 = Mellem, 3 = Svær.
+// Fx kan svaret "Jeg har aldrig klatret" give højst Let.
+// Til sidst bestemmer det LAVESTE af alle svarene anbefalingen (se services/quizLogik.js).
+// Der bruges ingen point.
 
 import BaseButton from '@/components/BaseButton.vue'
 import { ref, onMounted } from 'vue'
+
+// auth = login-forbindelsen. auth.currentUser er den, der er logget ind (eller null)
 import { auth } from '../firebase'
+
+// Adressen på spørgsmålene i Firebase + hentToken, der giver beviset på login
 import { SPOERGSMAAL_URL, hentToken } from '@/services/api.js'
 
-// Valgene i "Giver højst"-feltet ved hvert svar
+// Valgene i dropdown'en "Giver højst" ved hvert svar
 const NIVEAU_VALG = [
   { vaerdi: 3, tekst: 'Svær (ingen begrænsning)' },
   { vaerdi: 2, tekst: 'Mellem' },
   { vaerdi: 1, tekst: 'Let' },
 ]
 
-// Viser maksNiveau som ord i oversigten
+// Laver tallet om til et ord i oversigten: 1 → 'Let', 2 → 'Mellem', 3 → 'Svær'.
+// Er der intet tal, vises en streg '–'
 function niveauTekst(n) {
   return { 1: 'Let', 2: 'Mellem', 3: 'Svær' }[n] ?? '–'
 }
 
 // ---------- Spørgsmål ----------
 
-// Alle spørgsmål fra databasen, true mens de hentes, og en evt. fejlbesked
+// spoergsmaal = alle spørgsmål fra databasen
+// indlaeser   = true, mens de hentes ("Henter spørgsmål...")
+// fejlbesked  = hvis de ikke kunne hentes
 const spoergsmaal = ref([])
 const indlaeser = ref(true)
 const fejlbesked = ref('')
 
-// Henter alle spørgsmål fra Firebase (GET, kræver ikke login).
-// Kaldes også efter opret, rediger og slet, så listen altid passer med databasen
+// Henter alle spørgsmål fra Firebase. At læse kræver ikke login.
+// Den kaldes også efter man har oprettet, rettet eller slettet,
+// så listen på siden altid viser det samme som databasen
 async function hentSpoergsmaal() {
   try {
     const response = await fetch(`${SPOERGSMAAL_URL}.json`)
@@ -42,7 +54,8 @@ async function hentSpoergsmaal() {
 
     const data = await response.json()
 
-    // Databaseobjektet bliver til en liste, sorteret efter rækkefølge
+    // Firebase giver et objekt. Object.values laver det om til en liste,
+    // og sort sorterer efter feltet "raekkefoelge" (1, 2, 3 ...), så spørgsmålene står i quiz-rækkefølge
     const liste = Object.values(data ?? {})
     liste.sort((a, b) => (a.raekkefoelge ?? 0) - (b.raekkefoelge ?? 0))
 
@@ -55,8 +68,10 @@ async function hentSpoergsmaal() {
   }
 }
 
-// Fjerner mellemrum omkring teksterne. Tomme barn- og gruppetekster fjernes helt,
-// så quizzen bruger den almindelige tekst i stedet
+// Rydder op i ét svar, før det gemmes:
+// - fjerner mellemrum før og efter teksterne (.trim())
+// - er barn- eller gruppe-teksten tom, slettes feltet helt (delete),
+//   så quizzen i stedet bruger den almindelige tekst
 function rydSvar(svar) {
   const ren = { ...svar, tekst: svar.tekst.trim() }
   for (const felt of ['tekstBarn', 'tekstGruppe']) {
@@ -69,21 +84,25 @@ function rydSvar(svar) {
 
 // ---------- Opret spørgsmål ----------
 
-// Det nye spørgsmål, mens man skriver det i formularen
+// Formularen "Opret spørgsmål" – det, man skriver, havner her (via v-model)
 const nytSpoergsmaal = ref({
   tekst: '',
-  // Starter med to svarmuligheder. Flere kan tilføjes
+  // Starter med to tomme svar. Flere kan tilføjes med "Tilføj svarmulighed".
+  // maksNiveau: 3 = "Svær (ingen begrænsning)" er standard
   svar: [
     { id: 's1', tekst: '', maksNiveau: 3 },
     { id: 's2', tekst: '', maksNiveau: 3 }
   ]
 })
 
-// true mens der gemmes (knapperne bliver grå), og beskeden efter gemning
+// gemmer    = true, mens der gemmes (så knapperne bliver grå)
+// gemBesked = beskeden bagefter, fx "Spørgsmålet er gemt."
 const gemmer = ref(false)
 const gemBesked = ref('')
 
-// Tilføjer et tomt svar. crypto.randomUUID() laver et unikt id, så Vue kan holde svarene adskilt
+// "Tilføj svarmulighed": lægger et nyt, tomt svar i listen.
+// crypto.randomUUID() laver et tilfældigt id, som aldrig er det samme to gange.
+// Vue bruger id'et (:key) til at holde styr på, hvilket felt der er hvilket
 function tilfoejSvarmulighed() {
   nytSpoergsmaal.value.svar.push({
     id: crypto.randomUUID(),
@@ -92,9 +111,10 @@ function tilfoejSvarmulighed() {
   })
 }
 
-// Fjerner et svar ved at beholde alle de andre (filter)
+// "Fjern svarmulighed": fjerner et svar.
+// filter laver en ny liste med alle de svar, der IKKE har dette id – så er det væk
 function fjernSvarmulighed(svarId) {
-  // Beholder mindst to svarmuligheder
+  // Et spørgsmål skal have mindst to svar, så vi stopper her, hvis der kun er to
   if (nytSpoergsmaal.value.svar.length <= 2) {
     return
   }
@@ -102,8 +122,9 @@ function fjernSvarmulighed(svarId) {
   nytSpoergsmaal.value.svar = nytSpoergsmaal.value.svar.filter((svar) => svar.id !== svarId)
 }
 
-// Gemmer det nye spørgsmål i Firebase.
-// Først tjekkes login og at alt er udfyldt (return stopper funktionen tidligt)
+// "Gem spørgsmål": gemmer det nye spørgsmål i Firebase.
+// Først tjekkes, at man er logget ind, og at alt er udfyldt.
+// Er noget galt, vises en besked, og return stopper funktionen, før der gemmes
 async function opretSpoergsmaal() {
   gemBesked.value = ''
 
@@ -112,7 +133,8 @@ async function opretSpoergsmaal() {
     return
   }
 
-  // Spørgsmålet og alle svar skal have tekst
+  // Spørgsmålet og alle svar skal have tekst.
+  // .some(...) = "er der mindst ét svar, hvor teksten er tom?"
   if (
     !nytSpoergsmaal.value.tekst.trim() ||
     nytSpoergsmaal.value.svar.some((svar) => !svar.tekst.trim())
@@ -126,12 +148,13 @@ async function opretSpoergsmaal() {
   try {
     const token = await hentToken()
 
-    // Unikt id til både databaseplaceringen og spørgsmålet
+    // Et tilfældigt id. Det bruges både som spørgsmålets id og som dets adresse i Firebase
     const id = crypto.randomUUID()
 
-    // Finder den højeste rækkefølge, så det nye spørgsmål kommer sidst
+    // Find det højeste rækkefølge-nummer. Det nye spørgsmål får nummeret efter, så det kommer sidst
     const sidstePlacering = Math.max(0, ...spoergsmaal.value.map((sp) => Number(sp.raekkefoelge) || 0))
 
+    // Det, der gemmes. type 'niveau' = spørgsmålet er med til at bestemme anbefalingen
     const data = {
       id,
       tekst: nytSpoergsmaal.value.tekst.trim(),
@@ -140,7 +163,8 @@ async function opretSpoergsmaal() {
       svar: nytSpoergsmaal.value.svar.map(rydSvar)
     }
 
-    // PUT gemmer spørgsmålet på dets egen unikke placering
+    // PUT gemmer spørgsmålet på adressen spoergsmaal/<id>.
+    // ?auth=... er beviset på login, som databasen kræver for at gemme
     const response = await fetch(`${SPOERGSMAAL_URL}/${id}.json?auth=${encodeURIComponent(token)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -174,26 +198,29 @@ async function opretSpoergsmaal() {
 
 // ---------- Rediger spørgsmål ----------
 
-// En kopi af det spørgsmål, der redigeres. null = intet er åbnet
+// redigerer        = en KOPI af det spørgsmål, man retter (null = intet er åbent)
+// gemmerRedigering = true, mens ændringerne gemmes
+// redigerBesked    = fx "Ændringerne er gemt."
 const redigerer = ref(null)
 const gemmerRedigering = ref(false)
 const redigerBesked = ref('')
 
-// Åbner redigering af et spørgsmål.
-// JSON.parse(JSON.stringify(...)) laver en helt ny kopi, også af listen med svar
+// "Rediger spørgsmål": åbner formularen med en kopi af spørgsmålet.
+// Hvorfor en kopi? Så listen ikke ændrer sig, mens man skriver – kun når man trykker "Gem".
+// JSON.parse(JSON.stringify(...)) er et trick til at lave en HELT ny kopi,
+// også af listen med svar indeni (en almindelig kopi ville dele svar-listen med originalen)
 function startRedigering(sp) {
-  // Selvstændig kopi inkl. svarmuligheder, så oversigten ikke ændres før "Gem"
   redigerer.value = JSON.parse(JSON.stringify(sp))
   redigerBesked.value = ''
 }
 
-// Lukker redigeringen uden at gemme
+// "Annuller": luk formularen og smid kopien væk – intet bliver gemt
 function annullerRedigering() {
   redigerer.value = null
   redigerBesked.value = ''
 }
 
-// Gemmer det redigerede spørgsmål. Samme tjek som ved opret, og så PUT til databasen
+// "Gem ændringer": samme tjek som ved opret, og så erstattes spørgsmålet i Firebase (PUT)
 async function gemRedigering() {
   redigerBesked.value = ''
 
@@ -209,7 +236,7 @@ async function gemRedigering() {
     return
   }
 
-  // Fjerner mellemrum omkring tekster og bevarer alle øvrige felter
+  // Ryd op i teksterne. Alle andre felter (fx visHvis og tekstBarn) bliver, som de er
   data.tekst = data.tekst.trim()
   data.svar = data.svar.map(rydSvar)
 
@@ -218,7 +245,7 @@ async function gemRedigering() {
   try {
     const token = await hentToken()
 
-    // Erstatter det valgte spørgsmål med den redigerede kopi
+    // PUT erstatter hele spørgsmålet i Firebase med den rettede kopi
     const response = await fetch(
       `${SPOERGSMAAL_URL}/${encodeURIComponent(data.id)}.json?auth=${encodeURIComponent(token)}`,
       {
@@ -247,16 +274,19 @@ async function gemRedigering() {
 
 // ---------- Slet spørgsmål ----------
 
-// Id på det spørgsmål, der slettes lige nu ('' = intet), og beskeden bagefter
+// sletterId  = id på det spørgsmål, der slettes lige nu ('' = intet) – så knappen kan vise "Sletter..."
+// sletBesked = beskeden bagefter
 const sletterId = ref('')
 const sletBesked = ref('')
 
-// Sletter et spørgsmål. Først tjekkes, at det ikke bruges af quizlogikken,
-// og så spørges brugeren, om de er sikre (window.confirm)
+// "Slet spørgsmål". Før der slettes, tjekkes tre ting:
+// 1. Er det et af de faste spørgsmål, som quizlogikken har brug for? Så må det ikke slettes
+// 2. Afhænger et andet spørgsmål af det (visHvis)? Så må det heller ikke slettes
+// 3. Er man sikker? (window.confirm viser en boks med OK/Annuller)
 async function sletSpoergsmaal(sp) {
   sletBesked.value = ''
 
-  // Spørgsmål, som anbefalinger og betingelser afhænger af, må ikke slettes
+  // De faste spørgsmål. quizLogik.js bruger dem direkte ved navn, så quizzen går i stykker uden dem
   const fasteId = ['hoejde', 'erfaring', 'tryghed', 'fysik', 'oplevelse', 'fritfald', 'vaegt']
 
   if (fasteId.includes(sp.id)) {
@@ -264,7 +294,8 @@ async function sletSpoergsmaal(sp) {
     return
   }
 
-  // Undgår at slette et spørgsmål, som styrer andre spørgsmåls synlighed
+  // Er der et andet spørgsmål, som kun vises ved et bestemt svar på DETTE spørgsmål (visHvis)?
+  // Så ville det andet spørgsmål aldrig blive vist, hvis vi slettede dette
   if (spoergsmaal.value.some((andet) => andet.visHvis?.spoergsmaalId === sp.id)) {
     sletBesked.value = 'Spørgsmålet bruges som betingelse for et andet spørgsmål.'
     return
@@ -304,7 +335,7 @@ async function sletSpoergsmaal(sp) {
   }
 }
 
-// Henter alt, når komponenten vises
+// Hent spørgsmålene, så snart fanen vises
 onMounted(() => {
   hentSpoergsmaal()
 })
@@ -367,7 +398,8 @@ onMounted(() => {
           <label :for="'rediger-svar-gruppe-' + sp.id + '-' + svar.id">Tekst, når man svarer for en gruppe (valgfri)</label>
           <input :id="'rediger-svar-gruppe-' + sp.id + '-' + svar.id" v-model="svar.tekstGruppe" type="text" />
 
-          <!-- "Giver højst" kan kun rettes på spørgsmål, der styrer anbefalingen -->
+          <!-- "Giver højst" kan kun rettes på spørgsmål, der styrer anbefalingen (type 'niveau').
+               v-model.number = gem valget som et tal (3) og ikke som tekst ("3") -->
           <div v-if="redigerer.type === 'niveau'">
             <label :for="'rediger-niveau-' + sp.id + '-' + svar.id">Giver højst</label>
             <select :id="'rediger-niveau-' + sp.id + '-' + svar.id" v-model.number="svar.maksNiveau">

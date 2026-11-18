@@ -1,13 +1,19 @@
 <script setup>
-// Banefarverne – samme farver som på kortet.
-// Navne og rækkefølge (fra let til svær) hentes fra de fælles banedata i Firebase
-// (services/baner.js), så forklaringen altid passer med forsiden, kortet og filtret.
-// Farven kommer fra $kort-bane-farver i _colors.scss ud fra banens id (fx 'bane-1')
+// OVERBLIK OVER PARKEN
+// Sektion på forsiden med et billede af kortet (klik = gå til /kort)
+// og en forklaring af banernes farver.
+//
+// Farveforklaringen: navnene og rækkefølgen (fra let til svær) hentes fra Firebase
+// via services/baner.js, så den altid passer med forsiden, kortet og filtret.
+// Selve farven kommer fra $kort-bane-farver i _colors.scss ud fra banens id (fx 'bane-1')
 import { ref, onMounted } from 'vue'
 import { hentBaner } from '@/services/baner.js'
 
+// Listen til farveforklaringen: [{ navn: 'Grøn', klasse: 'bane-1' }, ...]
 const baneFarver = ref([])
 
+// Når sektionen vises: hent banerne og behold kun navn og id.
+// .map laver hver bane om til et lille objekt med kun det, vi skal bruge
 onMounted(async () => {
   try {
     baneFarver.value = (await hentBaner()).map((bane) => ({ navn: bane.name, klasse: bane.id }))

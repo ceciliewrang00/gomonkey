@@ -1,4 +1,9 @@
 <script setup>
+// SIDEHOVEDET
+// Logo, menu og "BOOK"-knap øverst på siden. Bruges på forsiden (HomeView) og i quizzen (QuizView).
+// Det bliver hængende i toppen, når man scroller (position: sticky i CSS'en).
+// På mobil er menuen skjult bag en burgerknap (☰). Et klik skifter isOpen mellem true og false,
+// og når isOpen er true, får <nav> klassen "open", som viser menuen (se CSS nederst).
 import { ref } from 'vue'
 import BaseButton from './BaseButton.vue'
 // Link til booking – samme som "Book nu" i hero (står ét sted i services/api.js)
@@ -14,6 +19,7 @@ const isOpen = ref(false)
         <img src="@/assets/images/logo.svg" alt="GoMonkey – se Forest lokationer">
       </a>
       <div class="menu">
+        <!-- :class="{ open: isOpen }" = klassen "open" sættes kun på, når isOpen er true -->
         <nav :class="{ open: isOpen }">
           <BaseButton variant="header" href="#">Cave</BaseButton>
           <BaseButton variant="header" href="#">Forest</BaseButton>
@@ -22,6 +28,7 @@ const isOpen = ref(false)
         </nav>
 
         <div class="actions">
+          <!-- Burgerknappen (kun på mobil). Viser ✕ når menuen er åben, ellers ☰ -->
           <button class="burger" aria-label="Menu" @click="isOpen = !isOpen">
             {{ isOpen ? '✕' : '☰' }}
           </button>

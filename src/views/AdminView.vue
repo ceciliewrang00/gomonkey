@@ -1,20 +1,25 @@
 <script setup>
 // ADMIN-SIDEN (adressen /admin)
-// Først skal man logge ind med Firebase. Derefter kan man skifte mellem tre faner:
-// - Baner: ret teksterne om banerne (AdminBaner.vue)
-// - Quiz: ret pointgrænser og quizspørgsmål (AdminQuiz.vue)
-// - Kort: ret banernes forløb på kortet og kortfiltrets tekster (AdminKort.vue)
-// Denne fil styrer kun login og faner. Hver fane henter og gemmer selv sine data.
+// Her kan GoMonkey selv rette indholdet på sitet uden at røre koden.
+// Først skal man logge ind. Derefter kan man skifte mellem tre faner:
+// - Baner: ret teksterne og tallene om banerne (AdminBaner.vue)
+// - Quiz:  ret quizzens spørgsmål og svar (AdminQuiz.vue)
+// - Kort:  ret, hvor banerne går på kortet, og teksterne i kortfiltret (AdminKort.vue)
+// Denne fil står KUN for login og for at skifte fane.
+// Hver fane er sin egen fil, som selv henter og gemmer sine data.
 
 // ---------- Imports ----------
 
 // Vores egen knap-komponent
 import BaseButton from '@/components/BaseButton.vue'
 
-// De to dele af admin-siden
+// De tre faner
 import AdminBaner from '@/components/AdminBaner.vue'
 import AdminQuiz from '@/components/AdminQuiz.vue'
 import AdminKort from '@/components/AdminKort.vue'
+
+// Menuen i venstre side med overskrifterne fra den åbne fane
+import AdminSidebar from '@/components/AdminSidebar.vue'
 
 // ref = en værdi Vue holder øje med. onUnmounted = kører, når man forlader siden
 import { ref, onUnmounted } from 'vue'
@@ -22,14 +27,18 @@ import { ref, onUnmounted } from 'vue'
 // RouterLink = link til en anden side i appen
 import { RouterLink } from 'vue-router'
 
-// Firebase-funktioner til login, logout og overvågning af loginstatus
+// Firebase-funktioner: log ind, log ud, og "sig til, når nogen logger ind eller ud"
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth'
 
 // Firebase-loginforbindelsen fra vores egen fil
 import { auth } from '../firebase'
 
-// Hvilken del af admin-siden der vises: 'baner' eller 'quiz'
+// Hvilken fane der er åben: 'baner', 'quiz' eller 'kort'. Starter på 'baner'
 const fane = ref('baner')
+
+// Boksen, som fanens indhold står i (ref="indhold" i templaten).
+// Den sendes til sidebaren, så den kan finde overskrifterne derinde
+const indhold = ref(null)
 
 // ---------- Login ----------
 
@@ -40,21 +49,25 @@ const adgangskode = ref('')
 // Den bruger, der er logget ind (null = ingen)
 const bruger = ref(null)
 
-// true, mens Firebase undersøger, om der allerede er et gemt login
+// true, mens Firebase tjekker, om man allerede er logget ind fra sidst
+// (Firebase husker et login, også hvis man genindlæser siden)
 const tjekkerLogin = ref(true)
 
-// Fejlbesked til login/logout, og true mens login er i gang (knappen bliver grå)
+// loginFejl = fejlbesked, fx "Login mislykkedes".
+// loggerInd = true, mens login er i gang (så knappen bliver grå og ikke kan trykkes to gange)
 const loginFejl = ref('')
 const loggerInd = ref(false)
 
-// Kaldes, når loginformularen sendes. async/await = vent på svar fra Firebase.
-// try/catch fanger fejl, fx forkert adgangskode. finally kører altid til sidst
+// Kører, når man trykker "Log ind".
+// async/await = vent på, at Firebase svarer, før vi går videre.
+// try = prøv det her. catch = gik det galt (fx forkert adgangskode), så gør det her.
+// finally = kører altid til sidst, uanset om det gik godt eller skidt
 async function logInd() {
   loginFejl.value = ''
   loggerInd.value = true
 
   try {
-    // Firebase kontrollerer e-mail og adgangskode
+    // Firebase tjekker e-mail og adgangskode. .trim() fjerner mellemrum før og efter e-mailen
     const resultat = await signInWithEmailAndPassword(auth, email.value.trim(), adgangskode.value)
     bruger.value = resultat.user
 
@@ -72,8 +85,8 @@ async function logUd() {
   loginFejl.value = ''
 
   try {
-    // Loginlytteren herunder opdaterer bruger bagefter.
-    // AdminBaner og AdminQuiz forsvinder fra siden og nulstilles af sig selv
+    // Vi behøver ikke selv sætte bruger til null – det gør "lytteren" herunder.
+    // Når bruger er null, viser templaten loginformularen i stedet for fanerne
     await signOut(auth)
     adgangskode.value = ''
   } catch (fejl) {
@@ -81,14 +94,16 @@ async function logUd() {
   }
 }
 
-// Lytter efter login og logout, også når siden genindlæses.
-// Funktionen returnerer en stopfunktion, som vi bruger til oprydning
+// "LYTTEREN": Firebase kører funktionen her, hver gang nogen logger ind eller ud –
+// og én gang, når siden åbnes (så vi ved, om man stadig er logget ind fra sidst).
+// aktuelBruger er brugeren, eller null, hvis ingen er logget ind.
+// onAuthStateChanged giver en "stop-knap" tilbage, som vi gemmer i stopLoginLytter
 const stopLoginLytter = onAuthStateChanged(auth, (aktuelBruger) => {
   bruger.value = aktuelBruger
   tjekkerLogin.value = false
 })
 
-// Stop lytteren, når man forlader admin-siden
+// Når man forlader admin-siden, trykker vi på stop-knappen, så lytteren ikke kører videre
 onUnmounted(() => {
   stopLoginLytter()
 })
@@ -144,7 +159,8 @@ onUnmounted(() => {
       <p>Logget ind som: {{ bruger.email }}</p>
       <p v-if="loginFejl" role="alert">{{ loginFejl }}</p>
 
-      <!-- Skifter mellem baner og quiz. Den valgte fane er fyldt ud -->
+      <!-- Fane-knapperne. Et klik sætter fane til knappens navn.
+           Den åbne fane får variant 'primary' (fyldt ud), de andre 'secondary' (kun kant) -->
       <div class="knapper">
         <BaseButton
           type="button"
@@ -169,10 +185,18 @@ onUnmounted(() => {
         </BaseButton>
       </div>
 
-      <!-- Hver del henter og gemmer selv sine data -->
-      <AdminBaner v-if="fane === 'baner'" />
-      <AdminQuiz v-else-if="fane === 'quiz'" />
-      <AdminKort v-else />
+      <!-- Sidebar med overskrifter til venstre, fanens indhold til højre -->
+      <div class="admin-layout">
+        <AdminSidebar :omraade="indhold" />
+
+        <!-- Kun den åbne fane vises (v-if / v-else-if / v-else).
+             Hver fane henter og gemmer selv sine data -->
+        <div ref="indhold" class="admin-indhold">
+          <AdminBaner v-if="fane === 'baner'" />
+          <AdminQuiz v-else-if="fane === 'quiz'" />
+          <AdminKort v-else />
+        </div>
+      </div>
     </template>
   </main>
 </template>
@@ -201,11 +225,38 @@ onUnmounted(() => {
     flex-direction: row;
     justify-content: space-between;
   }
+
+  // Mobil: sidebar over indholdet. Store skærme: sidebar til venstre
+  .admin-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    align-items: start;
+
+    @media (min-width: 900px) {
+      grid-template-columns: 16rem minmax(0, 1fr);
+    }
+  }
+
+  // Samme luft mellem elementerne som resten af admin-siden
+  .admin-indhold {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 0;
+
+    // Overskrifterne stopper lidt under toppen, når man ruller ned til dem.
+    // :deep = reglen må også ramme overskrifter inde i fane-filerne (ellers stopper scoped den)
+    :deep(h2),
+    :deep(h3) {
+      scroll-margin-top: 1rem;
+    }
+  }
 }
 </style>
 
 <!-- Fælles udseende for felter, bokse og knapper.
-     IKKE scoped, for ellers rammer det ikke indholdet inde i AdminBaner og AdminQuiz.
+     IKKE scoped, for ellers rammer det ikke indholdet inde i AdminBaner, AdminQuiz og AdminKort.
      Alt ligger under .admin, så det ikke påvirker resten af sitet -->
 <style lang="scss">
 @use '@/assets/styles/fonts' as ft;

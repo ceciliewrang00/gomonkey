@@ -1,8 +1,13 @@
 <script setup>
 // FAQ – OFTE STILLEDE SPØRGSMÅL
-// Spørgsmålene står i listen SPOERGSMAAL nedenfor. Vil du rette eller tilføje et, så gør det dér.
+// Sektionen nederst på forsiden med spørgsmål, man kan klikke på for at se svaret.
+// Spørgsmålene står direkte i listen SPOERGSMAAL nedenfor (ikke i Firebase).
+// Vil du rette eller tilføje et, så gør det dér.
 //
-// Hvert svar er en liste af tekststykker, der sættes sammen til én sætning:
+// Hvert spørgsmål ser sådan ud:
+//   sp   = spørgsmålet
+//   svar = en liste af tekststykker, der sættes sammen til én sætning.
+//          Det er en liste, så man kan putte links ind midt i en sætning. Et stykke kan være:
 //   'almindelig tekst'
 //   { tekst: 'link-tekst', href: 'https://...' }   – link til en anden side, telefon eller mail
 //   { tekst: 'link-tekst', til: '/banequiz' }      – link til en side på vores eget site
@@ -124,7 +129,7 @@ const SPOERGSMAAL = [
   },
 ]
 
-// Kun spørgsmål med et færdigt svar bliver vist
+// Kun spørgsmål med et færdigt svar bliver vist (! = "ikke", så: dem uden mangler: true)
 const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
 </script>
 
@@ -158,6 +163,10 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
         </summary>
 
         <div class="faq__svar">
+          <!-- Svaret sættes sammen stykke for stykke:
+               har stykket "til" → link til vores egen side (RouterLink)
+               har stykket "href" → almindeligt link (anden side, telefon eller mail)
+               ellers → bare tekst -->
           <p>
             <template v-for="(del, i) in s.svar" :key="i">
               <RouterLink v-if="del.til" :to="del.til">{{ del.tekst }}</RouterLink>
