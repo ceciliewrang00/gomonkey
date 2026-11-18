@@ -7,8 +7,10 @@
 
 import {
   beregnBane,
+  kravFor,
   lavBegrundelse,
   lavFritfaldBesked,
+  lavGruppeBesked,
   lavVidere,
   niveauUdenErfaring,
 } from '../src/services/quizLogik.js'
@@ -18,18 +20,19 @@ import {
 // Banerne under /baner (kun de felter, quizzen bruger). Sorteret fra let til svær som hentBaner()
 const BANER = [
   { id: 'bounce', name: 'Bounce', difficulty: '5%' },
-  { id: 'bane-1', name: 'Grøn', difficulty: '17.5%' },
-  { id: 'bane-2', name: 'Gul', difficulty: '30%' },
-  { id: 'bane-3', name: 'Blå', difficulty: '42.5%' },
-  { id: 'bane-4', name: 'Lilla', difficulty: '55%' },
-  { id: 'bane-5', name: 'Lyserød', difficulty: '67.5%' },
-  { id: 'bane-6', name: 'Rød', difficulty: '80%' },
-  { id: 'bane-7', name: 'Sort', difficulty: '92.5%' },
+  { id: 'bane-1', name: 'Grøn', difficulty: '17.5%', requirements: 'Minimum 110 cm høj.' },
+  { id: 'bane-2', name: 'Gul', difficulty: '30%', requirements: 'Minimum 110 cm høj.' },
+  { id: 'bane-3', name: 'Blå', difficulty: '42.5%', requirements: 'Minimum 120 cm høj.' },
+  { id: 'bane-4', name: 'Lilla', difficulty: '55%', requirements: 'Minimum 120 cm høj.' },
+  { id: 'bane-5', name: 'Lyserød', difficulty: '67.5%', requirements: 'Minimum 140 cm høj.' },
+  { id: 'bane-6', name: 'Rød', difficulty: '80%', requirements: 'Minimum 160 cm høj.' },
+  { id: 'bane-7', name: 'Sort', difficulty: '92.5%', requirements: 'Minimum 160 cm høj & 30 kg.' },
 ]
 
-// Svarmulighederne under /spoergsmaal med deres maksNiveau
+// Svarmulighederne under /spoergsmaal med deres maksNiveau.
+// Højderne er den laveste værdi i hvert højdesvar: 110–119, 120–139, 140–159, 160+
 const HVEM = ['mig', 'barn', 'gruppeBoern', 'gruppeVoksne']
-const HOEJDER = [110, 140, 160]
+const HOEJDER = [110, 120, 140, 160]
 const ERFARING = [
   { id: 'e1', maksNiveau: 1 },
   { id: 'e2', maksNiveau: 2 },
@@ -93,13 +96,23 @@ for (const hvem of HVEM) {
           if (t.id === 't1' || t.id === 't2') tjek(a.niveau === 1, `${navn}: tryghed ${t.id} gav niveau ${a.niveau}`)
           if (e.id === 'e1') tjek(a.niveau === 1, `${navn}: aldrig prøvet gav niveau ${a.niveau}`)
           if (o.id === 'o1') tjek(a.niveau === 1, `${navn}: rolig tur gav niveau ${a.niveau}`)
-          if (hoejde < 140) tjek(a.niveau <= 1, `${navn}: under 140 cm gav niveau ${a.niveau}`)
+          // Højden: man må aldrig få en bane, man ikke er høj nok til
+          tjek(hoejde >= kravFor(a.bane), `${navn}: fik ${a.bane.name}, som kræver ${kravFor(a.bane)} cm`)
+          if (hoejde < 120) tjek(a.niveau <= 1, `${navn}: under 120 cm gav niveau ${a.niveau}`)
           if (hoejde < 160) tjek(a.niveau <= 2, `${navn}: under 160 cm gav niveau ${a.niveau}`)
+
+          // "Næste skridt" må heller ikke pege på en bane, man ikke er høj nok til
+          const videre = lavVidere(a, svar, BANER)
+          for (const b of BANER) {
+            if (hoejde < kravFor(b) && videre.includes(` ${b.name} `)) {
+              fejl.push(`${navn}: "næste skridt" nævner ${b.name}, som kræver ${kravFor(b)} cm: "${videre}"`)
+            }
+          }
 
           // Frit fald: ingen opfordring under niveau 3
           const ff = lavFritfaldBesked(a, svar, BANER)
           if (a.niveau < 3) tjek(!ff.includes(OPFORDRING), `${navn}: opfordrer til Sort på niveau ${a.niveau}`)
-          const maaNaevneSortSenere = e.id === 'e1' && niveauUdenErfaring(svar) === 3
+          const maaNaevneSortSenere = e.id === 'e1' && niveauUdenErfaring(svar, BANER) === 3
           tjek(ff.includes(SORT_SENERE) === maaNaevneSortSenere, `${navn}: forkert frit fald-tekst for førstegangsklatrer: "${ff}"`)
 
           // Erfarne og trygge klatrere skal kunne få Rød
@@ -142,9 +155,14 @@ const SCENARIER = [
   { navn: 'mig, 140 cm, e1, t4, o3', args: [140, 'e1', 't4', 'o3'], bane: 'Grøn', videre: 'Blå' },
   { navn: 'mig, 160 cm, e1, t3, o4', args: [160, 'e1', 't3', 'o4'], bane: 'Grøn', videre: 'Blå' },
   { navn: 'mig, 160 cm, e1, t1, o2', args: [160, 'e1', 't1', 'o2'], bane: 'Grøn', videre: 'Gul' },
+  // De nye højdekrav: Blå og Lilla fra 120 cm, Lyserød fra 140 cm
+  { navn: 'mig, 125 cm, e1, t4, o4', args: [125, 'e1', 't4', 'o4'], bane: 'Grøn', videre: 'Blå' },
+  { navn: 'mig, 125 cm, e4, t4, o4', args: [125, 'e4', 't4', 'o4'], bane: 'Blå', videre: 'Lilla' },
+  { navn: 'mig, 115 cm, e4, t4, o4', args: [115, 'e4', 't4', 'o4'], bane: 'Grøn', videre: 'Gul' },
+  { navn: 'mig, 145 cm, e4, t4, o4', args: [145, 'e4', 't4', 'o4'], bane: 'Blå', videre: 'Lilla' },
 ]
 
-console.log('\nFørstegangsklatrere:')
+console.log('\nFørstegangsklatrere og højdekrav:')
 for (const s of SCENARIER) {
   const r = scenarie(...s.args)
   const ok = r.bane === s.bane && r.videre.includes(s.videre)
@@ -168,13 +186,36 @@ for (const s of SCENARIER) {
   console.log(`\n${ok ? '✓' : '✗'} mig, 160 cm, e1, t4, o4 → "${grunde.find((g) => g.includes('klatret før'))}"`)
 }
 
+/* --- Begrundelse og gruppebesked bruger de rigtige krav pr. bane --- */
+
+{
+  const svar = {
+    hvem: { hvem: 'gruppeBoern' },
+    hoejde: { minimumHoejde: 120 },
+    erfaring: ERFARING.find((x) => x.id === 'e4'),
+    tryghed: TRYGHED.find((x) => x.id === 't4'),
+    oplevelse: OPLEVELSE.find((x) => x.id === 'o4'),
+  }
+  const a = beregnBane(svar, BANER)
+  const grund = lavBegrundelse(a, svar)[0] ?? ''
+  const gruppe = lavGruppeBesked(a, svar, BANER).join(' ')
+  const okGrund = grund.includes('under 140 cm') && grund.includes('Lyserød')
+  const okGruppe = gruppe.includes('Blå og Lilla (fra 120 cm)') && gruppe.includes('Lyserød (fra 140 cm)') && gruppe.includes('Rød (fra 160 cm)')
+  tjek(okGrund, `gruppe, 120 cm: forkert begrundelse: "${grund}"`)
+  tjek(okGruppe, `gruppe, 120 cm: forkert gruppebesked: "${gruppe}"`)
+  console.log(`\n${okGrund ? '✓' : '✗'} begrundelse ved 120 cm → "${grund}"`)
+  console.log(`${okGruppe ? '✓' : '✗'} gruppebesked → "${gruppe}"`)
+}
+
 /* --- Udskriv resultatet --- */
 
 const tjekListe = [
   'Tryghed t1 eller t2 → altid niveau 1',
   'Erfaring e1 (aldrig prøvet) → altid niveau 1',
   'Oplevelse o1 → altid niveau 1',
-  'Under 140 cm → aldrig over niveau 1, under 160 cm → aldrig niveau 3',
+  'Aldrig en bane eller et "næste skridt", man ikke er høj nok til',
+  'Under 120 cm → aldrig over niveau 1, under 160 cm → aldrig niveau 3',
+  '120–139 cm kan få Blå og Lilla, men ikke Lyserød',
   'Ingen opfordring til Sort under niveau 3',
   'Sort nævnes kun som "senere mulighed" for førstegangsklatrere, der ellers ville få niveau 3',
   'e4 + t4 + o3/o4 ved 160 cm → Rød',
