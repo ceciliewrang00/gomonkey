@@ -52,6 +52,14 @@ const aabenInfo = ref(null)
 const billedDialog = ref(null) // selve <dialog>-elementet (ref="billedDialog" i templaten)
 const stortBillede = ref(null) // Banen, hvis billede vises stort (null = lukket)
 
+// Har banen en SVG-tegning i Firebase ("svg"), vises den.
+// Ellers bruges det gamle billede ("image") fra public-mappen.
+// SVG-teksten laves om til en data-adresse, så den kan vises i et almindeligt <img>
+function billedeSrc(bane) {
+    if (bane.svg) return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(bane.svg)
+    return `/${bane.image}`
+}
+
 // Åbn vinduet med banens billede. ?. = kun hvis dialogen findes
 function aabnBillede(bane) {
     stortBillede.value = bane
@@ -167,13 +175,13 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             <!-- Billede af banen -->
             <!-- Billedet er en knap: klik åbner det stort -->
             <button
-                v-if="bane.image"
+                v-if="bane.svg || bane.image"
                 type="button"
                 class="bane__billede"
                 :aria-label="`Se billedet af ${bane.name} i stor størrelse`"
                 @click="aabnBillede(bane)"
             >
-                <img :src="`/${bane.image}`" :alt="bane.altImg" class="bane__img"/>
+                <img :src="billedeSrc(bane)" :alt="bane.altImg" class="bane__img"/>
                 <!-- Lille forstørrelsesglas-ikon i hjørnet, så man kan se, at billedet kan åbnes -->
                 <span class="bane__zoom" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5M11 8v6M8 11h6" /></svg>
@@ -283,7 +291,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             <button type="button" class="button-close billed-dialog__luk" aria-label="Luk billedet" @click="lukBillede">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
             </button>
-            <img :src="`/${stortBillede.image}`" :alt="stortBillede.altImg" class="billed-dialog__img">
+            <img :src="billedeSrc(stortBillede)" :alt="stortBillede.altImg" class="billed-dialog__img">
             <figcaption class="billed-dialog__tekst">
                 <span class="billed-dialog__prik" :class="`bane--${stortBillede.id}`" aria-hidden="true"></span>
                 {{ stortBillede.name }}
