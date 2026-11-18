@@ -110,7 +110,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     <div id="bane-info" class="baner-intro">
         <!-- Introteksten. Står til venstre for forklaringsboksen på desktop og over den på mobil -->
         <div class="baner-intro__tekst">
-            <span class="badge baner-intro__badge">Baner i Forrest Odense</span>
+            <span class="badge baner-intro__badge">Baner i Forest Odense</span>
             <h2><span class="light">Find den bane - </span><br>der passer til dig</h2>
             <p>
                 Banerne står i rækkefølge efter sværhedsgrad – fra de letteste, hvor alle kan være med,
