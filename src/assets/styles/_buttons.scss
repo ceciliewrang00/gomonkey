@@ -4,6 +4,15 @@
 @use '_colors' as c;
 @use '_typography' as t;
 
+/* Mobil: knapperne bliver lidt mindre (mindre luft og skrift) */
+@mixin mobil-knap {
+    @media (max-width: 767px) {
+        padding: 0.45rem 1.15rem;
+        font-size: 14px;
+        border-radius: 0.85rem;
+    }
+}
+
 /* Primær knap: sort med lys tekst, lilla ved hover */
 .button-primary {
     background-color: c.$primary_black100;
@@ -13,6 +22,7 @@
     border: solid 2px transparent;
     border-radius: 1rem;
     width: fit-content;
+    @include mobil-knap;
 
     &:hover {
         background-color: c.$secondary_purple100;
@@ -62,6 +72,7 @@
     border-radius: 1rem;
     color: c.$primary_black100;
     border: solid 2px c.$primary-black100;
+    @include mobil-knap;
 
     &:hover {
         background-color: c.$secondary_purple100;

@@ -404,22 +404,12 @@ onUnmounted(() => {
     margin: 0 0.6rem;
   }
 
-  // Mobil: hvert faktum bliver en lille pille, så de bryder pænt over på flere linjer
+  // Mobil: almindelig tekst med prikker ligesom på desktop, bare lidt mindre.
+  // Hvert faktum holdes samlet på én linje
   @media (max-width: 767px) {
-    gap: 0.4rem;
-
     li {
-      padding: 0.2rem 0.75rem;
-      border: 1px solid rgba(c.$primary_light25, 0.45);
-      border-radius: 2rem;
-      background-color: rgba(c.$primary_black100, 0.25);
-      font-size: 0.8rem;
-      line-height: 1.5;
+      font-size: 0.85rem;
       white-space: nowrap;
-    }
-
-    li + li::before {
-      content: none;
     }
   }
 }
