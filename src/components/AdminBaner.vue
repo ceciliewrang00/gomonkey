@@ -14,11 +14,6 @@ import { BANER_URL, hentToken } from '@/services/api.js'
 const BANE_FIELDS = [
   { key: 'name', label: 'Navn', type: 'text' },
   { key: 'description', label: 'Beskrivelse', type: 'textarea' },
-  // Teksten i quizzens resultat i tre udgaver (du, barn, gruppe). Tom = quizzen laver selv en.
-  // "quizTekst.mig" betyder feltet "mig" inde i "quizTekst"
-  { key: 'quizTekst.mig', label: 'Banevælger: tekst i resultatet', type: 'textarea' },
-  { key: 'quizTekst.barn', label: 'Banevælger: tekst, når man svarer for sit barn (valgfri)', type: 'textarea' },
-  { key: 'quizTekst.gruppe', label: 'Banevælger: tekst til grupper (valgfri)', type: 'textarea' },
   { key: 'requirements', label: 'Krav', type: 'text' },
   { key: 'addOn', label: 'Tilkøb (fx 30 kr.) – tom = intet tilkøb', type: 'text' },
   { key: 'trackHeight', label: 'Banehøjde', type: 'text' },
@@ -61,17 +56,8 @@ async function hentBaner() {
     // Laver Firebase-objektet om til en liste, hvor hver bane har sit id med
     baner.value = Object.entries(data ?? {}).map(([id, bane]) => ({ id, ...bane }))
 
-    // Laver en udfyldt formular pr. bane med banens værdi i hvert felt (tomt, hvis det mangler)
-    baneForms.value = Object.fromEntries(
-      baner.value.map((bane) => [
-        bane.id,
-        {
-          ...Object.fromEntries(BANE_FIELDS.map((f) => [f.key, hentFelt(bane, f.key)])),
-          // Billedet kommer også med, så et nyt billede først gemmes sammen med de andre felter
-          svg: bane.svg ?? ''
-        }
-      ])
-    )
+    // Laver en udfyldt formular pr. bane
+    baneForms.value = Object.fromEntries(baner.value.map((bane) => [bane.id, lavForm(bane)]))
   } catch (e) {
     fejlbesked.value = 'Banerne kunne ikke hentes.'
     console.error(e)
@@ -81,35 +67,42 @@ async function hentBaner() {
   }
 }
 
-// Henter værdien af ét felt. "quizTekst.barn" er feltet "barn" inde i "quizTekst",
-// og en gammel quizTekst, der kun er én tekst, hører til "mig"
-function hentFelt(bane, key) {
-  if (!key.startsWith('quizTekst.')) return bane[key] ?? ''
-
-  const del = key.split('.')[1]
-  const qt = bane.quizTekst
-  if (typeof qt === 'string') return del === 'mig' ? qt : ''
-  return qt?.[del] ?? ''
+// Laver en formular med banens værdi i hvert felt (tomt, hvis det mangler).
+// Billedet kommer også med, så et nyt billede først gemmes sammen med de andre felter
+function lavForm(bane) {
+  return {
+    ...Object.fromEntries(BANE_FIELDS.map((f) => [f.key, bane[f.key] ?? ''])),
+    svg: bane.svg ?? ''
+  }
 }
 
-// Laver formularen om til det, der gemmes. De tre quiz-tekster samles i quizTekst,
-// og er de alle tomme, sendes null, så Firebase sletter feltet
+// Laver formularen om til det, der gemmes. Intet billede = null, så Firebase ikke får et tomt felt
 function tilGem(form) {
-  const data = {}
-  const quizTekst = {}
-  for (const [key, vaerdi] of Object.entries(form)) {
-    // Quiz-teksterne lægges i quizTekst, hvis de ikke er tomme
-    if (key.startsWith('quizTekst.')) {
-      const tekst = String(vaerdi ?? '').trim()
-      if (tekst) quizTekst[key.split('.')[1]] = tekst
-    } else {
-      data[key] = vaerdi
-    }
-  }
-  data.quizTekst = Object.keys(quizTekst).length ? quizTekst : null
-  // Intet billede = null, så Firebase ikke får et tomt felt
-  if (!data.svg) data.svg = null
-  return data
+  return { ...form, svg: form.svg || null }
+}
+
+// Fakta, der vises på kortet – kun dem, banen har udfyldt
+function faktaFor(bane) {
+  return BANE_FIELDS.filter(
+    (f) => !['name', 'description', 'altImg', 'class'].includes(f.key) && bane[f.key]
+  )
+}
+
+// ---------- Rediger bane ----------
+// Id på banen, hvis formular er åben (null = ingen)
+const redigererId = ref(null)
+
+// "Rediger bane": åbner formularen for denne bane
+function startRedigering(bane) {
+  redigererId.value = bane.id
+  baneBeskeder.value[bane.id] = ''
+}
+
+// "Annuller": lukker formularen og fjerner de rettelser, der ikke er gemt
+function annullerRedigering(bane) {
+  baneForms.value[bane.id] = lavForm(bane)
+  billedBeskeder.value[bane.id] = ''
+  redigererId.value = null
 }
 
 // "Gem bane": sender rettelserne til Firebase med beviset på login bag på adressen
@@ -137,6 +130,7 @@ async function gemBane(bane) {
     Object.assign(bane, data)
 
     baneBeskeder.value[bane.id] = 'Banen er gemt.'
+    redigererId.value = null
   } catch (e) {
     baneBeskeder.value[bane.id] = 'Banen kunne ikke gemmes. Prøv igen.'
     console.error(e)
@@ -199,91 +193,109 @@ onMounted(hentBaner)
   <p v-else-if="baner.length === 0">Der er ingen baner endnu.</p>
 
   <div v-else class="admin-liste">
-    <!-- Én formular pr. bane. @submit.prevent gemmer uden at genindlæse siden -->
-    <form
-      v-for="(bane, indeks) in baner"
-      :key="bane.id"
-      class="admin-kort felter"
-      @submit.prevent="gemBane(bane)"
-    >
+    <!-- Ét kort pr. bane med navn, beskrivelse og fakta – ligesom i quizzen -->
+    <article v-for="(bane, indeks) in baner" :key="bane.id" class="admin-kort">
       <h3>{{ bane.name }}</h3>
 
-      <!-- Ét felt pr. linje i BANE_FIELDS. v-model forbinder feltet med banens kopi -->
-      <div v-for="field in BANE_FIELDS" :key="field.key" class="felt">
-        <!-- id'et er unikt, fordi der er en formular pr. bane -->
-        <label :for="'bane-' + indeks + '-' + field.key">{{ field.label }}</label>
+      <p v-if="bane.description">{{ bane.description }}</p>
 
-        <!-- textarea = stort tekstfelt, select = dropdown, ellers et almindeligt tekstfelt -->
-        <textarea
-          v-if="field.type === 'textarea'"
-          :id="'bane-' + indeks + '-' + field.key"
-          v-model="baneForms[bane.id][field.key]"
-          rows="5"
-        ></textarea>
-
-        <select
-          v-else-if="field.type === 'select'"
-          :id="'bane-' + indeks + '-' + field.key"
-          v-model="baneForms[bane.id][field.key]"
-        >
-          <option value="">(ingen)</option>
-          <option v-for="option in field.options" :key="option" :value="option">
-            {{ option }}
-          </option>
-        </select>
-
-        <input
-          v-else
-          :id="'bane-' + indeks + '-' + field.key"
-          v-model="baneForms[bane.id][field.key]"
-          type="text"
-        />
-      </div>
-
-      <!-- Banens billede: se det, download det eller upload et nyt -->
-      <div class="felt">
-        <h4>Banens billede</h4>
-
-        <!-- Viser formularens billede – også et nyt, der ikke er gemt endnu -->
-        <img
-          v-if="baneForms[bane.id].svg"
-          :src="billedeSrc(baneForms[bane.id].svg)"
-          :alt="baneForms[bane.id].altImg || 'Billede af ' + bane.name"
-          class="bane-billede"
-        />
-        <p v-else>Banen har intet billede endnu.</p>
-
-        <div class="knapper">
-          <!-- type="button", så knappen ikke gemmer formularen -->
-          <BaseButton
-            v-if="baneForms[bane.id].svg"
-            type="button"
-            variant="secondary"
-            @click="downloadBillede(bane)"
-          >
-            Download billede (.svg)
-          </BaseButton>
-        </div>
-
-        <!-- Filvælgeren viser kun SVG-filer -->
-        <label :for="'bane-' + indeks + '-upload'">Upload nyt billede (.svg)</label>
-        <input
-          :id="'bane-' + indeks + '-upload'"
-          type="file"
-          accept=".svg,image/svg+xml"
-          @change="uploadBillede(bane, $event)"
-        />
-        <p v-if="billedBeskeder[bane.id]" role="status">{{ billedBeskeder[bane.id] }}</p>
-      </div>
+      <ul>
+        <li v-for="field in faktaFor(bane)" :key="field.key">
+          {{ field.label.split(' (')[0] }}: {{ bane[field.key] }}
+        </li>
+      </ul>
 
       <div class="knapper">
-        <BaseButton type="submit" variant="primary" :disabled="gemmerId !== ''">
-          {{ gemmerId === bane.id ? 'Gemmer...' : 'Gem bane' }}
+        <BaseButton type="button" variant="primary" @click="startRedigering(bane)">
+          Rediger bane
         </BaseButton>
       </div>
 
       <!-- Skærmlæsere læser beskeden højt -->
       <p v-if="baneBeskeder[bane.id]" role="status">{{ baneBeskeder[bane.id] }}</p>
-    </form>
+
+      <!-- Vises kun på den bane, der redigeres. @submit.prevent gemmer uden at genindlæse siden -->
+      <form
+        v-if="redigererId === bane.id"
+        class="redigering felter"
+        @submit.prevent="gemBane(bane)"
+      >
+        <h3>Rediger {{ bane.name }}</h3>
+
+        <!-- Ét felt pr. linje i BANE_FIELDS. v-model forbinder feltet med banens kopi -->
+        <div v-for="field in BANE_FIELDS" :key="field.key" class="felt">
+          <label :for="'bane-' + indeks + '-' + field.key">{{ field.label }}</label>
+
+          <!-- textarea = stort tekstfelt, select = dropdown, ellers et almindeligt tekstfelt -->
+          <textarea
+            v-if="field.type === 'textarea'"
+            :id="'bane-' + indeks + '-' + field.key"
+            v-model="baneForms[bane.id][field.key]"
+            rows="5"
+          ></textarea>
+
+          <select
+            v-else-if="field.type === 'select'"
+            :id="'bane-' + indeks + '-' + field.key"
+            v-model="baneForms[bane.id][field.key]"
+          >
+            <option value="">(ingen)</option>
+            <option v-for="option in field.options" :key="option" :value="option">
+              {{ option }}
+            </option>
+          </select>
+
+          <input
+            v-else
+            :id="'bane-' + indeks + '-' + field.key"
+            v-model="baneForms[bane.id][field.key]"
+            type="text"
+          />
+        </div>
+
+        <!-- Banens billede: se det, download det eller upload et nyt -->
+        <div class="felt">
+          <h4>Banens billede</h4>
+
+          <!-- Viser formularens billede – også et nyt, der ikke er gemt endnu -->
+          <img
+            v-if="baneForms[bane.id].svg"
+            :src="billedeSrc(baneForms[bane.id].svg)"
+            :alt="baneForms[bane.id].altImg || 'Billede af ' + bane.name"
+            class="bane-billede"
+          />
+          <p v-else>Banen har intet billede endnu.</p>
+
+          <div class="knapper">
+            <!-- type="button", så knappen ikke gemmer formularen -->
+            <BaseButton
+              v-if="baneForms[bane.id].svg"
+              type="button"
+              variant="secondary"
+              @click="downloadBillede(bane)"
+            >
+              Download billede (.svg)
+            </BaseButton>
+          </div>
+
+          <!-- Filvælgeren viser kun SVG-filer -->
+          <label :for="'bane-' + indeks + '-upload'">Upload nyt billede (.svg)</label>
+          <input
+            :id="'bane-' + indeks + '-upload'"
+            type="file"
+            accept=".svg,image/svg+xml"
+            @change="uploadBillede(bane, $event)"
+          />
+          <p v-if="billedBeskeder[bane.id]" role="status">{{ billedBeskeder[bane.id] }}</p>
+        </div>
+
+        <div class="knapper">
+          <BaseButton type="button" variant="pink" @click="annullerRedigering(bane)">Annuller</BaseButton>
+          <BaseButton type="submit" variant="primary" :disabled="gemmerId !== ''">
+            {{ gemmerId === bane.id ? 'Gemmer...' : 'Gem bane' }}
+          </BaseButton>
+        </div>
+      </form>
+    </article>
   </div>
 </template>

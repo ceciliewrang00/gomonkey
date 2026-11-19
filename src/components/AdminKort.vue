@@ -60,16 +60,6 @@ const gemmerRedigering = ref(false)
 // Id på banen, der er ved at blive slettet, så knappen kan vise "Sletter..."
 const sletterId = ref('')
 
-// Formularen "Opret ny bane" nederst på siden
-const nyBane = ref(tomNyBane())
-const opretter = ref(false)    // true, mens den nye bane gemmes
-const opretBesked = ref('')    // fx "Skriv et navn til banen."
-
-// Giver en tom formular – bruges ved start og efter en bane er oprettet
-function tomNyBane() {
-  return { navn: '', undertekst: '', type: 'bane', svaerhed: 'Let', farve: '#CED0C0' }
-}
-
 // ---------- Hent data ----------
 
 // Henter alt fra de tre steder i Firebase, når siden åbnes
@@ -381,7 +371,7 @@ function kortbaneTilGem(r) {
   return data
 }
 
-// Sender data til Firebase med beviset på login. Bruges af både gem og opret.
+// Sender data til Firebase med beviset på login.
 // PUT erstatter det hele, PATCH retter kun de felter, vi sender med
 async function skrivFirebase(url, metode, data) {
   const token = await hentToken()
@@ -394,7 +384,7 @@ async function skrivFirebase(url, metode, data) {
 }
 
 // Gemmer banens tekster i kortfiltret. Findes banen, rettes den på sin plads.
-// Er det en ny bane, lægges den sidst i listen
+// Har banen ingen tekster endnu, lægges de sidst i listen
 async function gemFilter(id, felter) {
   const post = filterFor(id)
   if (post) {
@@ -512,59 +502,6 @@ async function sletBane(bane) {
     console.error(e)
   } finally {
     sletterId.value = ''
-  }
-}
-
-// ---------- Opret bane ----------
-
-// Finder på et id til en ny bane: det højeste tal i "bane-7" osv. + 1, fx bane-8.
-// Id'er uden tal, fx "bounce", springes over
-function nytId() {
-  const numre = kortbaner.value
-    .map((b) => Number(b.id.match(/^bane-(\d+)$/)?.[1]))
-    .filter((n) => !Number.isNaN(n))
-  return `bane-${Math.max(0, ...numre) + 1}`
-}
-
-// "Opret bane": tjekker formularen, gemmer den nye bane uden linjer og åbner den,
-// så man kan tegne linjerne med det samme
-async function opretBane() {
-  opretBesked.value = ''
-  const ny = nyBane.value
-
-
-  if (!ny.navn.trim()) {
-    opretBesked.value = 'Skriv et navn til banen.'
-    return
-  }
-
-  const farve = rensFarve(ny.farve)
-  if (!farve) {
-    opretBesked.value = FARVE_FEJL
-    return
-  }
-  ny.farve = farve
-
-  opretter.value = true
-  try {
-    // Gemmer banen i "kortbaner" og dens tekster i kortfiltret
-    const id = nytId()
-    const data = kortbaneTilGem({ ...ny, id, segmenter: [], harFaelles: false })
-    await skrivFirebase(`${KORTBANER_URL}/${id}`, 'PUT', data)
-    await gemFilter(id, { titel: ny.navn.trim(), undertekst: ny.undertekst.trim(), svaerhed: ny.svaerhed })
-
-    // Viser den nye bane i listen og tømmer formularen
-    const bane = tilRedigerbar(data)
-    kortbaner.value.push(bane)
-    nyBane.value = tomNyBane()
-    opretBesked.value = 'Banen er oprettet. Tegn dens linjer på kortet ovenfor.'
-
-    if (bane.type === 'bane') startRedigering(bane)
-  } catch (e) {
-    opretBesked.value = 'Banen kunne ikke oprettes. Prøv igen.'
-    console.error(e)
-  } finally {
-    opretter.value = false
   }
 }
 
@@ -803,53 +740,6 @@ onUnmounted(() => {
       </section>
     </article>
   </div>
-
-  <!-- Opret bane (under listen, ligesom i quiz) -->
-  <section v-if="!indlaeser && !fejlbesked" class="admin-kort">
-    <h2>Opret bane</h2>
-
-    <label for="ny-kortbane-navn">Navn</label>
-    <input id="ny-kortbane-navn" v-model="nyBane.navn" type="text" required />
-
-    <label for="ny-kortbane-undertekst">Undertekst i kortfiltret (valgfri)</label>
-    <input id="ny-kortbane-undertekst" v-model="nyBane.undertekst" type="text" />
-
-    <label for="ny-kortbane-type">Type</label>
-    <select id="ny-kortbane-type" v-model="nyBane.type">
-      <option value="bane">Bane (har linjer på kortet)</option>
-      <option value="aktivitet">Aktivitet (ingen linjer, fx Bounce)</option>
-    </select>
-
-    <label for="ny-kortbane-svaerhed">Sværhedsgrad i kortfiltret</label>
-    <select id="ny-kortbane-svaerhed" v-model="nyBane.svaerhed">
-      <option v-for="s in SVAERHED_VALG" :key="s" :value="s">{{ s }}</option>
-    </select>
-
-    <label for="ny-kortbane-farve">Farve på kortet (hex-kode, fx #b8433f)</label>
-    <div class="farve-raekke">
-      <input
-        id="ny-kortbane-farve"
-        v-model="nyBane.farve"
-        type="text"
-        placeholder="#b8433f"
-        class="farve-felt"
-      />
-      <!-- Viser farven, så snart koden er gyldig -->
-      <span
-        class="farve-prik farve-proeve"
-        :style="{ background: rensFarve(nyBane.farve) ?? 'transparent' }"
-        aria-hidden="true"
-      ></span>
-    </div>
-
-    <div class="knapper">
-      <BaseButton type="button" variant="primary" :disabled="opretter" @click="opretBane">
-        {{ opretter ? 'Opretter...' : 'Opret bane' }}
-      </BaseButton>
-    </div>
-
-    <p v-if="opretBesked" role="status">{{ opretBesked }}</p>
-  </section>
 </template>
 
 <style lang="scss" scoped>
