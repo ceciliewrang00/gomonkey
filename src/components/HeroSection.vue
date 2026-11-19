@@ -152,7 +152,8 @@ onUnmounted(() => {
       </h1>
 
       <!-- h2 for strukturen, men samme udseende som h3 -->
-      <h2 class="h3">Klatring, svæv og frit fald midt i skoven</h2>
+      <!-- På mobil starter "frit fald midt i skoven" på linje 2 -->
+      <h2 class="h3">Klatring, svæv &<br class="hero__mobil-skift"> frit fald midt i skoven</h2>
 
       <div class="double-button hero__knapper">
         <a href="#baner" class="button-primary button-pink">Find din bane</a>
@@ -380,6 +381,15 @@ onUnmounted(() => {
   filter: brightness(0) invert(1);
 }
 
+// Linjeskiftet i undertitlen gælder kun på mobil
+.hero__mobil-skift {
+  display: none;
+
+  @media (max-width: 767px) {
+    display: inline;
+  }
+}
+
 .hero__knapper {
   margin-top: s.$spacing-l;
   text-shadow: none;
@@ -404,12 +414,29 @@ onUnmounted(() => {
     margin: 0 0.6rem;
   }
 
-  // Mobil: almindelig tekst med prikker ligesom på desktop, bare lidt mindre.
-  // Hvert faktum holdes samlet på én linje
+  // Mobil: de tre fakta står under hinanden, hver med en prik foran
   @media (max-width: 767px) {
+    flex-direction: column;
+    gap: 0.2rem;
+
     li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       font-size: 0.85rem;
-      white-space: nowrap;
+      line-height: 1.5;
+    }
+
+    // Prikken står foran alle tre i stedet for imellem dem
+    li::before,
+    li + li::before {
+      content: '' / '';
+      flex-shrink: 0;
+      width: 0.35rem;
+      height: 0.35rem;
+      margin: 0;
+      border-radius: 50%;
+      background-color: c.$forest_pink100;
     }
   }
 }
