@@ -2,7 +2,7 @@
 // Filteret til venstre for kortet. Et flueben sender med det samme de valgte baner op til KortView.
 // Listen kommer fra Firebase "mapfilter", navn og sværhedsgrad fra "baner"
 
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 
 // Giver adgang til adressen i browseren (?bane=...)
 import { useRoute } from 'vue-router'
@@ -10,7 +10,7 @@ import { useRoute } from 'vue-router'
 import { KORTFILTER_URL } from '@/services/api.js'
 
 // hentBaner hedder hentFaellesBaner her, fordi filen selv har en funktion, der hedder hentBaner
-import { hentBaner as hentFaellesBaner, niveauFor } from '@/services/baner.js'
+import { hentBaner as hentFaellesBaner, niveauFor, BOUNCE_ID } from '@/services/baner.js'
 
 // 'filter-changed' sendes op til KortView med de valgte baner
 const emit = defineEmits(['filter-changed'])
@@ -30,6 +30,13 @@ const banerListe = ref([])
 
 // true, mens banerne hentes
 const indlaeser = ref(true)
+
+// Listen delt i to grupper: klatrebaner og aktiviteter (Bounce).
+// Tomme grupper vises ikke
+const grupper = computed(() => [
+  { titel: 'Klatrebaner', baner: banerListe.value.filter((b) => b.id !== BOUNCE_ID) },
+  { titel: 'Aktiviteter', baner: banerListe.value.filter((b) => b.id === BOUNCE_ID) },
+].filter((g) => g.baner.length > 0))
 
 
 // ---------- Hent data ----------
@@ -166,33 +173,44 @@ function togglerFilter() {
               @change="nulstilFilter"
             />
             <div class="filter-tekst">
-              <span class="titel">Vis alle baner</span>
+              <span class="titel">Vis alle</span>
             </div>
           </label>
 
-          <!-- Én række pr. bane. Hele rækken er en <label>, så man kan klikke hvor som helst på den -->
-          <label
-            v-for="bane in banerListe"
-            :key="bane.id"
-            class="filter-item"
-            :class="{ aktiv: valgteFiltre.includes(bane.id) }"
-          >
-            <input
-              type="checkbox"
-              :checked="valgteFiltre.includes(bane.id)"
-              @change="vaelgBane(bane.id, $event.target.checked)"
-            />
-            <div class="filter-tekst">
-              <div class="titel-linie">
-                <span class="titel">{{ bane.titel }}</span>
+          <!-- En gruppe for banerne og en for aktiviteterne, hver med sin overskrift -->
+          <template v-for="gruppe in grupper" :key="gruppe.titel">
+            <!-- Overskrift, antal og en streg, der fylder resten af linjen -->
+            <h4 class="gruppe-titel">
+              {{ gruppe.titel }}
+              <span class="gruppe-antal" aria-hidden="true">{{ gruppe.baner.length }}</span>
+            </h4>
+
+            <!-- Én række pr. bane. Hele rækken er en <label>, så man kan klikke hvor som helst på den -->
+            <label
+              v-for="bane in gruppe.baner"
+              :key="bane.id"
+              class="filter-item"
+              :class="{ aktiv: valgteFiltre.includes(bane.id) }"
+            >
+              <input
+                type="checkbox"
+                :checked="valgteFiltre.includes(bane.id)"
+                @change="vaelgBane(bane.id, $event.target.checked)"
+              />
+              <div class="filter-tekst">
+                <div class="titel-linie">
+                  <span class="titel">{{ bane.titel }}</span>
+                </div>
+                <!-- Undertekst til venstre og sværhed til højre. Bounce får bare "For alle" -->
+                <div v-if="bane.undertekst || bane.svaerhed" class="under-linie">
+                  <span v-if="bane.undertekst" class="undertekst">{{ bane.undertekst }}</span>
+                  <span v-if="bane.svaerhed" class="badge ekstra-info">
+                    {{ bane.id === BOUNCE_ID ? bane.svaerhed : `Sværhedsgrad: ${bane.svaerhed}` }}
+                  </span>
+                </div>
               </div>
-              <!-- Undertekst til venstre og sværhed til højre -->
-              <div v-if="bane.undertekst || bane.svaerhed" class="under-linie">
-                <span v-if="bane.undertekst" class="undertekst">{{ bane.undertekst }}</span>
-                <span v-if="bane.svaerhed" class="badge ekstra-info">Sværhedsgrad: {{ bane.svaerhed }}</span>
-              </div>
-            </div>
-          </label>
+            </label>
+          </template>
 
         </div>
       </div>
@@ -200,7 +218,7 @@ function togglerFilter() {
       <!-- Kun mobil: lukker filteret og viser kortet -->
       <div class="filter-footer">
         <button type="button" class="vis-kort-knap" @click="erAaben = false">
-          <template v-if="valgteFiltre.length === 0">Vis alle baner på kortet</template>
+          <template v-if="valgteFiltre.length === 0">Vis alt på kortet</template>
           <template v-else-if="valgteFiltre.length === 1">Vis 1 bane på kortet</template>
           <template v-else>Vis {{ valgteFiltre.length }} af {{ banerListe.length }} baner på kortet</template>
         </button>
@@ -374,6 +392,42 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   cursor: pointer;
   color: c.$primary_black100;
   transition: background-color 0.2s ease;
+}
+
+/* Overskrift over hver gruppe ("Baner" og "Aktiviteter") */
+.gruppe-titel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0 1rem;
+  padding: 0;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.2;
+  color: c.$primary_darkgreen;
+
+  // Tynd streg efter overskriften
+  &::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    border-radius: 1px;
+    background-color: rgba(c.$primary_darkgreen, 0.2);
+  }
+}
+
+/* Lille rund mærke med antallet i gruppen */
+.gruppe-antal {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background-color: c.$forest_green25;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: c.$primary_darkgreen;
 }
 
 /* "Vis alle"-rækken har fed tekst */
