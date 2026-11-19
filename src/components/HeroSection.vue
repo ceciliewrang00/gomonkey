@@ -436,6 +436,18 @@ onUnmounted(() => {
 .hero__knapper {
   margin-top: s.$spacing-l;
   text-shadow: none;
+
+  // Mobil: lidt luft over knapperne, og de står ved siden af hinanden
+  @media (max-width: 767px) {
+    margin-top: s.$spacing-s;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+
+    > * {
+      padding-inline: 0.9rem;
+      white-space: nowrap;
+    }
+  }
 }
 
 .hero__fakta {
