@@ -1,13 +1,40 @@
+<script>
+import { KORTFILTER_URL } from '@/services/api.js'
+
+// Henter underteksterne fra kortfiltret ("mapfilter") én gang og gemmer dem,
+// så popup'en ikke henter dem igen, hver gang man klikker på en bane
+let underteksterPromise = null
+function hentUndertekster() {
+  if (!underteksterPromise) {
+    underteksterPromise = fetch(`${KORTFILTER_URL}.json`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        const tekster = {}
+        Object.values(data ?? {}).forEach((item) => {
+          if (item?.id && item.undertekst) tekster[item.id] = item.undertekst
+        })
+        return tekster
+      })
+      // Fejler hentningen, vises popup'en bare uden undertekst
+      .catch(() => {
+        underteksterPromise = null
+        return {}
+      })
+  }
+  return underteksterPromise
+}
+</script>
+
 <script setup>
 // Popup'en, der vises, når man klikker på en bane på kortet.
-// Teksterne kommer fra Firebase "baner", ligesom banekortene på forsiden
+// Navn og sværhedsgrad kommer fra Firebase "baner", underteksten fra kortfiltret
 
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 
 // GoMonkey-aben, der bruges som trin i sværhedsgraden
 import logoUrl from '@/assets/images/gomonkey-logo.svg'
 
-import { trinFor, niveauFor, harSvaerhedsgrad, faktaFor } from '@/services/baner.js'
+import { trinFor, niveauFor, harSvaerhedsgrad } from '@/services/baner.js'
 
 // bane = den bane, der skal vises
 const props = defineProps({
@@ -25,8 +52,25 @@ const niveau = computed(() => niveauFor(props.bane))
 const trin = computed(() => trinFor(props.bane))
 const medSvaerhedsgrad = computed(() => harSvaerhedsgrad(props.bane))
 
-// De faktatal, der er plads til i popup'en
-const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
+// Underteksten fra kortfiltret, fx "Tarzan spring"
+const undertekster = ref({})
+onMounted(async () => {
+  undertekster.value = await hentUndertekster()
+})
+const undertekst = computed(() => undertekster.value[props.bane.id])
+
+// De tre skalaer med aber. Højde og fysisk følger sværhedsgradens trin.
+// Bounce er ikke en klatrebane og viser kun "For alle"
+const skalaer = computed(() => {
+  const liste = [{ label: 'Sværhedsgrad', ord: niveau.value }]
+  if (medSvaerhedsgrad.value) {
+    liste.push(
+      { label: 'Højde', ord: ['Lavt', 'Mellem', 'Højt'][trin.value - 1] },
+      { label: 'Fysisk krævende', ord: ['Lidt', 'Noget', 'Meget'][trin.value - 1] }
+    )
+  }
+  return liste
+})
 </script>
 
 <template>
@@ -52,19 +96,19 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
       </button>
     </div>
 
-    <!-- Beskrivelsen. Skjules på smalle skærme -->
-    <p v-if="bane.description" class="popup-beskrivelse">
-      {{ bane.description }}
+    <!-- Den korte linje om banen fra kortfiltret -->
+    <p v-if="undertekst" class="popup-undertekst">
+      {{ undertekst }}
     </p>
 
-    <!-- Sværhedsgraden som 3 aber (de fyldte = niveauet) og ordet ved siden af -->
-    <div class="skala">
-      <span class="skala-label">Sværhedsgrad</span>
+    <!-- Hver skala som 3 aber (de fyldte = niveauet) og ordet ved siden af -->
+    <div v-for="s in skalaer" :key="s.label" class="skala">
+      <span class="skala-label">{{ s.label }}</span>
       <span class="skala-vaerdi">
         <span
           class="skala-ikoner"
           role="img"
-          :aria-label="medSvaerhedsgrad ? `Sværhedsgrad: ${niveau}, ${trin} ud af 3` : `Sværhedsgrad: ${niveau}`"
+          :aria-label="medSvaerhedsgrad ? `${s.label}: ${s.ord}, ${trin} ud af 3` : `${s.label}: ${s.ord}`"
         >
           <img
             v-for="i in 3"
@@ -75,17 +119,10 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
             :class="{ aktiv: medSvaerhedsgrad && i <= trin }"
           />
         </span>
-        <span class="skala-ord">{{ niveau }}</span>
+        <!-- Kun Bounce viser et ord ("For alle"), da den ikke har aber -->
+        <span v-if="!medSvaerhedsgrad" class="skala-ord">{{ s.ord }}</span>
       </span>
     </div>
-
-    <!-- Faktatal i et 2×2-gitter -->
-    <dl v-if="fakta.length" class="popup-fakta">
-      <div v-for="f in fakta" :key="f.key" class="popup-fakta__boks">
-        <dt>{{ f.label }}</dt>
-        <dd>{{ bane[f.key] }}</dd>
-      </div>
-    </dl>
 
     <p v-if="bane.requirements" class="popup-krav">
       <strong>Krav:</strong> {{ bane.requirements }}
@@ -98,7 +135,8 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
 
     <!-- Link til banens kort på forsiden, fx /#bane-6 -->
     <RouterLink :to="{ path: '/', hash: `#${bane.id}` }" class="button-arrow popup-link">
-      Læs mere om banen
+      <!-- Bounce er en aktivitet, ikke en bane -->
+      {{ medSvaerhedsgrad ? 'Læs mere om banen' : 'Læs mere om aktiviteten' }}
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
     </RouterLink>
   </div>
@@ -225,17 +263,12 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
   }
 }
 
-/* --- Beskrivelse --- */
-.popup-beskrivelse {
-  margin: s.$spacing-xs 0 s.$spacing-s;
+/* --- Undertekst fra kortfiltret --- */
+.popup-undertekst {
+  margin: 0.4rem 0 0.6rem;
   font-size: 0.95rem;
   font-weight: 400;
-  line-height: 1.5;
-
-  // Smalle skærme: skjules, så popup'en ikke dækker for meget af kortet
-  @media (max-width: 600px) {
-    display: none;
-  }
+  line-height: 1.4;
 }
 
 /* --- Sværhedsgrad (aberne) --- */
@@ -244,7 +277,7 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
   align-items: center;
   justify-content: space-between;
   gap: s.$spacing-xs;
-  margin-top: s.$spacing-xs;
+  margin-top: 0.4rem;
   padding: 0.6rem 0.9rem;
   border-radius: 0.75rem;
   background-color: c.$forest_green25;
@@ -282,36 +315,10 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
 }
 
 // Ordet (Let, Mellem, Svær eller "For alle") står altid skrevet ud
+// "For alle" på Bounce
 .skala-ord {
   font-weight: 800;
   color: c.$primary_darkgreen;
-}
-
-/* --- Faktatal (2×2) --- */
-.popup-fakta {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.4rem;
-  margin: 0.5rem 0 0;
-}
-
-.popup-fakta__boks {
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.75rem;
-  background-color: c.$primary_darkgreen;
-  color: c.$primary_light25;
-
-  dt {
-    font-size: 0.875rem;
-    font-weight: 400;
-    opacity: 0.85;
-  }
-
-  dd {
-    margin: 0.1rem 0 0;
-    font-size: 1rem;
-    font-weight: 800;
-  }
 }
 
 /* --- Krav --- */
