@@ -1,3 +1,5 @@
+/* Alle sidens farver. Tallet efter navnet er, hvor kraftig farven er (100 = fuld, 25 = lys) */
+
 /* --- FOREST FARVER --- */
 /* Forest Green */
 $forest_green100: #3A4303; 
@@ -52,6 +54,7 @@ $secondary_purple75: #5C6BAB;
 $secondary_purple50: #929CC7;
 $secondary_purple25: #C8CEE3;
 
+/* --- BANERNES FARVER PÅ KORTET --- */
 $kortbane_brun: #7F5B37;    // Bounce   – for alle
 $kortbane_groen: #2EB45C;   // Grøn     – let
 $kortbane_gul: #dcb144;     // Gul      – let
@@ -61,6 +64,7 @@ $kortbane_pink: #D44996;    // Pink     – mellem
 $kortbane_roed: #D73431;    // Rød      – svær
 $kortbane_sort: #161616;    // Sort     – Svær
 
+/* Parrer banens id med dens farve. Kortet laver en CSS-variabel for hver bane ud fra listen */
 $kort-bane-farver: (
   bounce: $kortbane_brun,
   bane-1: $kortbane_groen,

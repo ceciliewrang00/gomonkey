@@ -1,27 +1,12 @@
 <script setup>
-// QUIZSIDE (BANEVÆLGEREN)
-// Gæsten svarer på spørgsmål ét ad gangen og får til sidst en anbefalet første bane.
-// Vises på /banequiz (via QuizView.vue).
-//
-// Sådan hænger det sammen:
-// 1. Når siden åbnes (onMounted nederst), hentes spørgsmål og baner fra Firebase.
-// 2. Brugerens svar gemmes i valgteSvar: { 'hoejde': {...valgt svar}, 'erfaring': {...}, ... }
-// 3. Nogle spørgsmål vises kun ved bestemte svar (visHvis), fx vægt kun ved ja til frit fald.
-//    synligeSpoergsmaal = de spørgsmål, der skal vises lige nu.
-// 4. Denne fil REGNER ikke selv. Alle reglerne står i services/quizLogik.js,
-//    og her kalder vi bare funktionerne derfra.
-// 5. Templaten viser én af fire ting: "henter...", en fejl, ét spørgsmål eller resultatet.
-//
-// computed = en værdi, der regnes ud fra andre værdier og automatisk regnes ud igen,
-// når de ændrer sig. Fx skifter aktivtSpoergsmaal af sig selv, når aktivtIndeks ændres.
+// Banevælgeren på /banequiz. Gæsten svarer på spørgsmål ét ad gangen og får en anbefalet bane.
+// Denne fil viser kun spørgsmål og resultat – reglerne står i services/quizLogik.js
 
-// ref = en værdi Vue holder øje med. computed = se ovenfor. onMounted = kør, når siden er vist
 import { ref, computed, onMounted } from 'vue'
 
-// Databaseadresserne står samlet i api.js
 import { SPOERGSMAAL_URL } from '@/services/api.js'
 
-// Reglerne for anbefalingen står samlet i quizLogik.js
+// Reglerne for anbefalingen – hver funktion laver én del af quizzen
 import {
   lavResultat,
   skalVises,
@@ -37,36 +22,32 @@ import {
   lavFoerstegangsInfo,
 } from '@/services/quizLogik.js'
 
-// Banerne hentes fra de fælles banedata, så anbefalingen bruger de rigtige navne og tekster
 import { hentBaner } from '@/services/baner.js'
 
 
-// Brugerens svar, gemt under hvert spørgsmåls id. Starter tom: {}
+// Brugerens svar, gemt under hvert spørgsmåls id, fx { hoejde: {...}, erfaring: {...} }
 const valgteSvar = ref({})
 
-// Gemmer spørgsmålene, som hentes fra Firebase.
+// Spørgsmålene fra Firebase
 const spoergsmaal = ref([])
 
-// Nummeret på det spørgsmål, brugeren er nået til.
-// 0 = det første spørgsmål, fordi lister i JavaScript tæller fra 0.
+// Nummeret på det spørgsmål, brugeren er nået til (0 = det første)
 const aktivtIndeks = ref(0)
 
 // true = vis resultatet i stedet for spørgsmålene
 const visResultat = ref(false)
 
-// De spørgsmål, der skal vises lige nu. filter beholder kun dem, hvor skalVises siger ja
-// (skalVises tjekker visHvis og højden – se quizLogik.js).
-// Ændrer man et svar, regnes listen automatisk ud igen
+// De spørgsmål, der skal vises lige nu. Nogle vises kun ved bestemte svar (se skalVises)
 const synligeSpoergsmaal = computed(() => {
   return spoergsmaal.value.filter((sp) => skalVises(sp, valgteSvar.value))
 })
 
-// Det ene spørgsmål, der vises lige nu: plads nr. aktivtIndeks i listen over synlige spørgsmål
+// Det spørgsmål, der vises lige nu
 const aktivtSpoergsmaal = computed(() => {
   return synligeSpoergsmaal.value[aktivtIndeks.value]
 })
 
-// Spørgsmålets tekst, tilpasset "du", "dit barn" eller "gruppe" (se visTekst i quizLogik.js)
+// Spørgsmålets tekst, tilpasset "du", "dit barn" eller en gruppe
 const aktivTekst = computed(() => {
   if (!aktivtSpoergsmaal.value) {
     return ''
@@ -74,7 +55,7 @@ const aktivTekst = computed(() => {
   return visTekst(aktivtSpoergsmaal.value, valgteSvar.value)
 })
 
-// Lille hjælpetekst under spørgsmålet, fx "Svar for den, der er mest nervøs."
+// Lille hjælpetekst under spørgsmålet
 const aktivHjaelp = computed(() => {
   if (!aktivtSpoergsmaal.value) {
     return ''
@@ -82,8 +63,7 @@ const aktivHjaelp = computed(() => {
   return visHjaelp(aktivtSpoergsmaal.value, valgteSvar.value)
 })
 
-// Hvor langt man er nået, i procent (til bjælken øverst).
-// Fx spørgsmål 2 af 5 = (1 + 1) / 5 * 100 = 40 %. På resultatet er det altid 100 %
+// Hvor langt man er nået i procent, til bjælken øverst. På resultatet er det 100 %
 const fremdrift = computed(() => {
   if (synligeSpoergsmaal.value.length === 0) {
     return 0
@@ -96,13 +76,13 @@ const fremdrift = computed(() => {
   )
 })
 
-// Er true, mens spørgsmålene bliver hentet.
+// true, mens spørgsmålene hentes
 const indlaeser = ref(true)
 
-// Gemmer en fejlbesked. Starter uden en besked.
+// Fejlbesked, hvis noget går galt
 const fejlbesked = ref('')
 
-// true, hvis ALLE synlige spørgsmål har et svar (every = "gælder det for hver eneste?")
+// true, når alle synlige spørgsmål har et svar
 const alleBesvaret = computed(() => {
   return (
     synligeSpoergsmaal.value.length > 0 &&
@@ -110,14 +90,12 @@ const alleBesvaret = computed(() => {
   )
 })
 
-// Banerne fra Firebase, sorteret fra let til svær
 const baner = ref([])
 
 // ---------- Resultatet ----------
-// Alt herunder er computed og kalder en funktion i quizLogik.js.
-// De regnes først ud, når alle spørgsmål er besvaret
+// Regnes først ud, når alle spørgsmål er besvaret
 
-// Den anbefalede bane: { bane, niveau, begraensninger } (se beregnBane i quizLogik.js)
+// Den anbefalede bane (null, indtil alle spørgsmål er besvaret)
 const anbefaletBane = computed(() => {
   if (!alleBesvaret.value) {
     return null
@@ -125,7 +103,7 @@ const anbefaletBane = computed(() => {
   return beregnBane(valgteSvar.value, baner.value)
 })
 
-// Overskrift og tekst til resultatet, fx "Start på Grøn" (se lavResultat i quizLogik.js)
+// Overskrift og tekst til resultatet, fx "Start på Grøn"
 const resultat = computed(() => lavResultat(anbefaletBane.value, valgteSvar.value))
 
 // Listen "Derfor anbefaler vi den"
@@ -139,12 +117,12 @@ const begrundelse = computed(() => {
 // Sætningen om, hvilken bane man kan tage bagefter
 const videre = computed(() => lavVidere(anbefaletBane.value, valgteSvar.value, baner.value))
 
-// Ekstra beskeder til grupper (en liste, som kan være tom).
+// Ekstra beskeder til grupper
 const gruppeBesked = computed(() =>
   lavGruppeBesked(anbefaletBane.value, valgteSvar.value, baner.value)
 )
 
-// Ekstra besked om Sort bane / frit fald.
+// Ekstra besked om Sort bane og frit fald
 const fritfaldBesked = computed(() => {
   if (!alleBesvaret.value) {
     return ''
@@ -152,38 +130,34 @@ const fritfaldBesked = computed(() => {
   return lavFritfaldBesked(anbefaletBane.value, valgteSvar.value, baner.value)
 })
 
-// Forklaring af reglen om, at førstegangsklatrere starter på en let bane (null = ikke relevant)
+// Forklaring af reglen om, at førstegangsklatrere starter på en let bane
 const foerstegangsInfo = computed(() =>
   lavFoerstegangsInfo(anbefaletBane.value, valgteSvar.value, baner.value)
 )
 
-// Regler, som er gode at kende før besøget (fx voksne med børn og max. vægt).
+// Regler, der er gode at kende før besøget
 const godtAtVide = computed(() => lavGodtAtVide(valgteSvar.value))
 
 // ---------- Hent data og knapper ----------
 
-// Henter spørgsmålene til quizzen fra Firebase
+// Henter spørgsmålene og sorterer dem i quiz-rækkefølge
 async function hentSpoergsmaal() {
   try {
-    // 1. HENT: Beder Firebase om spørgsmålene med fetch.
     const response = await fetch(`${SPOERGSMAAL_URL}.json`)
 
-    // 2. TJEK: Gik det godt? Hvis ikke, "kaster" vi en fejl (throw), og så hopper koden til catch.
+    // Stopper med en fejl, hvis Firebase svarer med en fejl
     if (!response.ok) {
       throw new Error('Firebase svarede med status ' + response.status)
     }
 
-    // 3. LÆS: Læs indholdet som JavaScript-data.
     const data = await response.json()
 
-    // 4. LISTE: Lav spørgsmålene om til en liste (tom liste, hvis databasen er tom).
     const liste = Object.values(data ?? {})
 
-    // 5. SORTÉR: Brug spørgsmålenes rækkefølge fra databasen.
     liste.sort((a, b) => (a.raekkefoelge ?? 0) - (b.raekkefoelge ?? 0))
 
-    // 6. GEM: Læg listen i den variabel, Vue viser spørgsmålene fra.
     spoergsmaal.value = liste
+
   } catch (fejl) {
     fejlbesked.value =
       'Spørgsmålene kunne ikke hentes. Prøv at genindlæse siden.'
@@ -191,14 +165,12 @@ async function hentSpoergsmaal() {
   }
 }
 
-// Kører, når man klikker på et svar. Får spørgsmålets id og hele det valgte svar.
+// Gemmer det svar, man klikker på
 function vaelgSvar(spoergsmaalId, svar) {
-  // Gem en kopi af svaret ({ ...svar } kopierer alle felterne)
   valgteSvar.value[spoergsmaalId] = { ...svar }
 
-  // Ryd op: har det nye svar gjort, at et andet spørgsmål ikke skal vises mere,
-  // så slettes svaret på det spørgsmål også – ellers ville det tælle med i resultatet.
-  // Fx hvis man går tilbage og skifter fra "ja" til "nej" til frit fald.
+  // Sletter svar på spørgsmål, der ikke skal vises mere – ellers ville de tælle med.
+  // Fx hvis man går tilbage og skifter fra "ja" til "nej" til frit fald
   for (const sp of spoergsmaal.value) {
     if (!skalVises(sp, valgteSvar.value)) {
       delete valgteSvar.value[sp.id]
@@ -206,11 +178,11 @@ function vaelgSvar(spoergsmaalId, svar) {
   }
 }
 
-// "Næste": gå videre til næste spørgsmål – eller til resultatet, hvis det var det sidste.
-// Har man ikke svaret endnu, sker der ingenting (return)
+// "Næste": går til næste spørgsmål – eller til resultatet, hvis det var det sidste
 function naesteSpoergsmaal() {
   const sp = aktivtSpoergsmaal.value
 
+  // Har man ikke svaret, sker der ingenting
   if (!sp || !valgteSvar.value[sp.id]) {
     return
   }
@@ -222,22 +194,21 @@ function naesteSpoergsmaal() {
   }
 }
 
-// "Tilbage": gå ét spørgsmål tilbage (men ikke længere end til det første)
+// "Tilbage": går ét spørgsmål tilbage
 function forrigeSpoergsmaal() {
   if (aktivtIndeks.value > 0) {
     aktivtIndeks.value -= 1
   }
 }
 
-// "Start forfra": slet alle svar og gå til første spørgsmål.
-// Spørgsmålene er allerede hentet, så de skal ikke hentes igen
+// "Start forfra": sletter alle svar og går til første spørgsmål
 function startForfra() {
   valgteSvar.value = {}
   aktivtIndeks.value = 0
   visResultat.value = false
 }
 
-// Henter banerne (navne, beskrivelser og rækkefølge) fra de fælles banedata.
+// Henter banerne. Går det galt, vises en fejlbesked
 async function hentQuizBaner() {
   try {
     baner.value = await hentBaner()
@@ -247,8 +218,7 @@ async function hentQuizBaner() {
   }
 }
 
-// Når quizsiden vises: hent spørgsmål og baner på samme tid (Promise.all),
-// og vent, til begge er færdige, før "Henter spørgsmål..." forsvinder
+// Henter spørgsmål og baner på samme tid, når siden vises
 onMounted(async () => {
   indlaeser.value = true
   await Promise.all([hentSpoergsmaal(), hentQuizBaner()])
@@ -257,20 +227,19 @@ onMounted(async () => {
 </script>
 
 <template>
-  <!-- Samler sidens indhold. En div og ikke <main>, for QuizView har allerede <main> -->
+  <!-- En div og ikke <main>, for QuizView har allerede <main> -->
   <div class="quiz-side">
 
-    <!-- Kryds øverst til højre: lukker quizzen og går til forsiden -->
+    <!-- Krydset lukker quizzen og går til forsiden -->
     <RouterLink to="/" class="button-close quiz-luk" aria-label="Luk quizzen og gå til forsiden">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
     </RouterLink>
 
-    <!-- Desktop: introen til venstre og quizzen til højre. Mobil: under hinanden -->
-    <!-- Når resultatet vises, skjules introen, og resultatkortet får hele bredden -->
+    <!-- Desktop: introen til venstre og quizzen til højre -->
+    <!-- Når resultatet vises, skjules introen -->
     <div class="quiz-kolonne" :class="{ 'quiz-kolonne--resultat': visResultat }">
 
     <section v-if="!visResultat" class="quiz-intro">
-        <!-- Introducerer banevælgeren. -->
         <span class="badge badge--dark">Banevælger</span>
         <h1>Find den rette bane for dig</h1>
         <p>
@@ -286,32 +255,26 @@ onMounted(async () => {
         </ul>
     </section>
 
-    <!-- Vises, mens spørgsmål og baner hentes. -->
     <p v-if="indlaeser" class="quiz-status">Henter spørgsmål...</p>
 
-    <!-- Vises, hvis data ikke kunne hentes. -->
     <p v-else-if="fejlbesked" class="quiz-status">{{ fejlbesked }}</p>
 
-    <!-- Vises, hvis databasen er tom. -->
     <p v-else-if="spoergsmaal.length === 0" class="quiz-status">
       Der er endnu ingen spørgsmål i quizzen.
     </p>
 
-    <!-- Viser resultatet i en lys boks. -->
-    <!-- Opbygning: top (titel + tekst) → næste skridt → beskeder → to lister → knapper -->
-    <!-- Resultatkortet får den anbefalede banes farve (--bane-farve) i toppen -->
+    <!-- Resultatet -->
+    <!-- Resultatkortet får den anbefalede banes farve i toppen -->
     <section
       v-else-if="visResultat"
       class="quiz-kort quiz-resultat"
       :class="anbefaletBane ? `bane--${anbefaletBane.bane.id}` : ''"
     >
-      <!-- Desktop: to kolonner, så kortet kan være på skærmen uden at scrolle.
-           Venstre (resultat-hoved): anbefalingen, næste skridt og knapperne.
-           Højre (resultat-detaljer): beskeder og de to lister.
-           Mobil: alt under hinanden, med knapperne nederst -->
+      <!-- Desktop: to kolonner – anbefalingen til venstre, beskeder og lister til højre.
+           Mobil: alt under hinanden med knapperne nederst -->
       <div class="resultat-hoved">
 
-      <!-- Hvis databasen mangler de nye spørgsmål, kan vi ikke beregne en bane. -->
+      <!-- Mangler databasen de nye spørgsmål, kan vi ikke finde en bane -->
       <div v-if="!resultat" class="resultat-top">
         <span class="badge">Dit resultat</span>
         <h2>Vi kunne ikke finde en bane</h2>
@@ -319,16 +282,15 @@ onMounted(async () => {
       </div>
 
       <template v-else>
-        <!-- 1. Den anbefalede startbane og en kort beskrivelse af den. -->
+        <!-- 1. Den anbefalede bane og en kort beskrivelse -->
         <div class="resultat-top">
           <span class="badge">Dit resultat</span>
           <h2>
-            <!-- Prik i banens farve foran navnet -->
             <span class="resultat-prik" aria-hidden="true"></span>
             {{ resultat.titel }}
           </h2>
           <p class="resultat-tekst">{{ resultat.tekst }}</p>
-          <!-- Link til den anbefalede banes kort på forsiden, lige under beskrivelsen af banen -->
+          <!-- Link til banens kort på forsiden -->
           <RouterLink
             :to="anbefaletBane ? { path: '/', hash: `#${anbefaletBane.bane.id}` } : '/'"
             class="button-arrow resultat-se-bane"
@@ -340,7 +302,6 @@ onMounted(async () => {
 
         <!-- 2. Reglen for førstegangsklatrere og næste skridt -->
         <div class="resultat-naeste">
-        <!-- Førstegangsklatrere: forklarer GoMonkeys regel om at starte på en let bane -->
         <div v-if="foerstegangsInfo" class="resultat-regel">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" /><path d="M12 11v6M12 7.5v.01" /></svg>
           <div>
@@ -356,7 +317,7 @@ onMounted(async () => {
         </div>
       </template>
 
-      <!-- 5. Bundlinjen: ret svarene eller start forfra (står nederst – se order i CSS) -->
+      <!-- 5. Ret svarene eller start forfra -->
       <div class="resultat-fod">
       <div class="resultat-bund">
         <button
@@ -375,14 +336,13 @@ onMounted(async () => {
       </div>
 
       <div v-if="resultat" class="resultat-detaljer">
-        <!-- 3. Ekstra beskeder til grupper og om frit fald, samlet i lyserøde bokse. -->
+        <!-- 3. Ekstra beskeder til grupper og om frit fald -->
         <div v-if="gruppeBesked.length || fritfaldBesked" class="resultat-beskeder">
           <p v-for="linje in gruppeBesked" :key="linje" class="resultat-besked">{{ linje }}</p>
           <p v-if="fritfaldBesked" class="resultat-besked">{{ fritfaldBesked }}</p>
         </div>
 
-        <!-- 4. To korte lister: hvorfor denne bane, og praktiske regler.
-                Ved siden af hinanden på store skærme, under hinanden på mobil. -->
+        <!-- 4. To lister: hvorfor denne bane, og praktiske regler -->
         <div class="resultat-info">
           <div v-if="begrundelse.length">
             <h3 class="resultat-overskrift">Derfor anbefaler vi den</h3>
@@ -391,7 +351,7 @@ onMounted(async () => {
             </ul>
           </div>
 
-          <!-- Praktiske regler fra gomonkey.dk/praktisk-info. -->
+          <!-- Praktiske regler fra gomonkey.dk/praktisk-info -->
           <div>
             <h3 class="resultat-overskrift">Godt at vide</h3>
             <ul class="resultat-liste">
@@ -402,20 +362,17 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- Viser kun det aktuelle spørgsmål. -->
+    <!-- Det aktuelle spørgsmål -->
     <section v-else-if="aktivtSpoergsmaal" class="quiz-kort">
-      <!-- Spørgsmålsnummer og procent på én linje over fremdriftsbjælken. -->
+      <!-- Spørgsmålsnummer og procent over fremdriftsbjælken -->
       <div class="quiz-fremdrift">
         <div class="quiz-fremdrift__tekst">
-          <!-- Viser spørgsmålets nummer og antal synlige spørgsmål. -->
           <span class="quiz-meta">
             Spørgsmål {{ aktivtIndeks + 1 }} af {{ synligeSpoergsmaal.length }}
           </span>
-          <!-- Viser fremdriften som procent. -->
           <span class="quiz-meta">{{ fremdrift }}%</span>
         </div>
 
-        <!-- Viser fremdriften med 100 som maksimum. -->
         <progress
           :value="fremdrift"
           max="100"
@@ -423,17 +380,12 @@ onMounted(async () => {
         ></progress>
       </div>
 
-      <!-- Viser teksten til det aktive spørgsmål, tilpasset hvem der skal klatre. -->
       <h4>{{ aktivTekst }}</h4>
 
-      <!-- Kort forklaring under spørgsmålet, hvis der er en. -->
       <p v-if="aktivHjaelp" class="quiz-hjaelp">{{ aktivHjaelp }}</p>
 
-      <!-- Placerer svarmulighederne i en lodret liste. -->
       <div class="quiz-svar">
-        <!-- Én knap pr. svar. Klik gemmer svaret (vaelgSvar).
-             aria-pressed = true på det valgte svar. CSS'en bruger det til at farve knappen,
-             og skærmlæsere siger "valgt" -->
+        <!-- Én knap pr. svar. aria-pressed markerer det valgte svar -->
         <button
           v-for="svarItem in aktivtSpoergsmaal.svar"
           :key="svarItem.id"
@@ -442,20 +394,16 @@ onMounted(async () => {
           :aria-pressed="valgteSvar[aktivtSpoergsmaal.id]?.id === svarItem.id"
           @click="vaelgSvar(aktivtSpoergsmaal.id, svarItem)"
         >
-          <!-- Viser svarteksten – i barn- eller gruppeform, hvis den findes (se visSvarTekst). -->
           {{ visSvarTekst(svarItem, valgteSvar) }}
         </button>
       </div>
 
-      <!-- Bekræfter brugerens valgte svar. -->
       <p v-if="valgteSvar[aktivtSpoergsmaal.id]" class="quiz-valgt">
         Du har valgt: {{ visSvarTekst(valgteSvar[aktivtSpoergsmaal.id], valgteSvar) }}
       </p>
 
-      <!-- Samler navigationsknapperne med afstand mellem dem. -->
       <div class="quiz-navigation">
-        <!-- Viser Tilbage efter første spørgsmål. -->
-        <!-- .button-arrow fra _buttons.scss med pilen mod venstre -->
+        <!-- Tilbage vises efter første spørgsmål -->
         <button
           v-if="aktivtIndeks > 0"
           type="button"
@@ -466,14 +414,13 @@ onMounted(async () => {
           Tilbage
         </button>
 
-        <!-- "Næste" er grå (disabled), indtil man har valgt et svar. -->
+        <!-- "Næste" er grå, indtil man har valgt et svar -->
         <button
           type="button"
           class="button-primary quiz-naeste"
           :disabled="!valgteSvar[aktivtSpoergsmaal.id]"
           @click="naesteSpoergsmaal"
         >
-          <!-- Skifter knapteksten på sidste spørgsmål. -->
           {{
             aktivtIndeks === synligeSpoergsmaal.length - 1
               ? 'Se min anbefaling'
@@ -488,17 +435,14 @@ onMounted(async () => {
 </template>
 
 <style scoped lang="scss">
-/* Henter farver, flex-hjælpere og afstande fra de fælles style-filer.
-   .. går én mappe op (fra components til src), hvor assets ligger. */
+/* Farver, flex-hjælpere og afstande fra de fælles style-filer */
 @use '../assets/styles/colors' as c;
 @use '@/assets/styles/flex' as f;
 @use '@/assets/styles/spacings' as s;
 
-/* Giver quizsiden baggrundsfarve */
-// Fylder skærmen under headeren (ca. 5rem), og indholdet står lodret i midten,
-// så der er lige meget luft over og under quizzen, når siden åbnes
+// Fylder skærmen under headeren, og indholdet står lodret i midten
 .quiz-side {
-  position: relative; // Så krydset placeres i forhold til quizsiden
+  position: relative;  // så krydset placeres i forhold til quizsiden
   display: flex;
   align-items: center;
   min-height: calc(100dvh - 5rem);
@@ -508,14 +452,12 @@ onMounted(async () => {
     flex: 1;
   }
 
-  // Desktop: kolonnerne fylder hele højden, og hver kolonne centreres for sig
-  // (se .quiz-kolonne). Så rykker introen ikke, når kortet til højre skifter højde
+  // Desktop: hver kolonne centreres for sig, så introen ikke rykker, når kortet skifter højde
   @media (min-width: 1000px) {
     align-items: stretch;
   }
 }
 
-/* Lukkekryds øverst til højre. Udseendet kommer fra .button-close i _buttons.scss */
 .quiz-luk {
   position: absolute;
   top: s.$spacing-s;
@@ -523,8 +465,7 @@ onMounted(async () => {
   z-index: 2;
 }
 
-/* Siden: samme sidepadding og bredde som forsidens sektioner (.forside > section i main.scss).
-   Mobil: intro og quiz under hinanden. Desktop: intro til venstre, quiz til højre */
+/* Samme sidepadding og bredde som forsidens sektioner */
 .quiz-kolonne {
   display: grid;
   grid-template-columns: 1fr;
@@ -534,21 +475,19 @@ onMounted(async () => {
 
   @media (min-width: 1000px) {
     grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
-    // Mindre luft over og under end på forsiden, så resultatkortet kan være på skærmen
+    // Mindre luft end på forsiden, så resultatkortet kan være på skærmen
     padding-block: s.$spacing-l;
-    // Rækken er lige så høj som skærmen, så introen står det samme sted,
-    // uanset hvor højt kortet er
+    // Rækken er lige så høj som skærmen, så introen står samme sted
     align-items: center;
     column-gap: s.$spacing-xxl;
   }
 }
 
-/* Intro: badge, overskrift, tekst og tre punkter.
-   Desktop: står fast i venstre side, mens man svarer (sticky) */
+/* Introen står fast i venstre side på desktop, mens man svarer */
 .quiz-intro {
   @include f.flex-column;
   align-items: flex-start;
-  padding: 0; // Nulstiller section-padding fra main.scss
+  padding: 0;
   margin: 0;
 
   h1 {
@@ -558,7 +497,7 @@ onMounted(async () => {
   }
 
   p {
-    margin: 0; // Fjerner browserens standard-margin
+    margin: 0;
     font-size: 16px;
   }
 
@@ -568,7 +507,7 @@ onMounted(async () => {
   }
 }
 
-/* De tre punkter under introen: lille mørkegrøn prik med flueben */
+/* De tre punkter: lille mørkegrøn prik med flueben */
 .quiz-punkter {
   display: flex;
   flex-direction: column;
@@ -602,16 +541,16 @@ onMounted(async () => {
   }
 }
 
-/* Statusbeskeder (indlæser, fejl, tom quiz) bruger samme boks som quizkortet (se .quiz-kort) */
+/* Statusbeskederne bruger samme boks som quizkortet */
 
-/* Lille, dæmpet hjælpetekst, fx "Spørgsmål 1 af 5" og "Dit resultat". */
+/* Lille, dæmpet hjælpetekst, fx "Spørgsmål 1 af 5" */
 .quiz-meta {
   display: block;
   font-size: 0.875rem;
   color: c.$primary_black75;
 }
 
-/* Quizkortet: lys boks med blød skygge, så det står frem fra den grønne baggrund */
+/* Quizkortet: lys boks med blød skygge */
 .quiz-kort,
 .quiz-status {
   margin: 0;
@@ -622,21 +561,19 @@ onMounted(async () => {
 }
 
 
-/* Svarene under hinanden på mobil, i 2 kolonner på større skærme. */
+/* Svarene under hinanden på mobil, i 2 kolonner på større skærme */
 .quiz-svar {
   display: grid;
   grid-template-columns: 1fr;
   gap: s.$spacing-xs;
 
-  // Alle rækker er lige høje (lige så høje som det længste svar),
-  // så boksene er ens, uanset hvor lang teksten er
+  // Alle rækker er lige høje, så boksene er ens
   grid-auto-rows: 1fr;
 
   @media (min-width: 700px) {
     grid-template-columns: 1fr 1fr;
 
-    // Ved et ulige antal svar (fx Ja / Måske / Nej) fylder det sidste hele bredden,
-    // så der ikke står et tomt hul ved siden af det
+    // Ved et ulige antal svar fylder det sidste hele bredden
     .quiz-svarknap:last-child:nth-child(odd) {
       grid-column: 1 / -1;
     }
@@ -649,28 +586,25 @@ onMounted(async () => {
 font-weight: 900;
 }
 
-/* Giver svarknapperne afrundede kanter og venstrestillet tekst. */
 .quiz-svarknap {
   width: 100%;
-  // Samme mindstehøjde for alle bokse – også dem med korte svar som "Ja"
+  // Samme mindstehøjde for alle svar
   min-height: 3.5rem;
    padding:0.5rem 1.5rem;
    line-height: 1.4;
     font-size: 16px;
-  // Samme farve som det valgte svar (sort)
   border: 1px solid c.$primary_black100;
   border-radius: 1rem;
   background-color: transparent;
   color: c.$primary_black100;
   text-align: left;
-  // Teksten til venstre og den runde tjek-boks (::after) ude til højre
+  // Teksten til venstre og tjek-boksen til højre
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
 
-  /* Rund tjek-boks: tom cirkel, når svaret ikke er valgt.
-     Samme størrelse og flueben som tjekboksene i KortFilter.vue */
+  /* Rund tjek-boks – samme som i KortFilter.vue */
   &::after {
     content: '';
     flex-shrink: 0;
@@ -683,17 +617,14 @@ font-weight: 900;
     font-size: 13px;
     font-weight: bold;
     line-height: 1;
-    // Systemets skrift – samme som tjekboksen i filteret (et <input> arver ikke sidens skrift),
-    // så fluebenet ser ens ud begge steder. Inter tegner ✓ anderledes
+    // Systemets skrift, så fluebenet ser ens ud som i filteret
     font-family: system-ui, -apple-system, sans-serif;
     transition: background-color 0.2s ease, border-color 0.2s ease;
   }
 
   transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
 
-  // Hover (kun med mus, og kun på svar, der ikke er valgt):
-  // boksen får en svag lyserød baggrund, og cirklen bliver lyserød –
-  // et lille forvarsel om, hvordan det ser ud, når svaret er valgt
+  // Hover (kun med mus): svag lyserød baggrund og lyserød cirkel
   @media (hover: hover) {
     &:not([aria-pressed='true']):hover {
       background-color: c.$forest_pink25;
@@ -705,11 +636,11 @@ font-weight: 900;
     }
   }
 
-  /* Fremhæver det svar, brugeren har valgt. */
+  /* Det valgte svar */
   &[aria-pressed='true'] {
     background-color: c.$primary_black100;
     color: c.$primary_light25;
-    font-weight: 700; // Det valgte svar står med fed tekst
+    font-weight: 700;
 
     // Tjek-boksen bliver lyserød med et mørkt flueben
     &::after {
@@ -720,14 +651,13 @@ font-weight: 900;
     }
   }
 
-  /* Viser tydeligt fokus ved brug af tastaturet. */
+  /* Tydelig fokus ved brug af tastaturet */
   &:focus-visible {
     outline: 3px solid c.$forest_pink100;
     outline-offset: 3px;
   }
 }
 
-/* Placerer teksten over fremdriftsbjælken. */
 .quiz-fremdrift {
   display: flex;
   flex-direction: column;
@@ -735,14 +665,13 @@ font-weight: 900;
   margin-bottom: s.$spacing-m;
 }
 
-/* Spørgsmålsnummer til venstre og procent til højre på samme linje. */
 .quiz-fremdrift__tekst {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* Bestemmer fremdriftsbjælkens størrelse og grundfarve. */
+/* Fremdriftsbjælken */
 .quiz-fremdrift progress {
   width: 100%;
   height: 0.75rem;
@@ -752,32 +681,30 @@ font-weight: 900;
   appearance: none;
   background-color: c.$forest_pink100;
 
-  /* Farver baggrunden i Chrome og Safari. */
+  /* Baggrunden i Chrome og Safari */
   &::-webkit-progress-bar {
     background-color: c.$forest_pink100;
   }
 
-  /* Farver den udfyldte del i Chrome og Safari. */
+  /* Den udfyldte del i Chrome og Safari */
   &::-webkit-progress-value {
     background-color: c.$primary_black100;
     border-radius: 1rem;
   }
 
-  /* Farver den udfyldte del i Firefox. */
+  /* Den udfyldte del i Firefox */
   &::-moz-progress-bar {
     background-color: c.$primary_black100;
     border-radius: 1rem;
   }
 }
 
-/* Viser, når en knap er deaktiveret. */
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* Giver afstand over navigationen og mellem knapperne. */
-/* "Du har valgt: …" – lille og kursiv, så den ikke tager fokus fra svarene */
+/* "Du har valgt: …" – lille og kursiv */
 .quiz-valgt {
   font-size: 14px;
   font-style: italic;
@@ -788,21 +715,19 @@ button:disabled {
   margin-top: s.$spacing-m;
 }
 
-/* Næste står altid ude til højre – også på første spørgsmål, hvor Tilbage ikke vises.
-   margin-left: auto skubber den så langt til højre, som der er plads */
+/* "Næste" står altid ude til højre */
 .quiz-naeste {
   margin-left: auto;
 }
 
-/* Tilbage-knappen (.button-arrow) er sort her, da lyserød er svær at læse på den lyse quizboks */
+/* Tilbage-knappen er sort, da lyserød er svær at læse på den lyse boks */
 .quiz-tilbage {
   color: c.$primary_black100;
 }
 
-/* ---------- RESULTATKORTET ---------- */
+/* ---------- Resultatkortet ---------- */
 
-/* Delene står under hinanden med samme luft imellem.
-   En stribe i den anbefalede banes farve øverst (--bane-farve sættes af bane--<id> nedenfor) */
+/* En stribe i den anbefalede banes farve øverst */
 .quiz-resultat {
   position: relative;
   overflow: hidden;
@@ -825,10 +750,8 @@ button:disabled {
   }
 }
 
-/* Kolonnerne i resultatkortet.
-   Mobil: display: contents gør, at indpakningerne "forsvinder", så delene står direkte
-   under hinanden i kortet. order: 1 flytter bundlinjen med knapperne helt ned.
-   Desktop: to kolonner side om side, adskilt af en tynd lodret streg */
+/* Mobil: indpakningerne "forsvinder", så delene står under hinanden med knapperne nederst.
+   Desktop: to kolonner adskilt af en tynd streg */
 .resultat-hoved,
 .resultat-detaljer {
   display: contents;
@@ -849,7 +772,7 @@ button:disabled {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     column-gap: s.$spacing-xl;
 
-    // Mangler resultatet (fejl i data), er der kun én kolonne
+    // Mangler resultatet, er der kun én kolonne
     &:not(:has(.resultat-detaljer)) {
       grid-template-columns: 1fr;
     }
@@ -862,7 +785,6 @@ button:disabled {
     gap: s.$spacing-s;
   }
 
-  // Bundlinjen står nederst i venstre kolonne
   .resultat-fod {
     margin-top: auto;
   }
@@ -873,19 +795,18 @@ button:disabled {
   }
 }
 
-// Resultatet fylder hele bredden, så der skal være plads over kortet til lukkekrydset
+// Plads over kortet til lukkekrydset
 .quiz-kolonne--resultat {
   padding-top: 4.5rem;
 }
 
-// Banefarverne fra $kort-bane-farver i _colors.scss – samme farver som på kortet og forsiden
+// Banefarverne fra $kort-bane-farver
 @each $id, $farve in c.$kort-bane-farver {
   .bane--#{$id} {
     --bane-farve: #{$farve};
   }
 }
 
-// Prik i banens farve foran "Start på …"
 .resultat-prik {
   display: inline-block;
   width: 0.8em;
@@ -896,14 +817,12 @@ button:disabled {
   vertical-align: 0.02em;
 }
 
-/* Reglen for førstegangsklatrere og næste skridt, tæt under hinanden */
 .resultat-naeste {
   display: flex;
   flex-direction: column;
   gap: s.$spacing-xs;
 }
 
-/* 1. Toppen: badge, titel og tekst tæt sammen */
 .resultat-top {
   display: flex;
   flex-direction: column;
@@ -924,7 +843,7 @@ button:disabled {
   line-height: 1.55;
 }
 
-/* 2. Næste skridt: mørk boks med pil, så den skiller sig ud */
+/* 2. Næste skridt: mørk boks med pil */
 .resultat-videre {
   display: flex;
   align-items: flex-start;
@@ -939,7 +858,7 @@ button:disabled {
   svg {
     flex-shrink: 0;
     width: 1.25rem;
-    height: 1.5em; // Samme højde som første tekstlinje, så pilen flugter med den
+    height: 1.5em;  // pilen flugter med første tekstlinje
     fill: none;
     stroke: c.$forest_pink100;
     stroke-width: 2.5;
@@ -948,7 +867,7 @@ button:disabled {
   }
 }
 
-/* Reglen for førstegangsklatrere: lys boks med info-ikon og tynd mørk kant */
+/* Reglen for førstegangsklatrere: lys boks med info-ikon */
 .resultat-regel {
   display: flex;
   align-items: flex-start;
@@ -981,7 +900,7 @@ button:disabled {
   line-height: 1.5;
 }
 
-/* 3. Beskeder til grupper og om frit fald: lyserøde bokse */
+/* 3. Lyserøde bokse med beskeder */
 .resultat-beskeder {
   display: flex;
   flex-direction: column;
@@ -997,7 +916,7 @@ button:disabled {
   line-height: 1.5;
 }
 
-/* 4. De to lister – ved siden af hinanden på store skærme, adskilt af en tynd streg foroven */
+/* 4. De to lister – ved siden af hinanden på store skærme */
 .resultat-info {
   display: grid;
   grid-template-columns: 1fr;
@@ -1010,7 +929,6 @@ button:disabled {
   }
 }
 
-/* Små overskrifter over listerne */
 .resultat-overskrift {
   margin: 0 0 s.$spacing-xs;
   padding: 0;
@@ -1021,8 +939,7 @@ button:disabled {
   color: c.$primary_black75;
 }
 
-/* Listerne: egen punkt-tegning i stedet for browserens prikker.
-   Nulstiller den globale ul/li-styling fra _typography.scss */
+/* Vores egne punkter i stedet for browserens prikker */
 .resultat-liste {
   display: flex;
   flex-direction: column;
@@ -1038,7 +955,6 @@ button:disabled {
     font-weight: 400;
     line-height: 1.5;
 
-    // Lille prik foran hvert punkt
     &::before {
       content: '';
       flex-shrink: 0;
@@ -1051,7 +967,7 @@ button:disabled {
   }
 }
 
-/* "Derfor"-listen får et lyserødt flueben i stedet for en prik */
+/* "Derfor"-listen får et lyserødt flueben */
 .resultat-liste--tjek li::before {
   content: '✓';
   width: auto;
@@ -1062,7 +978,7 @@ button:disabled {
   font-weight: 900;
 }
 
-/* "Se Grøn →" under banens beskrivelse – sort og fed, så den ses på den lyse boks */
+/* "Se Grøn →" – sort og fed, så den ses på den lyse boks */
 .resultat-se-bane {
   margin-top: 0.25rem;
   color: c.$primary_black100;
@@ -1075,16 +991,15 @@ button:disabled {
   border-top: 1px solid rgba(c.$primary_black100, 0.12);
 }
 
-/* Ret svar til venstre, start forfra til højre */
 .resultat-bund {
   display: flex;
   flex-wrap: wrap;
-  align-items: center; // Linket og knappen flugter, selvom knappen er højere
+  align-items: center;
   justify-content: space-between;
   gap: s.$spacing-m;
 }
 
-/* Hjælpeteksten under spørgsmålet. Negativ margin trækker den tæt op under overskriften. */
+/* Hjælpeteksten trækkes tæt op under overskriften */
 .quiz-hjaelp {
   margin: -1.2rem 0 2rem;
   color: c.$primary_black75;

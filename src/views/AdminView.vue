@@ -1,19 +1,9 @@
 <script setup>
-// ADMIN-SIDEN (adressen /admin)
-// Her kan GoMonkey selv rette indholdet på sitet uden at røre koden.
-// Først skal man logge ind. Derefter kan man skifte mellem tre faner:
-// - Baner: ret teksterne og tallene om banerne (AdminBaner.vue)
-// - Quiz:  ret quizzens spørgsmål og svar (AdminQuiz.vue)
-// - Kort:  ret, hvor banerne går på kortet, og teksterne i kortfiltret (AdminKort.vue)
-// Denne fil står KUN for login og for at skifte fane.
-// Hver fane er sin egen fil, som selv henter og gemmer sine data.
+// Admin-siden på /admin. Den står for login og for at skifte mellem fanerne
+// Baner, Quiz og Kort – hver fane er sin egen fil
 
-// ---------- Imports ----------
-
-// Vores egen knap-komponent
 import BaseButton from '@/components/BaseButton.vue'
 
-// De tre faner
 import AdminBaner from '@/components/AdminBaner.vue'
 import AdminQuiz from '@/components/AdminQuiz.vue'
 import AdminKort from '@/components/AdminKort.vue'
@@ -21,57 +11,48 @@ import AdminKort from '@/components/AdminKort.vue'
 // Menuen i venstre side med overskrifterne fra den åbne fane
 import AdminSidebar from '@/components/AdminSidebar.vue'
 
-// ref = en værdi Vue holder øje med. onUnmounted = kører, når man forlader siden
 import { ref, onUnmounted } from 'vue'
 
-// RouterLink = link til en anden side i appen
 import { RouterLink } from 'vue-router'
 
-// Firebase-funktioner: log ind, log ud, og "sig til, når nogen logger ind eller ud"
+// Firebase-funktionerne til at logge ind, logge ud og høre, når nogen logger ind eller ud
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth'
 
-// Firebase-loginforbindelsen fra vores egen fil
 import { auth } from '../firebase'
 
-// Hvilken fane der er åben: 'baner', 'quiz' eller 'kort'. Starter på 'baner'
+// Den åbne fane: 'baner', 'quiz' eller 'kort'
 const fane = ref('baner')
 
-// Boksen, som fanens indhold står i (ref="indhold" i templaten).
-// Den sendes til sidebaren, så den kan finde overskrifterne derinde
+// Boksen med fanens indhold. Den sendes til sidebaren, så den kan finde overskrifterne
 const indhold = ref(null)
 
 // ---------- Login ----------
 
-// Det, der skrives i loginfelterne (forbundet med v-model i templaten)
+// Det, der skrives i loginfelterne
 const email = ref('')
 const adgangskode = ref('')
 
 // Den bruger, der er logget ind (null = ingen)
 const bruger = ref(null)
 
-// true, mens Firebase tjekker, om man allerede er logget ind fra sidst
-// (Firebase husker et login, også hvis man genindlæser siden)
+// true, mens Firebase tjekker, om man stadig er logget ind fra sidst
 const tjekkerLogin = ref(true)
 
-// loginFejl = fejlbesked, fx "Login mislykkedes".
-// loggerInd = true, mens login er i gang (så knappen bliver grå og ikke kan trykkes to gange)
+// Fejlbesked, fx "Login mislykkedes"
 const loginFejl = ref('')
+// true, mens login er i gang, så knappen ikke kan trykkes to gange
 const loggerInd = ref(false)
 
-// Kører, når man trykker "Log ind".
-// async/await = vent på, at Firebase svarer, før vi går videre.
-// try = prøv det her. catch = gik det galt (fx forkert adgangskode), så gør det her.
-// finally = kører altid til sidst, uanset om det gik godt eller skidt
+// "Log ind": Firebase tjekker e-mail og adgangskode. Går det galt, vises en fejlbesked
 async function logInd() {
   loginFejl.value = ''
   loggerInd.value = true
 
   try {
-    // Firebase tjekker e-mail og adgangskode. .trim() fjerner mellemrum før og efter e-mailen
     const resultat = await signInWithEmailAndPassword(auth, email.value.trim(), adgangskode.value)
     bruger.value = resultat.user
 
-    // Tømmer adgangskoden efter vellykket login
+    // Tømmer adgangskoden efter login
     adgangskode.value = ''
   } catch (fejl) {
     loginFejl.value = 'Login mislykkedes. Kontrollér e-mail og adgangskode.'
@@ -80,13 +61,11 @@ async function logInd() {
   }
 }
 
-// Logger ud, når man trykker "Log ud"
+// "Log ud". Lytteren herunder sætter bruger til null, så loginformularen vises igen
 async function logUd() {
   loginFejl.value = ''
 
   try {
-    // Vi behøver ikke selv sætte bruger til null – det gør "lytteren" herunder.
-    // Når bruger er null, viser templaten loginformularen i stedet for fanerne
     await signOut(auth)
     adgangskode.value = ''
   } catch (fejl) {
@@ -94,16 +73,14 @@ async function logUd() {
   }
 }
 
-// "LYTTEREN": Firebase kører funktionen her, hver gang nogen logger ind eller ud –
-// og én gang, når siden åbnes (så vi ved, om man stadig er logget ind fra sidst).
-// aktuelBruger er brugeren, eller null, hvis ingen er logget ind.
-// onAuthStateChanged giver en "stop-knap" tilbage, som vi gemmer i stopLoginLytter
+// Firebase kører denne funktion, hver gang nogen logger ind eller ud, og når siden åbnes.
+// Den giver en stop-funktion tilbage
 const stopLoginLytter = onAuthStateChanged(auth, (aktuelBruger) => {
   bruger.value = aktuelBruger
   tjekkerLogin.value = false
 })
 
-// Når man forlader admin-siden, trykker vi på stop-knappen, så lytteren ikke kører videre
+// Stopper lytteren, når man forlader admin-siden
 onUnmounted(() => {
   stopLoginLytter()
 })
@@ -117,19 +94,16 @@ onUnmounted(() => {
 
       <div class="double-button">
         <RouterLink to="/" class="button-primary">← Tilbage til forsiden</RouterLink>
-        <!-- Log ud vises kun, når man er logget ind -->
         <BaseButton v-if="bruger" type="button" variant="primary" @click="logUd">Log ud</BaseButton>
       </div>
     </div>
 
     <h1>Admin</h1>
 
-    <!-- Vises, mens Firebase undersøger, om der er et gemt login -->
+    <!-- Vises, mens Firebase tjekker, om der er et gemt login -->
     <p v-if="tjekkerLogin">Kontrollerer login...</p>
 
-    <!-- Loginformular. Vises, når man ikke er logget ind.
-         @submit.prevent kører logInd og stopper browseren i at genindlæse siden.
-         v-model forbinder feltet med variablen, så de altid har samme indhold -->
+    <!-- Loginformularen. Vises, når man ikke er logget ind -->
     <form v-else-if="!bruger" class="admin-kort" @submit.prevent="logInd">
       <h2>Log ind</h2>
 
@@ -154,13 +128,12 @@ onUnmounted(() => {
       </div>
     </form>
 
-    <!-- Alt herunder vises, når man ER logget ind -->
+    <!-- Vises, når man er logget ind -->
     <template v-else>
       <p>Logget ind som: {{ bruger.email }}</p>
       <p v-if="loginFejl" role="alert">{{ loginFejl }}</p>
 
-      <!-- Fane-knapperne. Et klik sætter fane til knappens navn.
-           Den åbne fane får variant 'primary' (fyldt ud), de andre 'secondary' (kun kant) -->
+      <!-- Fane-knapperne. Den åbne fane er fyldt ud, de andre har kun kant -->
       <div class="knapper">
         <BaseButton
           type="button"
@@ -185,12 +158,11 @@ onUnmounted(() => {
         </BaseButton>
       </div>
 
-      <!-- Sidebar med overskrifter til venstre, fanens indhold til højre -->
+      <!-- Sidebar til venstre, fanens indhold til højre -->
       <div class="admin-layout">
         <AdminSidebar :omraade="indhold" />
 
-        <!-- Kun den åbne fane vises (v-if / v-else-if / v-else).
-             Hver fane henter og gemmer selv sine data -->
+        <!-- Kun den åbne fane vises -->
         <div ref="indhold" class="admin-indhold">
           <AdminBaner v-if="fane === 'baner'" />
           <AdminQuiz v-else-if="fane === 'quiz'" />
@@ -201,7 +173,7 @@ onUnmounted(() => {
   </main>
 </template>
 
-<!-- Layout for selve siden. Scoped = gælder kun i denne fil -->
+<!-- Layout for selve siden -->
 <style lang="scss" scoped>
 @use '@/assets/styles/fonts' as ft;
 @use '@/assets/styles/buttons' as b;
@@ -217,7 +189,6 @@ onUnmounted(() => {
   padding: s.$spacing-xxl s.$spacing-m;
   background-color: c.$forest_green50;
 
-  // Øverste række: logo til venstre, knapper til højre
   .head {
     padding: s.$spacing-xs s.$spacing-m;
     display: flex;
@@ -237,7 +208,6 @@ onUnmounted(() => {
     }
   }
 
-  // Samme luft mellem elementerne som resten af admin-siden
   .admin-indhold {
     display: flex;
     flex-direction: column;
@@ -245,7 +215,7 @@ onUnmounted(() => {
     min-width: 0;
 
     // Overskrifterne stopper lidt under toppen, når man ruller ned til dem.
-    // :deep = reglen må også ramme overskrifter inde i fane-filerne (ellers stopper scoped den)
+    // :deep gør, at reglen også rammer overskrifterne i fane-filerne
     :deep(h2),
     :deep(h3) {
       scroll-margin-top: 1rem;
@@ -254,27 +224,25 @@ onUnmounted(() => {
 }
 </style>
 
-<!-- Fælles udseende for felter, bokse og knapper.
-     IKKE scoped, for ellers rammer det ikke indholdet inde i AdminBaner, AdminQuiz og AdminKort.
-     Alt ligger under .admin, så det ikke påvirker resten af sitet -->
+<!-- Fælles udseende for felter, bokse og knapper. Ikke scoped, så det også rammer fane-filerne.
+     Alt ligger under .admin, så det ikke påvirker resten af siden -->
 <style lang="scss">
 @use '@/assets/styles/fonts' as ft;
 @use '@/assets/styles/colors' as c;
 
 .admin {
-  // Fælles udseende for ALLE felter på siden
+  // Fælles udseende for alle felter
   input,
   textarea,
   select {
     display: block;
     width: 100%;
     max-width: 36rem;
-    // border-box = padding og kant regnes MED i de 100%.
-    // Uden den lægges padding og kant oven i, så feltet bliver bredere end kassen på små skærme
+    // Padding og kant regnes med i bredden, så feltet ikke bliver for bredt på små skærme
     box-sizing: border-box;
     font-family: ft.$font;
     font-weight: 300;
-    // clamp: skriften skalerer med skærmen, men aldrig under 1rem eller over 1.25rem
+    // Skriften skalerer med skærmen mellem 1rem og 1.25rem
     font-size: clamp(1rem, 1.5vw, 1.25rem);
     padding: 0.75rem 1rem;
     border: 2px solid c.$forest_green100;
@@ -282,14 +250,13 @@ onUnmounted(() => {
     background-color: c.$primary_light25;
     color: c.$primary_black100;
 
-    // Når man står i et felt, skifter kanten farve
+    // Kanten skifter farve, når man står i feltet
     &:focus {
       outline: none;
       border-color: c.$forest_pink100;
     }
   }
 
-  // Alle feltetiketter ligger over feltet
   label {
     display: block;
     margin-top: 1rem;
@@ -297,7 +264,7 @@ onUnmounted(() => {
     font-weight: 600;
   }
 
-  // Etiket med et (i) ved siden af (fx "Giver højst" i quizzen)
+  // Etiket med et (i) ved siden af
   .label-med-info {
     display: flex;
     align-items: center;
@@ -310,15 +277,14 @@ onUnmounted(() => {
     }
   }
 
-  // (i)-knap og forklaringsboble – samme udseende som ved "Sværhedsgrad" i TrackInfo.vue.
-  // position: relative, så boblen placeres i forhold til knappen
+  // (i)-knappen og forklaringsboblen – samme udseende som i TrackInfo.vue
   .info {
     position: relative;
     display: inline-flex;
     align-items: center;
   }
 
-  // Rund knap uden baggrund – ikonet arver tekstfarven (currentColor)
+  // Rund knap uden baggrund
   .info__knap {
     display: inline-grid;
     place-items: center;
@@ -341,7 +307,7 @@ onUnmounted(() => {
     }
   }
 
-  // Boblen over knappen, så den ikke dækker feltet. z-index lægger den øverst
+  // Boblen ligger over knappen, så den ikke dækker feltet
   .info__boble {
     position: absolute;
     bottom: calc(100% + 0.6rem);
@@ -371,24 +337,20 @@ onUnmounted(() => {
     }
   }
 
-  // Spørgsmålskortene ligger under hinanden
   .admin-liste {
     display: grid;
-    // minmax(0, 1fr) = kolonnen må gerne blive smallere end indholdet (fx lange ord eller
-    // filvælgeren). Ellers kan en lang ting skubbe hele kassen ud over skærmen
+    // Kolonnen må blive smallere end indholdet, så en lang ting ikke skubber kassen ud over skærmen
     grid-template-columns: minmax(0, 1fr);
     gap: 1rem;
     max-width: 60rem;
   }
 
-  // Redigeringsformularen sidder inde i spørgsmålskortet
   .redigering {
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid c.$primary_black100;
   }
 
-  // Bane-formularens felter: label og felt under hinanden
   .felter,
   .felt {
     display: flex;
@@ -396,20 +358,18 @@ onUnmounted(() => {
     gap: 0.75rem;
   }
 
-  // Forhåndsvisning af banens billede i fanen "Baner".
-  // object-fit: contain = hele billedet vises, uden at det bliver strakt
+  // Forhåndsvisning af banens billede. Hele billedet vises uden at blive strakt
   .bane-billede {
     width: 100%;
     max-width: 20rem;
     height: auto;
     object-fit: contain;
-    // Samme grund som ved felterne: padding skal være inde i de 100%
     box-sizing: border-box;
     padding: 0.5rem;
     border-radius: 0.75rem;
   }
 
-  // Rækker med knapper: ligger ved siden af hinanden og ombrydes på små skærme
+  // Knapper ved siden af hinanden, der ombrydes på små skærme
   .knapper {
     display: flex;
     flex-wrap: wrap;
@@ -417,7 +377,7 @@ onUnmounted(() => {
     margin-top: 1rem;
   }
 
-  // Gør ventetilstanden synlig på deaktiverede knapper
+  // Gør deaktiverede knapper tydelige
   button:disabled {
     opacity: 0.5;
     cursor: not-allowed;

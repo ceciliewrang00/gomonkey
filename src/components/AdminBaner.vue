@@ -1,35 +1,21 @@
 <script setup>
-// ADMIN: FANEN "BANER"
-// Her retter man teksterne og tallene om hver bane (Firebase "baner").
-// Det, man gemmer her, vises på forsidens banekort, i popup'en på kortet og i quizzen.
-// Filen vises i AdminView.vue under fanen "Baner". Udseendet kommer fra AdminView.vue.
-//
-// Sådan virker det:
-// 1. Alle baner hentes, og der laves en formular pr. bane med banens nuværende tekster
-// 2. Man retter i formularen (det er en kopi – intet gemmes endnu)
-// 3. "Gem bane" sender ændringerne til Firebase
-//
-// Banens billede er en SVG, som ligger i Firebase som tekst i feltet "svg".
-// Man kan se billedet, downloade det som en .svg-fil og uploade en ny (se "Banens billede" længere nede)
+// Fanen "Baner" i admin. Der er en formular pr. bane, hvor man retter teksterne og tallene,
+// og "Gem bane" sender ændringerne til Firebase "baner"
 
 import BaseButton from '@/components/BaseButton.vue'
+
 import { ref, onMounted } from 'vue'
 
-// Adressen på "baner" i Firebase + hentToken, som giver beviset på, at man er logget ind
+// Adressen på "baner" og hentToken, som beviser, at man er logget ind
 import { BANER_URL, hentToken } from '@/services/api.js'
 
-// Felterne i formularen. Hver linje bliver til ét felt på siden:
-//   key   = feltets navn i Firebase
-//   label = teksten over feltet
-//   type  = 'text' (lille felt), 'textarea' (stort felt) eller 'select' (dropdown)
-// Vil du kunne rette et nyt felt, så tilføj bare en linje her
+// Felterne i formularen – hver linje bliver til ét felt.
+// key = feltet i Firebase, label = teksten over feltet, type = slags felt
 const BANE_FIELDS = [
   { key: 'name', label: 'Navn', type: 'text' },
   { key: 'description', label: 'Beskrivelse', type: 'textarea' },
-  // Teksten i quizzens resultat. Den skal være neutral, så voksne ikke føler sig talt ned til.
-  // Lader man den stå tom, laver quizzen selv en tekst ud fra banens fakta.
-  // Der er tre udgaver: til "du", til en forælder og til en gruppe.
-  // Punktummet i "quizTekst.mig" betyder: feltet "mig" inde i "quizTekst"
+  // Teksten i quizzens resultat i tre udgaver (du, barn, gruppe). Tom = quizzen laver selv en.
+  // "quizTekst.mig" betyder feltet "mig" inde i "quizTekst"
   { key: 'quizTekst.mig', label: 'Banevælger: tekst i resultatet', type: 'textarea' },
   { key: 'quizTekst.barn', label: 'Banevælger: tekst, når man svarer for sit barn (valgfri)', type: 'textarea' },
   { key: 'quizTekst.gruppe', label: 'Banevælger: tekst til grupper (valgfri)', type: 'textarea' },
@@ -46,48 +32,42 @@ const BANE_FIELDS = [
   { key: 'class', label: 'Layout', type: 'select', options: ['img-right', 'img-left'] }
 ]
 
-// Alle baner fra databasen
 const baner = ref([])
 
-// Formularernes indhold – én kopi pr. bane, så alle formularer kan vises på én gang.
-// Ser sådan ud: { 'bane-1': { name: 'Grøn', description: '...', ... }, 'bane-2': {...} }
-// Man retter i kopien, og intet ændres i Firebase, før man trykker "Gem bane"
+// En kopi af hver banes felter, som formularerne retter i.
+// Intet ændres i Firebase, før man trykker "Gem bane"
 const baneForms = ref({})
 
-// Besked under hver bane, fx "Banen er gemt." – også gemt under banens id
+// Beskeden under hver bane, fx "Banen er gemt."
 const baneBeskeder = ref({})
 
-// Id på banen, der gemmes lige nu ('' = ingen). Så kan knappen vise "Gemmer..."
+// Id på banen, der gemmes lige nu, så knappen kan vise "Gemmer..."
 const gemmerId = ref('')
 
-// Vises, mens banerne hentes, eller hvis de ikke kunne hentes
+// true, mens banerne hentes
 const indlaeser = ref(true)
+// Fejlbesked, hvis banerne ikke kunne hentes
 const fejlbesked = ref('')
 
-// Henter alle baner fra Firebase. At LÆSE kræver ikke login – kun at gemme
+// Henter alle baner. At læse kræver ikke login – kun at gemme
 async function hentBaner() {
   try {
     const res = await fetch(`${BANER_URL}.json`)
 
-    // fetch siger ikke selv fra, hvis serveren svarer med en fejl (fx 404), så vi tjekker res.ok
     if (!res.ok) throw new Error(`Fejl ${res.status}`)
 
     const data = await res.json()
 
-    // Firebase giver et objekt { 'bane-1': {...}, ... }. Vi laver det om til en liste,
-    // hvor hver bane har sit id med: [{ id: 'bane-1', ... }, ...]
+    // Laver Firebase-objektet om til en liste, hvor hver bane har sit id med
     baner.value = Object.entries(data ?? {}).map(([id, bane]) => ({ id, ...bane }))
 
-    // Lav en udfyldt formular pr. bane: for hvert felt i BANE_FIELDS hentes banens værdi.
-    // Mangler banen et felt, bliver det tomt ('').
-    // Object.fromEntries laver en liste af par [nøgle, værdi] om til et objekt
+    // Laver en udfyldt formular pr. bane med banens værdi i hvert felt (tomt, hvis det mangler)
     baneForms.value = Object.fromEntries(
       baner.value.map((bane) => [
         bane.id,
         {
           ...Object.fromEntries(BANE_FIELDS.map((f) => [f.key, hentFelt(bane, f.key)])),
-          // Billedet (SVG-teksten) kommer også med i formularen, så et nyt billede først gemmes,
-          // når man trykker "Gem bane" – ligesom de andre felter
+          // Billedet kommer også med, så et nyt billede først gemmes sammen med de andre felter
           svg: bane.svg ?? ''
         }
       ])
@@ -95,31 +75,30 @@ async function hentBaner() {
   } catch (e) {
     fejlbesked.value = 'Banerne kunne ikke hentes.'
     console.error(e)
+
   } finally {
     indlaeser.value = false
   }
 }
 
-// Henter værdien af ét felt fra banen.
-// Almindelige felter (fx "name") læses bare direkte.
-// "quizTekst.barn" betyder feltet "barn" inde i "quizTekst" – så split('.') deler det i to.
-// Er quizTekst gemt som én almindelig tekst (gammel måde), hører den til "mig"
+// Henter værdien af ét felt. "quizTekst.barn" er feltet "barn" inde i "quizTekst",
+// og en gammel quizTekst, der kun er én tekst, hører til "mig"
 function hentFelt(bane, key) {
   if (!key.startsWith('quizTekst.')) return bane[key] ?? ''
+
   const del = key.split('.')[1]
   const qt = bane.quizTekst
   if (typeof qt === 'string') return del === 'mig' ? qt : ''
   return qt?.[del] ?? ''
 }
 
-// Laver formularen om til det, der skal gemmes i Firebase.
-// De tre quizTekst-felter samles i ét objekt: quizTekst: { mig, barn, gruppe }.
-// Tomme quiz-tekster tages ikke med. Er alle tre tomme, sættes quizTekst til null,
-// og så sletter Firebase feltet
+// Laver formularen om til det, der gemmes. De tre quiz-tekster samles i quizTekst,
+// og er de alle tomme, sendes null, så Firebase sletter feltet
 function tilGem(form) {
   const data = {}
   const quizTekst = {}
   for (const [key, vaerdi] of Object.entries(form)) {
+    // Quiz-teksterne lægges i quizTekst, hvis de ikke er tomme
     if (key.startsWith('quizTekst.')) {
       const tekst = String(vaerdi ?? '').trim()
       if (tekst) quizTekst[key.split('.')[1]] = tekst
@@ -128,15 +107,12 @@ function tilGem(form) {
     }
   }
   data.quizTekst = Object.keys(quizTekst).length ? quizTekst : null
-  // Har banen intet billede, sendes null i stedet for en tom tekst, så Firebase ikke får et tomt felt
+  // Intet billede = null, så Firebase ikke får et tomt felt
   if (!data.svg) data.svg = null
   return data
 }
 
-// "Gem bane": sender rettelserne til Firebase. Kræver login.
-// Beviset på login (token) sættes bag på adressen (?auth=...), så databasen ved,
-// at det er en admin, der gemmer.
-// encodeURIComponent laver tegn som mellemrum og & om, så de ikke ødelægger adressen
+// "Gem bane": sender rettelserne til Firebase med beviset på login bag på adressen
 async function gemBane(bane) {
   baneBeskeder.value[bane.id] = ''
   gemmerId.value = bane.id
@@ -145,8 +121,7 @@ async function gemBane(bane) {
     const token = await hentToken()
     const data = tilGem(baneForms.value[bane.id])
 
-    // PATCH = ret kun de felter, vi sender med. (PUT ville erstatte hele banen og slette resten).
-    // JSON.stringify laver objektet om til tekst, som kan sendes over nettet
+    // PATCH retter kun de felter, vi sender med
     const res = await fetch(
       `${BANER_URL}/${encodeURIComponent(bane.id)}.json?auth=${encodeURIComponent(token)}`,
       {
@@ -158,7 +133,7 @@ async function gemBane(bane) {
 
     if (!res.ok) throw new Error(`Fejl ${res.status}`)
 
-    // Kopiér de gemte værdier over i banen på siden, så fx overskriften viser det nye navn
+    // Kopierer de gemte værdier over i banen på siden, så fx overskriften viser det nye navn
     Object.assign(bane, data)
 
     baneBeskeder.value[bane.id] = 'Banen er gemt.'
@@ -171,15 +146,15 @@ async function gemBane(bane) {
 }
 
 // ---------- Banens billede (SVG) ---------- lavet med hjælp fra Claude (AI)
-// Billede-beskeder under hver bane, fx "Nyt billede valgt..." (gemt under banens id)
+// Beskeden om billedet under hver bane
 const billedBeskeder = ref({})
 
-// Laver SVG-teksten om til en adresse, som et <img> kan vise.
+// Laver SVG-teksten om til en adresse, som et <img> kan vise
 function billedeSrc(svg) {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
 }
 
-// DOWNLOAD: laver SVG-teksten om til en fil og får browseren til at downloade den.
+// Download: laver SVG-teksten om til en fil og får browseren til at hente den som fx bane-1.svg
 function downloadBillede(bane) {
   const svg = baneForms.value[bane.id].svg
   const fil = new Blob([svg], { type: 'image/svg+xml' })
@@ -193,14 +168,14 @@ function downloadBillede(bane) {
   URL.revokeObjectURL(adresse)
 }
 
-// UPLOAD: kører, når man har valgt en fil i "Upload nyt billede".
-// Billedet lægges kun i formularen. Det gemmes først i Firebase, når man trykker "Gem bane"
+// Upload: lægger den valgte SVG-fil i formularen. Den gemmes først, når man trykker "Gem bane"
 async function uploadBillede(bane, event) {
   const fil = event.target.files[0]
   if (!fil) return
 
   const tekst = await fil.text()
 
+  // Er det ikke en SVG-fil, vises en besked i stedet
   if (!tekst.includes('<svg')) {
     billedBeskeder.value[bane.id] = 'Filen er ikke en SVG. Vælg en .svg-fil.'
   } else {
@@ -208,25 +183,23 @@ async function uploadBillede(bane, event) {
     billedBeskeder.value[bane.id] = 'Nyt billede valgt. Tryk "Gem bane" for at gemme det.'
   }
 
-  // Tøm feltet, så man kan vælge den samme fil igen, hvis man vil
+  // Tømmer feltet, så man kan vælge den samme fil igen
   event.target.value = ''
 }
 
-// Hent banerne, så snart fanen vises
+// Henter banerne, når fanen vises
 onMounted(hentBaner)
 </script>
 
 <template>
   <h2>Rediger baner</h2>
 
-  <!-- v-if / v-else-if / v-else: kun én af dem vises ad gangen -->
   <p v-if="indlaeser">Henter baner...</p>
   <p v-else-if="fejlbesked">{{ fejlbesked }}</p>
   <p v-else-if="baner.length === 0">Der er ingen baner endnu.</p>
 
   <div v-else class="admin-liste">
-    <!-- Én formular pr. bane, åben fra starten.
-         @submit.prevent = kør gemBane, når man trykker "Gem bane", uden at siden genindlæses -->
+    <!-- Én formular pr. bane. @submit.prevent gemmer uden at genindlæse siden -->
     <form
       v-for="(bane, indeks) in baner"
       :key="bane.id"
@@ -235,15 +208,12 @@ onMounted(hentBaner)
     >
       <h3>{{ bane.name }}</h3>
 
-      <!-- Ét felt pr. linje i BANE_FIELDS.
-           v-model forbinder feltet med formularens kopi, så det man skriver, havner i baneForms -->
+      <!-- Ét felt pr. linje i BANE_FIELDS. v-model forbinder feltet med banens kopi -->
       <div v-for="field in BANE_FIELDS" :key="field.key" class="felt">
-        <!-- :for og :id hænger sammen, så et klik på teksten går til feltet.
-             indeks gør id'et unikt, fordi der er en formular pr. bane -->
+        <!-- id'et er unikt, fordi der er en formular pr. bane -->
         <label :for="'bane-' + indeks + '-' + field.key">{{ field.label }}</label>
 
-        <!-- Feltets type bestemmer, hvad der vises:
-             textarea = stort tekstfelt, select = dropdown, ellers et almindeligt tekstfelt -->
+        <!-- textarea = stort tekstfelt, select = dropdown, ellers et almindeligt tekstfelt -->
         <textarea
           v-if="field.type === 'textarea'"
           :id="'bane-' + indeks + '-' + field.key"
@@ -270,11 +240,11 @@ onMounted(hentBaner)
         />
       </div>
 
-      <!-- Banens billede: se det, download det som .svg-fil, eller upload et nyt -->
+      <!-- Banens billede: se det, download det eller upload et nyt -->
       <div class="felt">
         <h4>Banens billede</h4>
 
-        <!-- Forhåndsvisning. Viser altid formularens billede – også et nyt, der ikke er gemt endnu -->
+        <!-- Viser formularens billede – også et nyt, der ikke er gemt endnu -->
         <img
           v-if="baneForms[bane.id].svg"
           :src="billedeSrc(baneForms[bane.id].svg)"
@@ -295,7 +265,7 @@ onMounted(hentBaner)
           </BaseButton>
         </div>
 
-        <!-- accept = filvælgeren viser kun SVG-filer. @change kører, når man har valgt en fil -->
+        <!-- Filvælgeren viser kun SVG-filer -->
         <label :for="'bane-' + indeks + '-upload'">Upload nyt billede (.svg)</label>
         <input
           :id="'bane-' + indeks + '-upload'"
@@ -312,7 +282,7 @@ onMounted(hentBaner)
         </BaseButton>
       </div>
 
-      <!-- role="status" gør, at skærmlæsere læser beskeden højt -->
+      <!-- Skærmlæsere læser beskeden højt -->
       <p v-if="baneBeskeder[bane.id]" role="status">{{ baneBeskeder[bane.id] }}</p>
     </form>
   </div>

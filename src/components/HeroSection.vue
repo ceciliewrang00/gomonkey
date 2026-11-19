@@ -1,20 +1,18 @@
 <script setup>
-// HERO – den store sektion øverst på forsiden (HomeView)
-// Et baggrundsbillede, en wire (en buet SVG-streg) hen over billedet og nogle badges,
-// der hænger i "trisser" på wiren. Når man scroller ned, glider trisserne lidt hen ad wiren,
-// og billedet bevæger sig langsommere end siden (parallakse-effekt).
-//
-// Data:
-//  - Banerne fra Firebase (services/baner.js) – bruges kun til at tælle dem, fx "8 klatrebaner"
+// Den store sektion øverst på forsiden med baggrundsbillede, en wire og badges i trisser.
+// Når man scroller, glider trisserne hen ad wiren, og billedet bevæger sig langsommere
+
 import { ref, onMounted, onUnmounted } from 'vue'
+
 import { hentBaner } from '@/services/baner.js'
 
 import heroBillede from '@/assets/images/gomonkey_bane.webp'
 import abeSvaev from '@/assets/images/Abe.svg'
 
-// Alle baner fra Firebase (tom liste, indtil de er hentet)
+// Banerne fra Firebase – bruges kun til at tælle dem
 const baner = ref([])
 
+// Henter banerne. Går det galt, viser badgen bare "8 klatrebaner"
 onMounted(async () => {
   try {
     baner.value = await hentBaner()
@@ -23,40 +21,34 @@ onMounted(async () => {
   }
 })
 
-// Titlen i badgen: badgens egen titel, eller antallet af baner, hvis titel er null
+// Badgens egen titel – eller antallet af baner, hvis titel er null
 function titelTekst(trisse) {
   return trisse.titel ?? `${baner.value.length || 8} klatrebaner`
 }
 
-// Referencer til elementer i templaten (ref="heroEl" osv.), så vi kan måle og flytte dem
+// Elementerne i templaten, som vi måler og flytter
 const heroEl = ref(null)
 const billedeEl = ref(null)
 const wireEl = ref(null)
 
-// Trisserne på wiren. Hver har sin egen tekst og sit eget stykke af wiren
-// (0 = wirens start til venstre, 1 = slutningen til højre).
-// Trissen starter ved "start" og glider hen til "slut", mens man scroller forbi hero.
-// titel: null = antallet af baner fra Firebase, fx "8 klatrebaner"
-// snor: hvor langt badget hænger under wiren (længere = lavere)
-// vip: hvor skævt badget hænger, som om det har sat i sving (0deg = lige)
-// abe: true = i stedet for en badge hænger GoMonkey-aben på hovedet i halen fra wiren
+// Trisserne på wiren. start og slut er, hvor på wiren trissen glider fra og til (0–1).
+// snor = hvor langt badget hænger nede, vip = hvor skævt det hænger, abe = aben i stedet for badge
 const TRISSER = [
   { id: 'abe', abe: true, start: 0.17, slut: 0.25, vip: '0deg' },
   { id: 'svaev', titel: '126 m svæv', under: 'parkens længste', start: 0.78, slut: 0.8, snor: '8.5rem', vip: '8deg' },
   { id: 'baner', titel: null, under: 'Næste stop: trætoppene', start: 0.91, slut: 0.93, snor: '5.25rem', vip: '-2deg' },
 ]
-// Alle trisse-elementerne på siden (ref="trisseEls" i v-for giver en liste)
+// Alle trisse-elementerne på siden
 const trisseEls = ref([])
 
-// true, hvis brugeren har slået "reducér bevægelse" til i sit styresystem.
-// Så står billedet og trisserne stille
+// true, hvis brugeren har slået "reducér bevægelse" til. Så står alt stille
 let roligBevaegelse = false
 
-// Id på den opdatering, der venter på at blive tegnet (se vedScroll)
+// Id på den opdatering, der venter på at blive tegnet
 let ventendeFrame = null
 
 // Flytter hver trisse hen til sit punkt på wiren.
-// Wiren tegnes i et 0–100-koordinatsystem, så punktet kan bruges direkte som procent
+// fremskridt = hvor langt man har scrollet (0 = toppen, 1 = forbi hero)
 function placerTrisser(fremskridt) {
   const wire = wireEl.value
   if (!wire) return
@@ -64,14 +56,15 @@ function placerTrisser(fremskridt) {
   trisseEls.value.forEach((el) => {
     const trisse = TRISSER.find((t) => t.id === el.dataset.trisse)
     if (!trisse) return
+    // Punktet på wiren mellem trissens start og slut, alt efter hvor langt man har scrollet
     const punkt = wire.getPointAtLength(laengde * (trisse.start + (trisse.slut - trisse.start) * fremskridt))
+    // Giver punktet til CSS'en, som placerer trissen
     el.style.setProperty('--trisse-x', `${punkt.x}%`)
     el.style.setProperty('--trisse-y', `${punkt.y}%`)
   })
 }
 
-// Regner ud, hvor langt man har scrollet ned gennem hero (fremskridt: 0 = toppen, 1 = forbi),
-// og flytter billedet og trisserne derefter
+// Regner ud, hvor langt man har scrollet gennem hero, og flytter billedet og trisserne
 function opdaterVedScroll() {
   ventendeFrame = null
   const hero = heroEl.value
@@ -79,28 +72,26 @@ function opdaterVedScroll() {
 
   const scroll = window.scrollY
   const hoejde = hero.offsetHeight
-  // Er hero scrollet helt ud af syne, er der ingen grund til at flytte noget
+  // Er hero scrollet ud af syne, flyttes intet
   if (scroll > hoejde) return
 
   const fremskridt = Math.min(Math.max(scroll / hoejde, 0), 1)
 
   if (!roligBevaegelse && billedeEl.value) {
-    // Desktop: billedet er skubbet 6 % til højre. Mobil: ingen forskydning (se CSS)
+    // Desktop: billedet er skubbet 6 % til højre
     const forskydning = window.matchMedia('(max-width: 767px)').matches ? '0%' : '6%'
-    // Billedet flyttes 25 % af scroll-afstanden ned, så det ser ud til at bevæge sig langsommere
+    // Billedet flyttes med en fjerdedel af scrollet, så det ser ud til at bevæge sig langsommere
     billedeEl.value.style.transform = `translate3d(${forskydning}, ${scroll * 0.25}px, 0)`
   }
   placerTrisser(roligBevaegelse ? 0 : fremskridt)
 }
 
-// Kører, hver gang man scroller eller ændrer vinduets størrelse.
-// scroll kan ske mange gange i sekundet, så vi beder browseren om at køre opdaterVedScroll
-// én gang ved næste skærmopdatering (requestAnimationFrame) i stedet for hver eneste gang
+// Kører ved scroll og ændret vinduesstørrelse, men opdaterer højst én gang pr. skærmopdatering
 function vedScroll() {
   if (!ventendeFrame) ventendeFrame = requestAnimationFrame(opdaterVedScroll)
 }
 
-// Når hero er vist: tjek "reducér bevægelse", placér trisserne og begynd at lytte efter scroll
+// Tjekker "reducér bevægelse", placerer trisserne og begynder at lytte efter scroll
 onMounted(() => {
   roligBevaegelse = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   opdaterVedScroll()
@@ -108,7 +99,7 @@ onMounted(() => {
   window.addEventListener('resize', vedScroll)
 })
 
-// Når man forlader forsiden, fjernes lytterne igen, så de ikke kører videre på andre sider
+// Fjerner lytterne igen, når man forlader forsiden
 onUnmounted(() => {
   window.removeEventListener('scroll', vedScroll)
   window.removeEventListener('resize', vedScroll)
@@ -126,7 +117,7 @@ onUnmounted(() => {
       <path ref="wireEl" d="M -2 2 Q 45 9 102 15" />
     </svg>
 
-    <!-- Badges, der hænger i trisser på wiren. Teksterne står i TRISSER i scriptet -->
+    <!-- Badges, der hænger i trisser på wiren -->
     <div
       v-for="trisse in TRISSER"
       :key="trisse.id"
@@ -136,10 +127,9 @@ onUnmounted(() => {
       :class="`hero__trisse--${trisse.id}`"
       :style="{ '--snor': trisse.snor, '--vip': trisse.vip }"
     >
-      <!-- Aben har sin egen trisse i tegningen, så den får ikke det almindelige hjul -->
+      <!-- Aben har sin egen trisse i tegningen -->
       <span v-if="!trisse.abe" class="hero__trisse-hjul" aria-hidden="true"></span>
 
-      <!-- Aben, der svæver på wiren (Abe.svg). Kun pynt -->
       <img v-if="trisse.abe" :src="abeSvaev" alt="" class="hero__abe" aria-hidden="true">
 
       <span v-if="!trisse.abe" class="hero__trisse-snor" aria-hidden="true"></span>
@@ -149,7 +139,7 @@ onUnmounted(() => {
       </p>
     </div>
 
-    <!-- Indhold til venstre, lodret centreret -->
+    <!-- Indhold til venstre -->
     <div class="hero__indhold">
       <p class="hero__label">
         <img src="@/assets/images/forrest-ikon.webp" alt="" class="hero__label-ikon">
@@ -161,13 +151,11 @@ onUnmounted(() => {
         tør du?
       </h1>
 
-      <!-- h2 for strukturen, men samme udseende som h3 (.h3 fra _typography.scss) -->
+      <!-- h2 for strukturen, men samme udseende som h3 -->
       <h2 class="h3">Klatring, svæv og frit fald midt i skoven</h2>
 
-      <!-- .double-button og knapperne kommer fra main.scss og _buttons.scss -->
       <div class="double-button hero__knapper">
         <a href="#baner" class="button-primary button-pink">Find din bane</a>
-        <!-- RouterLink til kortsiden (/kort), ligesom "Se det fulde kort" længere nede -->
         <RouterLink to="/kort" class="button-secondary button-secondary--light">Se oversigtskort</RouterLink>
       </div>
 
@@ -196,7 +184,6 @@ onUnmounted(() => {
   min-height: clamp(640px, 100vh, 750px);
   padding-top: s.$sektion-luft;
   padding-bottom: s.$spacing-xl;
-  // Mørk baggrund og lys tekst – samme mixin som de andre mørke sektioner
   @include m.section-black100;
 }
 
@@ -219,7 +206,6 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   z-index: -1;
-  // Samme gradient som banner-sektionen (billede-gradient i _mixins.scss)
   background: m.billede-gradient();
 }
 
@@ -246,16 +232,15 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  // Drejer om hjulet (toppen), så snor og badge hænger skævt som et pendul.
-  // --vip sættes pr. trisse i TRISSER
+  // Drejer om hjulet, så snor og badge hænger skævt som et pendul
   transform-origin: 50% 0.45rem;
   transform: translate(-50%, -0.45rem) rotate(var(--vip, 0deg));
   transition: left 0.4s ease-out, top 0.4s ease-out;
-  // Svinger en lille smule frem og tilbage omkring sin skæve vinkel
+  // Svinger en lille smule frem og tilbage
   animation: svinge 4.5s ease-in-out infinite;
 }
 
-// Den anden trisse svinger i sit eget tempo, så de ikke bevæger sig i takt
+// Den anden trisse svinger i sit eget tempo
 .hero__trisse--baner {
   animation-duration: 5.5s;
   animation-delay: -2s;
@@ -266,12 +251,8 @@ onUnmounted(() => {
   50% { transform: translate(-50%, -0.45rem) rotate(calc(var(--vip, 0deg) + 2deg)); }
 }
 
-/* --- Den røde tråd på wiren ---
-   Alt på wiren hænger på samme måde, som rigtigt udstyr i parken:
-   - et lyst trissehjul med mørk midte på wiren
-   - en tynd lys snor ned
-   - et lyst "mærke" (som et skilt på en bane) med et hul i toppen, hvor snoren går ind.
-   Hullet har en lyserød ring – den lyserøde farve går igen i aben, så alt hænger sammen */
+/* Alt på wiren hænger som rigtigt udstyr: et trissehjul, en snor
+   og et mærke med en lyserød ring, hvor snoren går ind */
 .hero__trisse-hjul {
   position: relative;
   z-index: 1;
@@ -286,12 +267,12 @@ onUnmounted(() => {
 
 .hero__trisse-snor {
   width: 1.5px;
-  height: var(--snor, 1.75rem); // Længden sættes pr. trisse i TRISSER
+  height: var(--snor, 1.75rem);  // længden sættes pr. trisse i TRISSER
   margin-top: -2px;
   background-color: rgba(c.$primary_light25, 0.9);
 }
 
-// Mærket. Snoren er bundet i en lille ring, der sidder på mærkets øverste kant
+// Mærket, som snoren er bundet fast i
 .hero__badge {
   position: relative;
   display: flex;
@@ -311,7 +292,7 @@ onUnmounted(() => {
   text-align: center;
   white-space: nowrap;
 
-  // Ringen på mærkets øverste kant, hvor snoren er bundet fast
+  // Ringen, hvor snoren er bundet fast
   &::before {
     content: '';
     position: absolute;
@@ -337,13 +318,10 @@ onUnmounted(() => {
   }
 }
 
-/* --- Aben, der svæver på wiren ---
-   Tegningen (Abe.svg) har sin egen trisse øverst. Trissens punkt ligger
-   57,1 % inde og 21,4 % nede i tegningen – billedet flyttes, så netop det punkt
-   sidder på wiren. Så svinger aben også om trissen som et pendul.
-   Aben svinger mere end badgerne – og rigtig meget, når man holder musen over den */
+/* Aben, der svæver på wiren. Tegningen flyttes, så abens egen trisse sidder på wiren,
+   og den svinger mere, når man holder musen over den */
 .hero__trisse--abe {
-  // Pendulets omdrejningspunkt = trissen (se margin-top på .hero__abe)
+  // Pendulet drejer om trissen
   transform-origin: 50% 0.45rem;
   animation: abe-sving 3.5s ease-in-out infinite;
 }
@@ -361,10 +339,10 @@ onUnmounted(() => {
   display: block;
   width: 10rem;
   height: auto;
-  // Flytter tegningen, så trissen (57,1 % / 21,4 %) står i containerens midte øverst
+  // Flytter tegningen, så trissen står øverst i midten
   margin-top: 0.45rem;
   transform: translate(-7.1%, -21.4%);
-  // Tynd lys kant rundt om aben, så den mørkegrønne abe kan ses på den mørke skov
+  // Tynd lys kant, så aben kan ses på den mørke skov
   filter:
     drop-shadow(0 0 1px rgba(c.$primary_light25, 0.9))
     drop-shadow(0 0 1px rgba(c.$primary_light25, 0.9))
@@ -426,9 +404,7 @@ onUnmounted(() => {
     margin: 0 0.6rem;
   }
 
-  // Mobil: linjen kan ikke være på én række, og så ville en prik ende alene
-  // i starten af næste linje. Her bliver hvert faktum i stedet en lille pille
-  // med lys kant, og pillerne bryder pænt over på flere linjer
+  // Mobil: hvert faktum bliver en lille pille, så de bryder pænt over på flere linjer
   @media (max-width: 767px) {
     gap: 0.4rem;
 
@@ -449,20 +425,18 @@ onUnmounted(() => {
 }
 
 @media (max-width: 767px) {
-  // Mobil: ingen fast højde – hero er kun så høj som teksten og knapperne
+  // Mobil: hero er kun så høj som indholdet
   .hero {
     min-height: auto;
   }
 
-  // Mobil: billedet er ikke skubbet til højre (det er det kun på desktop).
-  // Udtoningen i venstre side (mask-image) er den samme som på desktop, så teksten
-  // står på mørk baggrund. Det første tal i object-position flytter billedet vandret:
-  // større tal = pigen længere til venstre, mindre tal = længere til højre
+  // Mobil: billedet er ikke skubbet til højre.
+  // object-position flytter billedet vandret
   .hero__billede {
     object-position: 30% 30%;
   }
 
-  // Badget ville ligge oven på overskriften, når hero er så lav, så det skjules
+  // Badget ville ligge oven på overskriften, så det skjules
   .hero__trisse {
     display: none;
   }
@@ -482,7 +456,7 @@ onUnmounted(() => {
     display: none;
   }
 
-  // Kun "klatrebaner"-badget vises her – ellers ville de ligge oven på hinanden
+  // Kun "klatrebaner"-badget vises
   .hero__trisse--svaev,
   .hero__trisse--abe {
     display: none;
@@ -502,7 +476,7 @@ onUnmounted(() => {
     transform: translate3d(6%, 0, 0) !important;
   }
 
-  // Ingen svingen – badgen hænger bare stille i sin skæve vinkel
+  // Ingen svingen
   .hero__trisse {
     transition: none;
     animation: none;

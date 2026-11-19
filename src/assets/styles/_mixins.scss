@@ -1,17 +1,20 @@
+// Mixins til baggrunde, som flere sektioner bruger
+
 @use 'colors' as c;
 
+// Sort sektion med lys tekst
 @mixin section-black100 {
     background-color: c.$primary_black100;
     color: c.$primary_light25;
 }
 
+// Lyserød sektion med mørk tekst
 @mixin section-green100 {
     background-color: c.$forest_pink50;
     color: c.$primary_black100;
 }
 
-/* Mørk gradient fra venstre over et baggrundsbillede, så teksten til venstre kan læses.
-   Bruges i hero og banner-sektionen. Brug: background: m.billede-gradient(); */
+/* Mørk gradient fra venstre over et baggrundsbillede, så teksten kan læses. Bruges i hero og banner */
 @function billede-gradient() {
     @return linear-gradient(
         100deg,

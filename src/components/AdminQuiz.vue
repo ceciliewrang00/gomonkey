@@ -1,32 +1,25 @@
 <script setup>
-// ADMIN: FANEN "QUIZ"
-// Her retter man quizzens spørgsmål og svar (Firebase "spoergsmaal").
-// Man kan: se alle spørgsmål, rette et spørgsmål, slette et og oprette et nyt.
-// Filen vises i AdminView.vue under fanen "Quiz". Udseendet kommer fra AdminView.vue.
-//
-// Det vigtige ved hvert svar er "Giver højst" (i koden: maksNiveau).
-// Det er den sværeste bane, svaret tillader: 1 = Let, 2 = Mellem, 3 = Svær.
-// Fx kan svaret "Jeg har aldrig klatret" give højst Let.
-// Til sidst bestemmer det LAVESTE af alle svarene anbefalingen (se services/quizLogik.js).
-// Der bruges ingen point.
+// Fanen "Quiz" i admin, hvor man opretter, retter og sletter quizzens spørgsmål.
+// "Giver højst" (maksNiveau) ved hvert svar er den sværeste bane, svaret tillader
 
 import BaseButton from '@/components/BaseButton.vue'
+
 import { ref, onMounted, onUnmounted } from 'vue'
 
-// auth = login-forbindelsen. auth.currentUser er den, der er logget ind (eller null)
+// Login-forbindelsen. auth.currentUser er den, der er logget ind
 import { auth } from '../firebase'
 
-// Adressen på spørgsmålene i Firebase + hentToken, der giver beviset på login
+// Adressen på spørgsmålene og hentToken, som beviser, at man er logget ind
 import { SPOERGSMAAL_URL, hentToken } from '@/services/api.js'
 
-// Valgene i dropdown'en "Giver højst" ved hvert svar
+// Valgene i dropdown'en "Giver højst"
 const NIVEAU_VALG = [
   { vaerdi: 3, tekst: 'Svær (ingen begrænsning)' },
   { vaerdi: 2, tekst: 'Mellem' },
   { vaerdi: 1, tekst: 'Let' },
 ]
 
-// Hjælpeteksten i (i)'et ved "Giver højst". Står her, så den kun skal rettes ét sted
+// Hjælpeteksten i (i)'et ved "Giver højst"
 const GIVER_HOEJST_HJAELP =
   'Den sværeste bane, man kan få anbefalet, hvis man vælger dette svar. ' +
   'Fx kan "Jeg har aldrig klatret" give højst Let. Quizzen bruger det laveste af alle svarene, ' +
@@ -34,9 +27,7 @@ const GIVER_HOEJST_HJAELP =
   'hvis svaret ikke skal holde anbefalingen nede.'
 
 // ---------- Info-boblen ved "Giver højst" ----------
-// Samme løsning som ved "Sværhedsgrad" i TrackInfo.vue.
-// Kun én boble kan være åben ad gangen, så vi gemmer bare en nøgle for den åbne boble
-// (fx 'nyt-3' eller 'rediger-2'). null = ingen er åben
+// Nøglen på den boble, der er åben (null = ingen)
 const aabenInfo = ref(null)
 
 // Klik på (i) åbner boblen – klik igen lukker den
@@ -44,41 +35,36 @@ function skiftInfo(noegle) {
   aabenInfo.value = aabenInfo.value === noegle ? null : noegle
 }
 
-// Lukker boblen, når man med tastaturet (Tab) går videre fra (i)-knappen.
-// relatedTarget = det element, man går hen til. Ligger det ikke inde i boblen, lukker vi den
+// Lukker boblen, når man går videre fra (i)-knappen med Tab
 function lukVedFokusUd(event) {
   if (!event.currentTarget.contains(event.relatedTarget)) {
     aabenInfo.value = null
   }
 }
 
-// Lukker boblen, når man klikker et andet sted på siden.
-// closest('.info') = "ligger det, man klikkede på, inde i en info-boble?" Hvis ikke, lukkes den.
-// (Den ovenfor er ikke nok alene, fordi Safari ikke flytter fokus, når man klikker på en knap)
+// Lukker boblen, når man klikker et andet sted på siden (nødvendig i Safari)
 function lukVedKlikUdenfor(event) {
   if (aabenInfo.value && !event.target.closest('.info')) {
     aabenInfo.value = null
   }
 }
 
-// Laver tallet om til et ord i oversigten: 1 → 'Let', 2 → 'Mellem', 3 → 'Svær'.
-// Er der intet tal, vises en streg '–'
+// Laver tallet om til et ord: 1 → 'Let', 2 → 'Mellem', 3 → 'Svær'
 function niveauTekst(n) {
   return { 1: 'Let', 2: 'Mellem', 3: 'Svær' }[n] ?? '–'
 }
 
 // ---------- Spørgsmål ----------
 
-// spoergsmaal = alle spørgsmål fra databasen
-// indlaeser   = true, mens de hentes ("Henter spørgsmål...")
-// fejlbesked  = hvis de ikke kunne hentes
+// Alle spørgsmål fra databasen
 const spoergsmaal = ref([])
+// true, mens de hentes
 const indlaeser = ref(true)
+// Fejlbesked, hvis de ikke kunne hentes
 const fejlbesked = ref('')
 
-// Henter alle spørgsmål fra Firebase. At læse kræver ikke login.
-// Den kaldes også efter man har oprettet, rettet eller slettet,
-// så listen på siden altid viser det samme som databasen
+// Henter alle spørgsmål og sorterer dem i quiz-rækkefølge.
+// Den kaldes også efter opret, ret og slet, så listen altid passer med databasen
 async function hentSpoergsmaal() {
   try {
     const response = await fetch(`${SPOERGSMAAL_URL}.json`)
@@ -89,24 +75,22 @@ async function hentSpoergsmaal() {
 
     const data = await response.json()
 
-    // Firebase giver et objekt. Object.values laver det om til en liste,
-    // og sort sorterer efter feltet "raekkefoelge" (1, 2, 3 ...), så spørgsmålene står i quiz-rækkefølge
     const liste = Object.values(data ?? {})
     liste.sort((a, b) => (a.raekkefoelge ?? 0) - (b.raekkefoelge ?? 0))
 
     spoergsmaal.value = liste
+
   } catch (fejl) {
     fejlbesked.value = 'Spørgsmålene kunne ikke hentes.'
     console.error('Fejl ved hentning af spørgsmål:', fejl)
+
   } finally {
     indlaeser.value = false
   }
 }
 
-// Rydder op i ét svar, før det gemmes:
-// - fjerner mellemrum før og efter teksterne (.trim())
-// - er barn- eller gruppe-teksten tom, slettes feltet helt (delete),
-//   så quizzen i stedet bruger den almindelige tekst
+// Fjerner mellemrum i svarets tekster. Er barn- eller gruppe-teksten tom,
+// slettes feltet, så quizzen bruger den almindelige tekst
 function rydSvar(svar) {
   const ren = { ...svar, tekst: svar.tekst.trim() }
   for (const felt of ['tekstBarn', 'tekstGruppe']) {
@@ -119,25 +103,22 @@ function rydSvar(svar) {
 
 // ---------- Opret spørgsmål ----------
 
-// Formularen "Opret spørgsmål" – det, man skriver, havner her (via v-model)
+// Formularen "Opret spørgsmål"
 const nytSpoergsmaal = ref({
   tekst: '',
-  // Starter med to tomme svar. Flere kan tilføjes med "Tilføj svarmulighed".
-  // maksNiveau: 3 = "Svær (ingen begrænsning)" er standard
+  // Starter med to tomme svar. 3 = "Svær (ingen begrænsning)" er standard
   svar: [
     { id: 's1', tekst: '', maksNiveau: 3 },
     { id: 's2', tekst: '', maksNiveau: 3 }
   ]
 })
 
-// gemmer    = true, mens der gemmes (så knapperne bliver grå)
-// gemBesked = beskeden bagefter, fx "Spørgsmålet er gemt."
+// true, mens der gemmes
 const gemmer = ref(false)
+// Beskeden bagefter, fx "Spørgsmålet er gemt."
 const gemBesked = ref('')
 
-// "Tilføj svarmulighed": lægger et nyt, tomt svar i listen.
-// crypto.randomUUID() laver et tilfældigt id, som aldrig er det samme to gange.
-// Vue bruger id'et (:key) til at holde styr på, hvilket felt der er hvilket
+// "Tilføj svarmulighed": lægger et nyt, tomt svar med et tilfældigt id i listen
 function tilfoejSvarmulighed() {
   nytSpoergsmaal.value.svar.push({
     id: crypto.randomUUID(),
@@ -146,10 +127,8 @@ function tilfoejSvarmulighed() {
   })
 }
 
-// "Fjern svarmulighed": fjerner et svar.
-// filter laver en ny liste med alle de svar, der IKKE har dette id – så er det væk
+// "Fjern svarmulighed": fjerner svaret med dette id – men der skal være mindst to svar
 function fjernSvarmulighed(svarId) {
-  // Et spørgsmål skal have mindst to svar, så vi stopper her, hvis der kun er to
   if (nytSpoergsmaal.value.svar.length <= 2) {
     return
   }
@@ -157,9 +136,8 @@ function fjernSvarmulighed(svarId) {
   nytSpoergsmaal.value.svar = nytSpoergsmaal.value.svar.filter((svar) => svar.id !== svarId)
 }
 
-// "Gem spørgsmål": gemmer det nye spørgsmål i Firebase.
-// Først tjekkes, at man er logget ind, og at alt er udfyldt.
-// Er noget galt, vises en besked, og return stopper funktionen, før der gemmes
+// "Gem spørgsmål": tjekker, at man er logget ind, og at alt er udfyldt,
+// og gemmer så det nye spørgsmål i Firebase
 async function opretSpoergsmaal() {
   gemBesked.value = ''
 
@@ -168,8 +146,7 @@ async function opretSpoergsmaal() {
     return
   }
 
-  // Spørgsmålet og alle svar skal have tekst.
-  // .some(...) = "er der mindst ét svar, hvor teksten er tom?"
+  // Spørgsmålet og alle svar skal have tekst
   if (
     !nytSpoergsmaal.value.tekst.trim() ||
     nytSpoergsmaal.value.svar.some((svar) => !svar.tekst.trim())
@@ -183,13 +160,13 @@ async function opretSpoergsmaal() {
   try {
     const token = await hentToken()
 
-    // Et tilfældigt id. Det bruges både som spørgsmålets id og som dets adresse i Firebase
+    // Et tilfældigt id, som også er spørgsmålets adresse i Firebase
     const id = crypto.randomUUID()
 
-    // Find det højeste rækkefølge-nummer. Det nye spørgsmål får nummeret efter, så det kommer sidst
+    // Det nye spørgsmål får nummeret efter det højeste, så det kommer sidst
     const sidstePlacering = Math.max(0, ...spoergsmaal.value.map((sp) => Number(sp.raekkefoelge) || 0))
 
-    // Det, der gemmes. type 'niveau' = spørgsmålet er med til at bestemme anbefalingen
+    // type 'niveau' = spørgsmålet er med til at bestemme anbefalingen
     const data = {
       id,
       tekst: nytSpoergsmaal.value.tekst.trim(),
@@ -198,8 +175,7 @@ async function opretSpoergsmaal() {
       svar: nytSpoergsmaal.value.svar.map(rydSvar)
     }
 
-    // PUT gemmer spørgsmålet på adressen spoergsmaal/<id>.
-    // ?auth=... er beviset på login, som databasen kræver for at gemme
+    // PUT gemmer spørgsmålet på spoergsmaal/<id> med beviset på login
     const response = await fetch(`${SPOERGSMAAL_URL}/${id}.json?auth=${encodeURIComponent(token)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -210,7 +186,7 @@ async function opretSpoergsmaal() {
       throw new Error('Gemning fejlede med status ' + response.status)
     }
 
-    // Henter oversigten igen, så det nye spørgsmål bliver vist
+    // Henter listen igen, så det nye spørgsmål vises
     await hentSpoergsmaal()
 
     // Tømmer formularen
@@ -223,6 +199,7 @@ async function opretSpoergsmaal() {
     }
 
     gemBesked.value = 'Spørgsmålet er gemt.'
+
   } catch (fejl) {
     gemBesked.value = 'Spørgsmålet kunne ikke gemmes. Kontrollér dit login.'
     console.error('Fejl ved oprettelse:', fejl)
@@ -233,29 +210,27 @@ async function opretSpoergsmaal() {
 
 // ---------- Rediger spørgsmål ----------
 
-// redigerer        = en KOPI af det spørgsmål, man retter (null = intet er åbent)
-// gemmerRedigering = true, mens ændringerne gemmes
-// redigerBesked    = fx "Ændringerne er gemt."
+// En kopi af det spørgsmål, man retter (null = intet er åbent)
 const redigerer = ref(null)
+// true, mens ændringerne gemmes
 const gemmerRedigering = ref(false)
+// Beskeden bagefter, fx "Ændringerne er gemt."
 const redigerBesked = ref('')
 
-// "Rediger spørgsmål": åbner formularen med en kopi af spørgsmålet.
-// Hvorfor en kopi? Så listen ikke ændrer sig, mens man skriver – kun når man trykker "Gem".
-// JSON.parse(JSON.stringify(...)) er et trick til at lave en HELT ny kopi,
-// også af listen med svar indeni (en almindelig kopi ville dele svar-listen med originalen)
+// "Rediger spørgsmål": åbner formularen med en helt ny kopi af spørgsmålet og dets svar,
+// så listen ikke ændrer sig, før man trykker "Gem"
 function startRedigering(sp) {
   redigerer.value = JSON.parse(JSON.stringify(sp))
   redigerBesked.value = ''
 }
 
-// "Annuller": luk formularen og smid kopien væk – intet bliver gemt
+// "Annuller": lukker formularen – intet bliver gemt
 function annullerRedigering() {
   redigerer.value = null
   redigerBesked.value = ''
 }
 
-// "Gem ændringer": samme tjek som ved opret, og så erstattes spørgsmålet i Firebase (PUT)
+// "Gem ændringer": samme tjek som ved opret, og så erstattes spørgsmålet i Firebase
 async function gemRedigering() {
   redigerBesked.value = ''
 
@@ -271,7 +246,7 @@ async function gemRedigering() {
     return
   }
 
-  // Ryd op i teksterne. Alle andre felter (fx visHvis og tekstBarn) bliver, som de er
+  // Rydder op i teksterne. Alle andre felter bliver, som de er
   data.tekst = data.tekst.trim()
   data.svar = data.svar.map(rydSvar)
 
@@ -280,7 +255,6 @@ async function gemRedigering() {
   try {
     const token = await hentToken()
 
-    // PUT erstatter hele spørgsmålet i Firebase med den rettede kopi
     const response = await fetch(
       `${SPOERGSMAAL_URL}/${encodeURIComponent(data.id)}.json?auth=${encodeURIComponent(token)}`,
       {
@@ -294,6 +268,7 @@ async function gemRedigering() {
       throw new Error('Redigering fejlede med status ' + response.status)
     }
 
+    // Henter listen igen og lukker formularen
     await hentSpoergsmaal()
 
     redigerer.value = null
@@ -309,19 +284,17 @@ async function gemRedigering() {
 
 // ---------- Slet spørgsmål ----------
 
-// sletterId  = id på det spørgsmål, der slettes lige nu ('' = intet) – så knappen kan vise "Sletter..."
-// sletBesked = beskeden bagefter
+// Id på det spørgsmål, der slettes lige nu, så knappen kan vise "Sletter..."
 const sletterId = ref('')
+// Beskeden bagefter
 const sletBesked = ref('')
 
-// "Slet spørgsmål". Før der slettes, tjekkes tre ting:
-// 1. Er det et af de faste spørgsmål, som quizlogikken har brug for? Så må det ikke slettes
-// 2. Afhænger et andet spørgsmål af det (visHvis)? Så må det heller ikke slettes
-// 3. Er man sikker? (window.confirm viser en boks med OK/Annuller)
+// "Slet spørgsmål". Faste spørgsmål og spørgsmål, som et andet spørgsmål afhænger af,
+// må ikke slettes. Til sidst spørger vi, om man er sikker
 async function sletSpoergsmaal(sp) {
   sletBesked.value = ''
 
-  // De faste spørgsmål. quizLogik.js bruger dem direkte ved navn, så quizzen går i stykker uden dem
+  // De faste spørgsmål, som quizLogik.js bruger ved navn
   const fasteId = ['hoejde', 'erfaring', 'tryghed', 'fysik', 'oplevelse', 'fritfald', 'vaegt']
 
   if (fasteId.includes(sp.id)) {
@@ -329,8 +302,7 @@ async function sletSpoergsmaal(sp) {
     return
   }
 
-  // Er der et andet spørgsmål, som kun vises ved et bestemt svar på DETTE spørgsmål (visHvis)?
-  // Så ville det andet spørgsmål aldrig blive vist, hvis vi slettede dette
+  // Vises et andet spørgsmål kun ved et svar på dette spørgsmål, må det ikke slettes
   if (spoergsmaal.value.some((andet) => andet.visHvis?.spoergsmaalId === sp.id)) {
     sletBesked.value = 'Spørgsmålet bruges som betingelse for et andet spørgsmål.'
     return
@@ -370,12 +342,12 @@ async function sletSpoergsmaal(sp) {
   }
 }
 
-// Hent spørgsmålene, så snart fanen vises
+// Henter spørgsmålene, når fanen vises, og lytter efter klik, så boblen kan lukke
 onMounted(() => {
   hentSpoergsmaal()
-  // Lyt efter klik på hele siden, så boblen kan lukke – og stop igen, når man forlader fanen
   document.addEventListener('click', lukVedKlikUdenfor)
 })
+// Stopper med at lytte efter klik, når fanen lukkes
 onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 </script>
 
@@ -386,7 +358,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
   <p v-if="sletBesked" role="status">{{ sletBesked }}</p>
 
   <!-- Liste med spørgsmål -->
-  <!-- v-if / v-else-if / v-else: kun én af dem vises ad gangen -->
   <p v-if="indlaeser">Henter spørgsmål...</p>
   <p v-else-if="fejlbesked">{{ fejlbesked }}</p>
   <p v-else-if="spoergsmaal.length === 0">Der er ingen spørgsmål endnu.</p>
@@ -404,7 +375,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         </li>
       </ul>
 
-      <!-- Åbner en kopi af dette spørgsmål til redigering -->
       <div class="knapper">
         <BaseButton type="button" variant="primary" @click="startRedigering(sp)">
           Rediger spørgsmål
@@ -429,19 +399,19 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             required
           />
 
-          <!-- Valgfri tekster, når man svarer for sit barn eller en gruppe -->
+          <!-- Valgfri tekster til barn og gruppe -->
           <label :for="'rediger-svar-barn-' + sp.id + '-' + svar.id">Tekst, når man svarer for sit barn (valgfri)</label>
           <input :id="'rediger-svar-barn-' + sp.id + '-' + svar.id" v-model="svar.tekstBarn" type="text" />
 
           <label :for="'rediger-svar-gruppe-' + sp.id + '-' + svar.id">Tekst, når man svarer for en gruppe (valgfri)</label>
           <input :id="'rediger-svar-gruppe-' + sp.id + '-' + svar.id" v-model="svar.tekstGruppe" type="text" />
 
-          <!-- "Giver højst" kan kun rettes på spørgsmål, der styrer anbefalingen (type 'niveau').
-               v-model.number = gem valget som et tal (3) og ikke som tekst ("3") -->
+          <!-- "Giver højst" kan kun rettes på spørgsmål af typen 'niveau'.
+               v-model.number gemmer valget som et tal -->
           <div v-if="redigerer.type === 'niveau'">
             <div class="label-med-info">
               <label :for="'rediger-niveau-' + sp.id + '-' + svar.id">Giver højst</label>
-              <!-- (i)-knap: klik åbner en lille boble med forklaringen. Esc, Tab væk eller klik udenfor lukker den -->
+              <!-- (i)-knappen åbner en boble med forklaringen -->
               <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
                 <button
                   type="button"
@@ -484,7 +454,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         </div>
       </section>
 
-      <!-- Alle slet-knapper er grå, mens et spørgsmål slettes -->
       <div class="knapper">
         <BaseButton
           type="button"
@@ -498,19 +467,19 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     </article>
   </div>
 
-  <!-- Opret spørgsmål (under listen med alle spørgsmål) -->
+  <!-- Opret spørgsmål -->
   <section class="admin-kort">
     <h2>Opret spørgsmål</h2>
 
     <label for="nyt-spoergsmaal">Spørgsmålstekst</label>
     <input id="nyt-spoergsmaal" v-model="nytSpoergsmaal.tekst" type="text" required />
 
-    <!-- Ét sæt felter pr. svarmulighed. indeks starter ved 0, derfor indeks + 1 -->
+    <!-- Felter pr. svarmulighed -->
     <div v-for="(svar, indeks) in nytSpoergsmaal.svar" :key="svar.id">
       <label :for="'nyt-svar-' + svar.id">Svarmulighed {{ indeks + 1 }}</label>
       <input :id="'nyt-svar-' + svar.id" v-model="svar.tekst" type="text" required />
 
-      <!-- Valgfri tekster, når man svarer for sit barn eller en gruppe (fx "Det tør mit barn ikke") -->
+      <!-- Valgfri tekster til barn og gruppe -->
       <label :for="'nyt-svar-barn-' + svar.id">Tekst, når man svarer for sit barn (valgfri)</label>
       <input :id="'nyt-svar-barn-' + svar.id" v-model="svar.tekstBarn" type="text" />
 
@@ -519,7 +488,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 
       <div class="label-med-info">
         <label :for="'nyt-niveau-' + svar.id">Giver højst</label>
-        <!-- (i)-knap: klik åbner en lille boble med forklaringen. Esc, Tab væk eller klik udenfor lukker den -->
+        <!-- (i)-knappen åbner en boble med forklaringen -->
         <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
           <button
             type="button"

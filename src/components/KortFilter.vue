@@ -1,103 +1,82 @@
 <script setup>
-// KORTFILTER
-// Listen til venstre for kortet, hvor man sætter flueben ved de baner, man vil se.
-// Så snart man sætter et flueben, sendes de valgte baner op til KortView.vue (med emit),
-// som giver dem videre til kortet. Der er ingen "Anvend"-knap.
-// På mobil er filteret skjult bag en "Filtre"-knap og glider ind fra venstre.
-//
-// Data kommer to steder fra:
-//  - Firebase "mapfilter": listen af baner i filteret + deres korte undertekst (fx "Tarzan spring")
-//  - Firebase "baner" (via baner.js): banens navn og sværhedsgrad – så der står det samme
-//    som på forsiden og i popup'en
+// Filteret til venstre for kortet. Et flueben sender med det samme de valgte baner op til KortView.
+// Listen kommer fra Firebase "mapfilter", navn og sværhedsgrad fra "baner"
 
 import { ref, watch, onMounted } from 'vue'
 
-// useRoute giver adgang til adressen i browseren (bruges til ?bane=... herunder)
+// Giver adgang til adressen i browseren (?bane=...)
 import { useRoute } from 'vue-router'
 
-// Adressen på "mapfilter" i Firebase
 import { KORTFILTER_URL } from '@/services/api.js'
 
-// hentBaner henter banerne fra "baner". "as hentFaellesBaner" giver den et andet navn her,
-// fordi denne fil selv har en funktion, der hedder hentBaner.
-// niveauFor laver sværhedsgraden om til et ord, fx "Mellem"
+// hentBaner hedder hentFaellesBaner her, fordi filen selv har en funktion, der hedder hentBaner
 import { hentBaner as hentFaellesBaner, niveauFor } from '@/services/baner.js'
 
-// Beskeden 'filter-changed', der sendes op til KortView.vue med de valgte baner
+// 'filter-changed' sendes op til KortView med de valgte baner
 const emit = defineEmits(['filter-changed'])
 
 // Kommer man fra et link som /kort?bane=bane-6, er den bane valgt fra start.
-// Flere baner kan skrives med komma: ?bane=bane-1,bane-2.
-// split(',') deler teksten ved kommaerne, og filter(Boolean) fjerner tomme stykker
+// Flere baner kan skrives med komma
 const route = useRoute()
 const fraAdressen = String(route.query.bane ?? '').split(',').filter(Boolean)
 
-// Id'erne på de baner, der er sat flueben ved, fx ['bane-1', 'bane-6']
+// Id'erne på de baner, der er sat flueben ved
 const valgteFiltre = ref(fraAdressen)
 
 // Er filteret åbent på mobil?
 const erAaben = ref(false)
 
-// Alle baner fra Firebase
 const banerListe = ref([])
 
-// true, mens banerne hentes ("Henter baner...")
+// true, mens banerne hentes
 const indlaeser = ref(true)
 
 
 // ---------- Hent data ----------
 
-// Den fulde adresse til "mapfilter" i Firebase
 const databaseUrl = `${KORTFILTER_URL}.json`
 
-// Henter banerne til filteret
+// Henter listen fra "mapfilter" og sætter navn og sværhedsgrad fra "baner" på hver bane
 async function hentBaner() {
   try {
-    // 1. Hent listen fra "mapfilter"
     const response = await fetch(databaseUrl)
 
-    // Svaret kommer som tekst. .json() laver det om til JavaScript-data, vi kan bruge
     const data = await response.json()
 
-    // 2. Hent navn og sværhedsgrad fra "baner", så filteret siger det samme som
-    // forsiden og popup'en. Fejler det, bruges bare teksterne fra "mapfilter"
+    // Fejler "baner", bruges bare teksterne fra "mapfilter"
     let faelles = []
     try {
       faelles = await hentFaellesBaner()
     } catch (e) {
       console.error('Banernes navne kunne ikke hentes:', e)
     }
-    // 3. En lille funktion, der sætter de to sammen for én bane:
-    // finder banen i "baner" og bruger dens navn og sværhedsgrad.
-    // Findes banen ikke dér (fx en ny bane fra admin), bruges teksterne fra "mapfilter"
+    // Sætter navn og sværhedsgrad fra "baner" på én bane.
+    // Findes banen ikke dér (fx en ny bane fra admin), beholdes teksterne fra "mapfilter"
     const medFaellesData = (item) => {
       const bane = faelles.find((b) => b.id === item.id)
       if (!bane) return item
       return { ...item, titel: bane.name, svaerhed: niveauFor(bane) }
     }
 
-    // 4. Gem listen. Firebase kan sende den på to måder:
+    // Firebase kan sende listen som en liste eller som et objekt
     if (data) {
       if (Array.isArray(data)) {
-        // Som en liste: fjern tomme pladser (dem, hvor en bane er slettet)
+        // Fjerner tomme pladser, hvor en bane er slettet
         banerListe.value = data.filter(item => item !== null && item !== undefined).map(medFaellesData)
       } else {
-        // Som et objekt: lav det om til en liste
         banerListe.value = Object.values(data).map(medFaellesData)
       }
     }
 
-  // Gik noget galt, skrives fejlen i konsollen (F12 i browseren)
   } catch (fejl) {
     console.error('Fejl ved hentning af banedata fra Firebase:', fejl)
 
-  // finally kører altid til sidst – så "Henter baner..." forsvinder, uanset hvad
   } finally {
     indlaeser.value = false
   }
 }
 
-// Hent banerne, så snart filteret vises på siden
+// Henter banerne, når filteret vises
 onMounted(() => {
   hentBaner()
 })
@@ -105,19 +84,14 @@ onMounted(() => {
 
 // ---------- Når man sætter flueben ----------
 
-// watch holder øje med valgteFiltre. Hver gang listen ændrer sig, sendes den til KortView.vue.
-// Er intet valgt, sendes 'alle', så alle baner vises.
-// [...valgte] sender en kopi af listen.
-// immediate: true = send også én gang med det samme, så en bane fra adressen (?bane=)
-// er valgt på kortet fra start
+// Sender valgene til KortView, hver gang de ændrer sig ('alle', hvis intet er valgt).
+// immediate: true sender også med det samme, så en bane fra adressen er valgt fra start
 watch(valgteFiltre, (valgte) => {
   emit('filter-changed', valgte.length === 0 ? 'alle' : [...valgte])
 }, { immediate: true })
 
-// Kører, når man klikker på en bane. checked = true, hvis der nu er flueben.
-// Flueben: læg banen i listen (hvis den ikke allerede er der).
-// Intet flueben: lav en ny liste uden banen.
-// Vi laver en NY liste i stedet for at ændre den gamle, så watch opdager ændringen
+// Flueben: læg banen i listen. Intet flueben: lav en ny liste uden banen.
+// Vi laver en ny liste, så watch opdager ændringen
 function vaelgBane(id, checked) {
   if (checked) {
     if (!valgteFiltre.value.includes(id)) {
@@ -128,13 +102,12 @@ function vaelgBane(id, checked) {
   }
 }
 
-// "Vis alle" og "Ryd filtre" tømmer listen, så alle baner vises igen
+// "Vis alle" og "Ryd filtre" tømmer listen, så alle baner vises
 function nulstilFilter() {
   valgteFiltre.value = []
 }
 
-// "Filtre"-knappen på mobil: åbner filteret, hvis det er lukket, og lukker det, hvis det er åbent
-// (! vender true til false og omvendt)
+// "Filtre"-knappen på mobil åbner og lukker filteret
 function togglerFilter() {
   erAaben.value = !erAaben.value
 }
@@ -149,14 +122,13 @@ function togglerFilter() {
 
 <template>
   <div class="filter-wrapper">
-    <!-- Knappen "Filtre" (kun på mobil). Tallet viser, hvor mange baner der er valgt.
-         aria-expanded fortæller skærmlæsere, om filteret er åbent -->
+    <!-- "Filtre"-knappen (kun mobil). Tallet viser, hvor mange baner der er valgt -->
     <button type="button" class="mobil-filter-knap" :aria-expanded="erAaben" @click="togglerFilter">
       <span>Filtre</span>
       <span v-if="valgteFiltre.length > 0" class="filter-badge">{{ valgteFiltre.length }}</span>
     </button>
 
-    <!-- Mørk baggrund bag det åbne filter på mobil. Klik på den lukker filteret -->
+    <!-- Mørk baggrund bag det åbne filter på mobil. Klik lukker filteret -->
     <div v-if="erAaben" class="mobil-overlay" @click="erAaben = false"></div>
 
     <!-- Selve filteret. Klassen er-aaben får det til at glide ind på mobil -->
@@ -177,18 +149,16 @@ function togglerFilter() {
         <button type="button" class="luk-knap" aria-label="Luk filtre" @click="erAaben = false">×</button>
       </div>
 
-      <!-- Kort forklaring, så man ved, hvad filteret gør -->
       <p class="hjaelpe-tekst">Vælg de baner, du vil se på kortet. Kortet opdateres med det samme.</p>
 
       <div class="filter-sektion">
 
-        <!-- Vises, mens banerne hentes. Bagefter vises listen (v-else) -->
         <div v-if="indlaeser" class="indlaeser-tekst">
           Henter baner...
         </div>
 
         <div v-else class="filter-liste">
-          <!-- Vis alle: er afkrydset, når intet er valgt. Klik tømmer listen med valgte baner -->
+          <!-- "Vis alle" er afkrydset, når intet er valgt -->
           <label class="filter-item vis-alle-item" :class="{ aktiv: valgteFiltre.length === 0 }">
             <input
               type="checkbox"
@@ -200,9 +170,7 @@ function togglerFilter() {
             </div>
           </label>
 
-          <!-- Én række pr. bane. Hele rækken er en <label>, så man kan klikke hvor som helst på den.
-               :checked = der er flueben, hvis banen er i listen.
-               @change sender banens id og om der nu er flueben ($event.target.checked) -->
+          <!-- Én række pr. bane. Hele rækken er en <label>, så man kan klikke hvor som helst på den -->
           <label
             v-for="bane in banerListe"
             :key="bane.id"
@@ -218,11 +186,9 @@ function togglerFilter() {
               <div class="titel-linie">
                 <span class="titel">{{ bane.titel }}</span>
               </div>
-              <!-- Undertekst til venstre og sværhed til højre på samme linje.
-                   Begge vises kun, hvis banen har dem -->
+              <!-- Undertekst til venstre og sværhed til højre -->
               <div v-if="bane.undertekst || bane.svaerhed" class="under-linie">
                 <span v-if="bane.undertekst" class="undertekst">{{ bane.undertekst }}</span>
-                <!-- Sværheds-mærke. Bruger .badge fra _badges.scss -->
                 <span v-if="bane.svaerhed" class="badge ekstra-info">Sværhedsgrad: {{ bane.svaerhed }}</span>
               </div>
             </div>
@@ -231,7 +197,7 @@ function togglerFilter() {
         </div>
       </div>
 
-      <!-- Kun på mobil: lukker filteret og viser kortet. Teksten siger, hvad man får at se -->
+      <!-- Kun mobil: lukker filteret og viser kortet -->
       <div class="filter-footer">
         <button type="button" class="vis-kort-knap" @click="erAaben = false">
           <template v-if="valgteFiltre.length === 0">Vis alle baner på kortet</template>
@@ -245,13 +211,12 @@ function togglerFilter() {
 
 <style lang="scss" scoped>
 @use '@/assets/styles/fonts' as ft;
-// Farverne kommer fra _colors.scss, så filteret passer til resten af siderne
 @use '@/assets/styles/colors' as c;
 
-// Skygge under knapper, der ligger oven på kortet
+// Skygge under knapper oven på kortet
 $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 
-/* Ramme om hele filteret. position: relative gør, at Filtre-knappen placeres i forhold til den */
+/* Ramme om hele filteret */
 .filter-wrapper {
   position: relative;
 }
@@ -269,8 +234,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   border: 0;
 }
 
-/* "Filtre"-knappen på mobil, øverst til venstre oven på kortet (z-index: 10).
-   Sort med lys tekst, ligesom button-primary */
+/* "Filtre"-knappen på mobil, øverst til venstre oven på kortet */
 .mobil-filter-knap {
   display: flex;
   align-items: center;
@@ -281,7 +245,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   z-index: 10;
   background: c.$primary_black100;
   color: c.$primary_light25;
-  // Samme kant som Tilbage-knappen, så de to knapper er lige høje
+  // Samme kant som Tilbage-knappen, så de er lige høje
   border: solid 2px c.$primary_black100;
   padding: 0.5rem 1.5rem;
   border-radius: 1rem;
@@ -291,7 +255,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   cursor: pointer;
 }
 
-/* Den lille runde boble med antal valgte baner */
+/* Boblen med antal valgte baner */
 .filter-badge {
   background: c.$forest_pink100;
   color: c.$primary_black100;
@@ -300,7 +264,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   border-radius: 1rem;
 }
 
-/* Halvgennemsigtig sort baggrund bag filteret på mobil. position: fixed = dækker hele skærmen */
+/* Halvgennemsigtig sort baggrund bag filteret på mobil */
 .mobil-overlay {
   display: block;
   position: fixed;
@@ -312,9 +276,8 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   z-index: 99;
 }
 
-/* MOBIL (standard): filteret ligger uden for skærmen (left: -100%) og fylder hele skærmen.
-   transition gør, at det glider ind. På desktop ændres det i @media længere nede.
-   env(safe-area-inset-bottom) giver plads til iPhones hjem-streg */
+/* Mobil: filteret ligger uden for skærmen og glider ind, når det åbnes.
+   Nederst er der plads til iPhones hjem-streg */
 .filter-sidebar {
   position: fixed;
   top: 0;
@@ -338,13 +301,12 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   color: c.$primary_black100;
 }
 
-/* Listen fylder den ledige plads (flex: 1) og kan scrolles, hvis den er for lang */
+/* Listen fylder den ledige plads og kan scrolles */
 .filter-sektion {
   flex: 1;
   overflow-y: auto;
 }
 
-/* Når filteret er åbent, glider det ind på skærmen */
 .filter-sidebar.er-aaben {
   left: 0;
 }
@@ -370,7 +332,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   padding-bottom: 0.75rem;
 }
 
-/* Fed overskrift ligesom h1 på resten af sitet, bare mindre */
+/* Fed overskrift ligesom h1, bare mindre */
 .filter-header h3 {
   margin: 0;
   padding: 0;
@@ -378,7 +340,6 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   color: c.$primary_black100;
 }
 
-/* Forklaringen under overskriften */
 .hjaelpe-tekst {
   margin: 0;
   font-size: 0.9rem;
@@ -386,8 +347,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   color: c.$primary_black100;
 }
 
-/* "Ryd filtre"-knappen: udseendet kommer fra .button-primary i _buttons.scss.
-   margin-left: auto skubber den ud til højre i overskriftslinjen */
+/* "Ryd filtre" står ude til højre i overskriftslinjen */
 .nulstil-link {
   margin-left: auto;
   cursor: pointer;
@@ -400,14 +360,12 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   padding: 0.5rem 0;
 }
 
-/* Alle rækker i én sammenhængende liste */
 .filter-liste {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-/* Én række i filteret (fx en bane) */
 .filter-item {
   display: flex;
   align-items: center;
@@ -418,19 +376,18 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   transition: background-color 0.2s ease;
 }
 
-/* "Vis alle"-rækken: en almindelig række med fed tekst */
+/* "Vis alle"-rækken har fed tekst */
 .vis-alle-item .titel {
   font-weight: 900;
 }
 
-/* Valgt række: ingen baggrundsfarve – teksten bliver blå/lilla i stedet */
+/* Valgt række: teksten bliver blå/lilla */
 .filter-item.aktiv .titel,
 .filter-item.aktiv .undertekst {
   color: c.$secondary_purple100;
 }
 
-/* Egen tjekboks: appearance: none fjerner browserens standard-tjekboks.
-   Firkantet med runde hjørner, så den tydeligt ligner noget, man kan sætte flueben i */
+/* Vores egen tjekboks i stedet for browserens */
 .filter-item input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
@@ -448,13 +405,13 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
-/* Afkrydset: blå/lilla boks med lyst flueben, så den passer til den farvede tekst */
+/* Afkrydset: blå/lilla boks med lyst flueben */
 .filter-item input[type="checkbox"]:checked {
   background: c.$secondary_purple100;
   border-color: c.$secondary_purple100;
 }
 
-/* ::after indsætter et ✓ i tjekboksen, når den er afkrydset */
+/* Fluebenet ✓ i tjekboksen */
 .filter-item input[type="checkbox"]:checked::after {
   content: "✓";
   color: c.$primary_light25;
@@ -463,23 +420,21 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   line-height: 1;
 }
 
-/* Tydelig ramme, når man bruger tastaturet (Tab) */
+/* Tydelig ramme, når man bruger tastaturet */
 .filter-item input[type="checkbox"]:focus-visible {
   outline: 3px solid c.$secondary_purple100;
   outline-offset: 2px;
 }
 
-/* Titel og undertekst under hinanden */
 .filter-tekst {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  // Fylder resten af rækken, så sværheden kan stå helt ude til højre
+  // Fylder resten af rækken, så sværheden står ude til højre
   flex: 1;
   min-width: 0;
 }
 
-/* Linjen med banens navn */
 .titel-linie {
   display: flex;
   align-items: center;
@@ -498,14 +453,13 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   font-weight: 400;
 }
 
-/* Bunden med "Vis ... på kortet" (kun mobil). margin-top: auto skubber den helt ned */
+/* Bunden med "Vis ... på kortet" (kun mobil) står helt nede */
 .filter-footer {
   margin-top: auto;
   padding-top: 1rem;
   border-top: 2px solid c.$primary_black100;
 }
 
-/* "Vis på kortet" ser ud som button-primary, bare i fuld bredde */
 .vis-kort-knap {
   width: 100%;
   background-color: c.$primary_black100;
@@ -518,16 +472,14 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   cursor: pointer;
 }
 
-/* Undertekst og sværheds-mærke på samme linje.
-   gap giver en lille luft, så mærket står lige efter teksten */
+/* Undertekst og sværheds-mærke på samme linje */
 .under-linie {
   display: flex;
   align-items: center;
   gap: 0.6rem;
 }
 
-/* Sværheds-mærket: bruger .badge fra _badges.scss – her sættes farverne og en mindre størrelse.
-   Står lige efter underteksten og brydes aldrig over to linjer */
+/* Sværheds-mærket: en mindre .badge, der aldrig brydes over to linjer */
 .ekstra-info {
   --badge-bg: #{c.$primary_darkgreen};
   --badge-color: #{c.$primary_light50};
@@ -546,9 +498,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   --badge-bg: #{c.$secondary_purple100};
 }
 
-/* DESKTOP (over 800px): filteret svæver oven på kortet med luft rundt om,
-   så kortet fylder hele skærmen bag det. Mobil-knapperne og bunden skjules,
-   da kortet opdateres live.
+/* Desktop: filteret svæver oven på kortet, og mobil-knapperne skjules.
    Afstanden (24px) og bredden (360px) bruges også i KortView.vue – ret begge steder */
 @media (min-width: 801px) {
   .mobil-filter-knap,
@@ -558,8 +508,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     display: none;
   }
 
-  /* Rammen ligger oven på kortet og går fra top til bund med 24px luft.
-     pointer-events: none lader klik og træk gå igennem til kortet under filteret */
+  /* Klik og træk går igennem rammen til kortet under filteret */
   .filter-wrapper {
     position: absolute;
     top: 24px;
@@ -571,8 +520,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     pointer-events: none;
   }
 
-  /* Selve filteret: et lyst kort med runde hjørner og skygge.
-     Det er kun så højt som indholdet, men aldrig højere end skærmen (max-height) */
+  /* Et lyst kort med runde hjørner, aldrig højere end skærmen */
   .filter-sidebar {
     position: static;
     left: auto;
@@ -589,15 +537,14 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   }
 }
 
-/* Hover-effekter kun på enheder med mus. På touch ville de "hænge fast" efter et tryk */
+/* Hover kun på enheder med mus – på touch ville det "hænge fast" */
 @media (hover: hover) {
-  /* Hover: ingen baggrundsfarve – teksten og tjekboksens kant bliver blå/lilla */
+  /* Hover: teksten og tjekboksens kant bliver blå/lilla */
   .filter-item:hover .titel,
   .filter-item:hover .undertekst {
     color: c.$secondary_purple100;
   }
 
-  /* Hover: mærket får samme blå/lilla farve som teksten */
   .filter-item:hover .ekstra-info {
     --badge-bg: #{c.$secondary_purple100};
   }

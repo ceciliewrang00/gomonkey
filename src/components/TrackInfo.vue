@@ -1,130 +1,102 @@
 <script setup>
-// BANEKORTENE PÅ FORSIDEN
-// Øverst en forklaring af sværhedsgraden (Let/Mellem/Svær), og derunder ét stort kort pr. bane
-// med billede, beskrivelse, krav, faktatal og en sværhedsbjælke.
-// Alt om banerne hentes fra Firebase "baner" via services/baner.js – det samme, som
-// popup'en på kortet og quizzen bruger.
-// Hvert kort har banens id som id (fx id="bane-6"), så andre sider kan linke direkte til det
-// med /#bane-6 (fx "Læs mere om banen" på kortet og "Se Grøn" i quizzen).
+// Banekortene på forsiden: en forklaring af sværhedsgraden og ét kort pr. bane.
+// Hvert kort har banens id (fx id="bane-6"), så andre sider kan linke til det med /#bane-6
 
-// ref = en værdi som Vue holder øje med. onMounted = kører, når siden er vist.
-// onUnmounted = kører, når siden forlades (bruges til at fjerne klik-lytteren igen)
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
-// Banerne og reglerne for niveauer står i services/baner.js, så alle sider viser det samme
 import { hentBaner, NIVEAUER, trinFor, niveauFor, harSvaerhedsgrad, faktaFor } from '@/services/baner.js'
 
-// Tom liste til banerne. Siden opdateres, når listen får data
+// Banerne fra Firebase
 const baner = ref([])
 
-// Kun klatrebanerne (alle undtagen Bounce), sorteret fra let til svær.
-// Bruges til numrene 01, 02, 03 ..., så Bounce ikke får et nummer
+// Kun klatrebanerne (uden Bounce). Bruges til numrene 01, 02, 03 ...
 const klatrebaner = computed(() => baner.value.filter(harSvaerhedsgrad))
 
-// Rækkefølgen på siden: klatrebanerne først, Bounce til sidst,
-// fordi Bounce ikke er en klatrebane men et ekstra tilbud
+// Klatrebanerne først og Bounce til sidst, fordi Bounce er et ekstra tilbud
 const visteBaner = computed(() => [
     ...klatrebaner.value,
     ...baner.value.filter((bane) => !harSvaerhedsgrad(bane)),
 ])
 
-// Banens nummer som "01", "02" ... (padStart sætter et 0 foran, så 1 bliver 01)
+// Banens nummer som "01", "02" ...
 function nummerFor(bane) {
     return String(klatrebaner.value.indexOf(bane) + 1).padStart(2, '0')
 }
 
-// true mens vi venter på databasen
+// true, mens vi venter på databasen
 const loading = ref(true)
 
-// Gemmer en fejlbesked, hvis noget går galt
+// Fejlbesked, hvis noget går galt
 const error = ref(null)
 
-// Når siden er vist: hent data fra databasen
+// Henter banerne, når siden er vist. Fejler det, vises en besked
 onMounted(async () => {
     try {
-        // Henter banerne (sorteret fra let til svær) – se services/baner.js
         baner.value = await hentBaner()
     } catch (e) {
-        // Hvis noget fejler, gemmer vi en besked, som vi kan vise
         error.value = 'Banerne kunne ikke hentes. Prøv igen senere.'
         console.error(e)
     } finally {
-        // Uanset om det gik godt eller dårligt, er vi færdige med at vente,
-        // så teksten "Henter baner..." fjernes
         loading.value = false
     }
 })
 
 // ---------- Info-boblen ved "Sværhedsgrad" ----------
-// Ved hver bane står der "Sværhedsgrad (i)". Klik på (i) åbner en lille boble med en forklaring.
-// Kun én boble kan være åben ad gangen, så vi gemmer bare id'et på banen, hvis boble er åben
-// (null = ingen er åben)
+// Id på banen, hvis boble er åben (null = ingen)
 const aabenInfo = ref(null)
 
 /* ---------- Stort billede ----------
-   Klik på en banes billede åbner det stort i et vindue oven på siden.
-   Vi bruger HTML's eget <dialog>-element. Med showModal() får vi det hele gratis:
-   mørk baggrund, Escape lukker, og tastaturet bliver inde i vinduet */
-const billedDialog = ref(null) // selve <dialog>-elementet (ref="billedDialog" i templaten)
-const stortBillede = ref(null) // Banen, hvis billede vises stort (null = lukket)
+   Klik på en banes billede åbner det stort i et <dialog>-vindue */
+const billedDialog = ref(null)  // <dialog>-elementet
+const stortBillede = ref(null)  // banen, hvis billede vises stort
 
-// Banens tegning ligger som SVG-tekst i Firebase ("svg").
-// Teksten laves om til en data-adresse, så den kan vises i et almindeligt <img>
-// (så kan SVG'en ikke køre kode på siden, og alt-teksten virker stadig)
+// Laver banens SVG-tekst om til en adresse, som et <img> kan vise
 function billedeSrc(bane) {
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(bane.svg)
 }
 
-// Åbn vinduet med banens billede. ?. = kun hvis dialogen findes
+// Åbner vinduet med banens billede
 function aabnBillede(bane) {
     stortBillede.value = bane
     billedDialog.value?.showModal()
 }
 
-// Luk vinduet
 function lukBillede() {
     billedDialog.value?.close()
 }
 
-// Klik på den mørke baggrund uden for billedet lukker også.
-// Klikker man på billedet, er event.target billedet. Klikker man udenfor, er det selve dialogen
+// Klik uden for billedet lukker også vinduet
 function klikPaaDialog(event) {
     if (event.target === billedDialog.value) lukBillede()
 }
 
-// Klik på (i) åbner boblen – klik igen lukker den.
-// Er denne banes boble åben, sættes den til null (lukket). Ellers sættes den til banens id (åben)
+// Klik på (i) åbner boblen – klik igen lukker den
 function skiftInfo(id) {
     aabenInfo.value = aabenInfo.value === id ? null : id
 }
 
-// Lukker boblen, når man med tastaturet (Tab) går videre fra (i)-knappen og boblen.
-// relatedTarget = det element, man går hen til. Ligger det ikke inde i boblen, lukker vi den
+// Lukker boblen, når man går videre med Tab
 function lukVedFokusUd(event) {
     if (!event.currentTarget.contains(event.relatedTarget)) {
         aabenInfo.value = null
     }
 }
 
-// Lukker boblen, når man klikker et andet sted på siden.
-// closest('.info') = "ligger det, man klikkede på, inde i en info-boble?" Hvis ikke, lukkes den.
-// (Den ovenfor er ikke nok alene, fordi Safari ikke flytter fokus, når man klikker på en knap)
+// Lukker boblen, når man klikker et andet sted på siden (nødvendig i Safari)
 function lukVedKlikUdenfor(event) {
     if (aabenInfo.value && !event.target.closest('.info')) {
         aabenInfo.value = null
     }
 }
 
-// Lyt efter klik på hele siden, mens forsiden er vist – og stop igen, når man forlader den
+// Lytter efter klik på hele siden, mens forsiden er vist
 onMounted(() => document.addEventListener('click', lukVedKlikUdenfor))
 onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 </script>
 
 <template>
-    <!-- Intro over banerne. id="bane-info", så "Se banerne"-knapperne linker hertil.
-         Det er en div og ikke en <header>, fordi header har sit eget layout i main.scss -->
+    <!-- Intro over banerne. "Se banerne"-knapperne linker hertil (#bane-info) -->
     <div id="bane-info" class="baner-intro">
-        <!-- Introteksten. Står til venstre for forklaringsboksen på desktop og over den på mobil -->
         <div class="baner-intro__tekst">
             <span class="badge baner-intro__badge">Baner i Forest Odense</span>
             <h2><span class="light">Find den bane - </span><br>der passer til dig</h2>
@@ -136,16 +108,14 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                 kan genkende den i parken.</p>
         </div>
 
-        <!-- Forklaring af sværhedsbjælken, som står på hver bane længere nede.
-             Står her ét sted, så man ikke selv skal gætte, hvad bjælken betyder -->
+        <!-- Forklaring af sværhedsbjælken, som står på hver bane -->
         <section id="skala-forklaring" class="skala-forklaring" aria-labelledby="skala-titel">
             <h4 id="skala-titel" class="skala-titel">Hvad betyder sværhedsgraden?</h4>
             <p class="skala-tekst">
                 Sværhedsgraden viser, hvor højt oppe du er, hvor lange svævene er, og hvor meget banen kræver af din krop og dit mod. Jo flere trin der er fyldt ud på bjælken, jo sværere er banen.
             </p>
 
-            <!-- De tre niveauer. Hvert kort har samme trin-bjælke som banerne,
-                 så man kan sammenligne direkte -->
+            <!-- De tre niveauer med samme bjælke som banerne -->
             <ul class="skala-trin">
                 <li v-for="(niveau, i) in NIVEAUER" :key="niveau.navn">
                     <div class="trin-bjaelke" aria-hidden="true">
@@ -158,7 +128,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                     </div>
                     <strong class="skala-trin__navn">{{ niveau.navn }}</strong>
                     <p class="skala-trin__tekst">{{ niveau.tekst }}</p>
-                    <!-- Hvem niveauet passer til (kun hvis niveauet har en "passer"-tekst) -->
                     <p v-if="niveau.passer" class="skala-trin__tekst">
                         <strong>Passer til:</strong> {{ niveau.passer }}
                     </p>
@@ -169,7 +138,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 
     <p v-if="loading" class="status">Henter baner...</p>
     <p v-else-if="error" class="status">{{ error }}</p>
-    <!-- Ét kort pr. bane (v-for gentager article) -->
+    <!-- Ét kort pr. bane -->
     <article
         v-else
         v-for="bane in visteBaner"
@@ -179,16 +148,14 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         class="bane"
     ><!-- id = banens id (fx "bane-6"), så hero og popup'en på kortet kan linke direkte hertil (/#bane-6) -->
         <div class="bane__kort">
-            <!-- Overskriften står i sin egen række over teksten,
-                 så billedet kun flugter med teksten under den -->
+            <!-- Overskriften står over teksten, så billedet kun flugter med teksten -->
             <div class="bane__top">
-                <!-- 01, 02, 03 ... i banens farve. Kun klatrebaner får et nummer, ikke Bounce -->
+                <!-- Nummeret i banens farve. Bounce får ikke et nummer -->
                 <span v-if="harSvaerhedsgrad(bane)" class="bane__nr" aria-hidden="true">{{ nummerFor(bane) }}</span>
                 <h2 class="bane__navn">{{ bane.name }}</h2>
             </div>
 
-            <!-- Billede af banen -->
-            <!-- Billedet er en knap: klik åbner det stort -->
+            <!-- Klik på billedet åbner det stort -->
             <button
                 v-if="bane.svg"
                 type="button"
@@ -197,7 +164,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                 @click="aabnBillede(bane)"
             >
                 <img :src="billedeSrc(bane)" :alt="bane.altImg" class="bane__img"/>
-                <!-- Lille forstørrelsesglas-ikon i hjørnet, så man kan se, at billedet kan åbnes -->
+                <!-- Forstørrelsesglas, som viser, at billedet kan åbnes -->
                 <span class="bane__zoom" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5M11 8v6M8 11h6" /></svg>
                 </span>
@@ -206,18 +173,16 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             <div class="bane__content">
                 <p class="bane__beskrivelse">{{ bane.description }}</p>
 
-                <!-- Krav står for sig selv, da det ofte er en længere tekst -->
                 <p v-if="bane.requirements" class="bane__krav">
                     <strong>Krav:</strong> {{ bane.requirements }}
                 </p>
 
-                <!-- Ekstra pris oven i klatreprisen, fx frit fald på Sort. Kun hvis banen har et -->
+                <!-- Ekstra pris, fx frit fald på Sort. Vises kun, hvis banen har en -->
                 <p v-if="bane.addOn" class="bane__krav">
                     <strong>Tilkøb:</strong> {{ bane.addOn }}
                 </p>
 
-                <!-- Faktabokse, fx "Banehøjde: 8 m". faktaFor giver kun de fakta, banen har udfyldt.
-                     dl/dt/dd er HTML's liste til "navn: værdi" -->
+                <!-- Faktabokse med de fakta, banen har udfyldt -->
                 <dl class="fakta" v-if="faktaFor(bane).length">
                     <div v-for="f in faktaFor(bane)" :key="f.key" class="fakta__boks">
                         <dt>{{ f.label }}</dt>
@@ -227,8 +192,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 
                 <div class="difficulty">
                     <div class="difficulty__label">
-                        <!-- "Sværhedsgrad" med (i)-knap. Klik åbner en lille boble med forklaringen.
-                             Escape eller fokus et andet sted lukker den igen -->
+                        <!-- "Sværhedsgrad" med en (i)-knap, der åbner en forklaring -->
                         <span
                             class="info"
                             @focusout="lukVedFokusUd"
@@ -260,13 +224,11 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                                 <a href="#skala-forklaring" class="info__link" @click="aabenInfo = null">Se hele forklaringen</a>
                             </span>
                         </span>
-                        <!-- Niveauet skrevet med ord (Let, Mellem eller Svær), så man ikke selv skal aflæse bjælken -->
+                        <!-- Niveauet skrevet med ord -->
                         <span class="difficulty__niveau">{{ niveauFor(bane) }}</span>
                     </div>
-                    <!-- Bjælke med tre trin: 1 fyldt = Let, 2 = Mellem, 3 = Svær.
-                         Præcis samme bjælke og farve som i forklaringen øverst.
-                         Bounce har ingen sværhedsgrad: bjælken vises, men ingen trin er fyldt.
-                         role="meter" og aria-value... fortæller skærmlæsere, hvor svær banen er -->
+                    <!-- Bjælke med tre trin: 1 fyldt = Let, 2 = Mellem, 3 = Svær. Bounce har ingen fyldte trin.
+                         role="meter" fortæller skærmlæsere, hvor svær banen er -->
                     <div
                         class="trin-bjaelke"
                         role="meter"
@@ -285,8 +247,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                     </div>
                 </div>
 
-                <!-- Link til kortet, hvor kun denne bane er valgt (?bane=… læses af KortFilter).
-                     .button-arrow fra _buttons.scss – her bare i mørk farve, så den kan læses på den lyse baggrund -->
+                <!-- Link til kortet, hvor kun denne bane er valgt -->
                 <RouterLink
                     :to="{ path: '/kort', query: { bane: bane.id } }"
                     class="button-arrow bane__kort-link"
@@ -299,7 +260,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         </div>
     </article>
 
-    <!-- Det store billede. Én dialog til alle baner – den viser den bane, man klikkede på -->
+    <!-- Det store billede. Én dialog til alle baner -->
     <dialog
         ref="billedDialog"
         class="billed-dialog"
@@ -324,9 +285,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
 
-// Banens farve – fra $kort-bane-farver i _colors.scss (samme farver som på kortet).
-// Klassen er banens id fra Firebase, fx .bane--bane-1.
-// Ukendte baner får en grå farve (står først, så banefarverne vinder)
+// Banens farve fra $kort-bane-farver ud fra klassen, fx .bane--bane-1. Ukendte baner bliver grå
 .bane {
     --bane-farve: #{c.$primary_black50};
 }
@@ -338,21 +297,19 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 }
 
 /* --- Intro --- */
-// Samme sidemargin som sektionerne (se .forside > section i main.scss)
+// Samme sidemargin som sektionerne
 .baner-intro {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: s.$spacing-s;
     text-align: left;
-    // Samme luft i top og bund som sektionerne (se section i main.scss).
-    // Introen er en div og ikke en section, så den skal have det sat her
+    // Samme luft i top og bund som sektionerne
     padding-block: s.$sektion-luft;
     padding-inline: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
-    // Samme grønne baggrund som banerne, så introen hører med til sektionen.
-    // Den tynde streg over den første bane adskiller introen fra listen
+    // Samme grønne baggrund som banerne, med en tynd streg over den første bane
     background-color: c.$forest_green25;
-    scroll-margin-top: 5rem; // Så den sticky header ikke dækker overskriften
+    scroll-margin-top: 5rem;  // så headeren ikke dækker overskriften
 
     h2 {
         
@@ -369,17 +326,13 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     }
 }
 
-// Badge, overskrift og tekst under hinanden
-// Badget: ingen baggrund, kun en mørk kant og mørk tekst – samme stil som badgerne i
-// OverviewSection og FAQ, bare mørk, fordi baggrunden her er lys.
-// Udseendet kommer fra .badge i _badges.scss – her sættes kun farverne og kanten
+// Badget har kun en mørk kant og mørk tekst, fordi baggrunden er lys
 .baner-intro__badge {
     --badge-bg: transparent;
     --badge-color: #{c.$primary_black100};
     border: 1.5px solid c.$primary_black100;
 }
 
-// Badge, overskrift og tekst under hinanden
 .baner-intro__tekst {
     display: flex;
     flex-direction: column;
@@ -387,9 +340,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     gap: s.$spacing-s;
 }
 
-// Desktop: introteksten til venstre og forklaringsboksen til højre.
-// Boksen får mere plads (2fr), da den har tre kort ved siden af hinanden.
-// end = boksen står nederst, så dens bund flugter med den sidste linje tekst til venstre
+// Desktop: introteksten til venstre og forklaringsboksen til højre
 @media (min-width: 900px) {
     .baner-intro {
         display: grid;
@@ -404,8 +355,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 }
 
 /* --- Forklaring af sværhedsgraden --- */
-// Boks med mørk kant i stedet for baggrundsfarve (samme runde hjørner som faktaboksene).
-// Fylder hele bredden inden for introens padding, så den flugter med banerne under
+// Boks med mørk kant, der flugter med banerne under
 .skala-forklaring {
     display: flex;
     flex-direction: column;
@@ -414,20 +364,18 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     box-sizing: border-box;
     margin-top: s.$spacing-xs;
     padding: s.$spacing-l;
-    // Mørkegrøn boks med lys tekst
     border-radius: 1rem;
     background-color: c.$primary_darkgreen;
     color: c.$primary_light25;
 }
 
-// Overskriften i forklaringsboksen
 .skala-titel {
     margin: 0;
     padding: 0;
     font-weight: 700;
 }
 
-// Teksten holdes i en behagelig linjelængde, selvom boksen er bred
+// Teksten holdes i en behagelig linjelængde
 .baner-intro .skala-tekst {
     max-width: 60ch;
 
@@ -444,9 +392,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     list-style: none;
     padding: 0;
 
-    // Ét kort pr. niveau: samme lyse grønne baggrund som banerne og mørk tekst.
-    // Så ser bjælken helt ens ud her og på banerne
-    // (de mørkegrønne trin ville forsvinde direkte på den mørkegrønne boks)
+    // Ét kort pr. niveau med samme lyse baggrund som banerne, så bjælken ser ens ud
     > li {
         padding: 0.9rem 1rem 1rem;
         border-radius: 0.75rem;
@@ -476,10 +422,8 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     }
 }
 
-// Når forklaringsboksen er smal, står kortene under hinanden.
-// @container kigger på boksens bredde (ikke skærmens), så det virker både på mobil
-// og på desktop, hvor boksen kun fylder den højre halvdel.
-// container-type gør boksen til den "container", der måles på
+// Er boksen smal, står kortene under hinanden.
+// @container kigger på boksens bredde og ikke skærmens
 .skala-forklaring {
     container-type: inline-size;
 }
@@ -497,8 +441,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     background-color: c.$forest_green25;
 }
 
-// Afstanden styres af .bane__kort – siderne styres af .forside > article i main.scss.
-// Stregen sidder her, så den går lige og helt ud til siderne af skærmen
+// Stregen mellem banerne går helt ud til siderne af skærmen
 .bane {
     padding-block: 0;
     background-color: c.$forest_green25;
@@ -510,7 +453,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 }
 
 /* --- Kortet --- */
-// Mobil: overskrift, billede, tekst under hinanden
+// Mobil: overskrift, billede og tekst under hinanden
 .bane__kort {
     display: grid;
     grid-template-columns: 1fr;
@@ -519,7 +462,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         "billede"
         "tekst";
     gap: s.$spacing-m;
-    // Åbent layout uden boks – stregen mellem banerne sidder på .bane
     padding: s.$spacing-l 0;
 
     @media (min-width: 900px) {
@@ -539,9 +481,8 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     font-variant-numeric: tabular-nums;
 }
 
-// Store skærme: overskriften står over tekstkolonnen,
-// og billedet fylder kun rækken med teksten
-// Standard (og img-left) = billedet til venstre, img-right = billedet til højre
+// Store skærme: overskriften står over teksten, og billedet står ved siden af.
+// img-right = billedet til højre, ellers til venstre
 @media (min-width: 900px) {
     .bane__kort {
         grid-template-areas:
@@ -561,7 +502,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 .bane__content { grid-area: tekst; }
 
 /* --- Billede --- */
-// Billedet er en knap (klik åbner det stort), så browserens knap-stil nulstilles
+// Fjerner browserens knap-stil på billedet
 .bane__billede {
     position: relative;
     display: block;
@@ -579,14 +520,14 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         outline-offset: 3px;
     }
 
-    // Billedet fylder feltet, men feltets højde styres af teksten ved siden af
+    // Billedet fylder feltet, men højden styres af teksten ved siden af
     .bane__img {
         position: absolute;
         inset: s.$spacing-s;
         width: calc(100% - 2 * #{s.$spacing-s});
         height: calc(100% - 2 * #{s.$spacing-s});
         object-fit: contain;
-        // Den hvide baggrund i tegningerne smelter sammen med den grønne baggrund
+        // Tegningens hvide baggrund smelter sammen med den grønne baggrund
         mix-blend-mode: multiply;
         transition: transform 0.4s ease;
     }
@@ -596,7 +537,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     transform: scale(1.03);
 }
 
-// Forstørrelsesglasset i hjørnet – bliver tydeligere ved hover og fokus
+// Forstørrelsesglasset bliver tydeligere ved hover
 .bane__zoom {
     position: absolute;
     right: 0.75rem;
@@ -639,7 +580,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     box-shadow: 0 1.5rem 4rem rgba(c.$primary_black100, 0.4);
     overflow: hidden;
 
-    // Ingen blå ramme om hele vinduet – lukkeknappen har sin egen fokusramme
+    // Ingen ramme om hele vinduet – lukkeknappen har sin egen
     &:focus {
         outline: none;
     }
@@ -667,7 +608,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     padding: s.$spacing-m;
 }
 
-// Lukkeknappen bruger .button-close fra _buttons.scss
 .billed-dialog__luk {
     position: absolute;
     top: 0.75rem;
@@ -675,12 +615,12 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     z-index: 1;
 }
 
-// Billedet fylder så meget som muligt, men aldrig mere end skærmen
+// Billedet er så stort som muligt, men aldrig større end skærmen
 .billed-dialog__img {
     width: 100%;
     max-height: calc(100dvh - 10rem);
     object-fit: contain;
-    mix-blend-mode: multiply; // Den hvide baggrund i tegningen smelter sammen med kortet
+    mix-blend-mode: multiply;  // tegningens hvide baggrund smelter sammen med kortet
 }
 
 .billed-dialog__tekst {
@@ -706,8 +646,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     gap: s.$spacing-s;
 }
 
-// Linjen under navn og nummer er en ::after-streg i stedet for en border,
-// så den kan få runde ender. Ret height for tykkelsen
+// Stregen under navnet, med runde ender
 .bane__top {
     position: relative;
     display: flex;
@@ -733,7 +672,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     line-height: 1.1;
     margin: 0;
     padding-top: 0;
-    // Samme farve som banen (og nummeret ved siden af)
     color: var(--bane-farve);
 }
 
@@ -783,7 +721,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 }
 
 /* --- Sværhedsgrad --- */
-// "Se på kortet"-linket nederst på hver bane. Mørkt, fordi baggrunden er lys
+// "Se på kortet"-linket er mørkt, fordi baggrunden er lys
 .bane__kort-link {
     color: c.$primary_darkgreen;
     font-weight: 700;
@@ -792,8 +730,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 .difficulty {
     padding-top: s.$spacing-xs;
 
-    // "Sværhedsgrad" er en lille, dæmpet etiket med store bogstaver.
-    // Selve niveauet ("Let", "Mellem" …) står stort og fedt – det er det, man skal se
+    // "Sværhedsgrad" er en lille, dæmpet etiket. Niveauet står stort og fedt
     .difficulty__label {
         display: flex;
         justify-content: space-between;
@@ -806,7 +743,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         color: c.$primary_black75;
     }
 
-    // Niveauet ude til højre, fx "Let"
     .difficulty__niveau {
         font-size: 1.1rem;
         font-weight: 900;
@@ -818,7 +754,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 }
 
 /* --- (i)-knap og forklaringsboble ved "Sværhedsgrad" --- */
-// position: relative, så boblen placeres i forhold til teksten
 .info {
     position: relative;
     display: inline-flex;
@@ -826,7 +761,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     gap: 0.35rem;
 }
 
-// Rund knap uden baggrund – ikonet arver tekstfarven (currentColor)
+// Rund knap uden baggrund
 .info__knap {
     display: inline-grid;
     place-items: center;
@@ -849,8 +784,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     }
 }
 
-// Boblen over "Sværhedsgrad", så den ikke dækker bjælken, den forklarer.
-// Mørkegrøn med lys tekst ligesom faktaboksene. z-index lægger den øverst
+// Boblen ligger over "Sværhedsgrad", så den ikke dækker bjælken
 .info__boble {
     position: absolute;
     bottom: calc(100% + 0.6rem);
@@ -864,8 +798,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     font-size: 0.85rem;
     font-weight: 400;
     line-height: 1.45;
-    // Boblen står inde i "SVÆRHEDSGRAD"-etiketten, som har store bogstaver og ekstra
-    // bogstavafstand – det nulstilles her, så teksten er almindelig læsbar tekst
+    // Nulstiller etikettens store bogstaver, så boblens tekst er almindelig
     text-transform: none;
     letter-spacing: normal;
     box-shadow: 0 0.5rem 1.5rem rgba(c.$primary_darkgreen, 0.25);
@@ -885,15 +818,13 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     }
 }
 
-// Så den sticky header ikke dækker forklaringen, når man hopper til den fra boblen
+// Så headeren ikke dækker forklaringen
 .skala-forklaring {
     scroll-margin-top: 6rem;
 }
 
-/* --- Trin-bjælke (bruges både på banerne og i forklaringen) ---
-   Tre lige brede trin med lidt luft imellem. Fyldte trin er mørkegrønne, tomme trin er lyse.
-   Samme farve på alle baner og i forklaringen, så de ser ens ud.
-   Ret her, så ændres bjælken begge steder */
+/* --- Trin-bjælke (både på banerne og i forklaringen) ---
+   Tre lige brede trin. Fyldte trin er mørkegrønne, tomme er lyse */
 .trin-bjaelke {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -905,7 +836,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         background-color: c.$primary_light50;
     }
 
-    // Runde hjørner kun i hver ende, så de tre trin ligner én bjælke
+    // Runde hjørner i hver ende, så trinene ligner én bjælke
     .trin-bjaelke__trin:first-child {
         border-radius: 1rem 0 0 1rem;
     }

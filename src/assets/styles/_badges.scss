@@ -1,21 +1,16 @@
 @use 'fonts' as ft;
 @use 'colors' as c;
 
-/* --- BADGES ---
-   Små etiketter over overskrifter, fx "Udforsk terrænet".
-   Brug: <span class="badge">Tekst</span>
-   Varianter: badge--light, badge--dark, badge--outline, badge--outline-green
-
-   Egen farve på én badge – sæt variablerne:
-   <span class="badge" style="--badge-bg: #67ACCB; --badge-color: #000F02">Tekst</span>
-   eller i komponentens <style>:  .badge { --badge-bg: #{c.$secondary_blue100}; } */
+/* Små etiketter over overskrifter, fx "Udforsk terrænet".
+   Farven kan ændres med variablerne --badge-bg og --badge-color */
 
 .badge {
     display: inline-block;
-    align-self: flex-start; // Bliver ikke strakt ud i flex-kolonner
+    align-self: flex-start;  // bliver ikke strakt ud i flex-kolonner
     width: fit-content;
     padding: 0.6rem 1rem;
     border-radius: 1rem;
+    // Bruger --badge-bg, hvis den er sat – ellers lyserød
     background-color: var(--badge-bg, #{c.$forest_pink100});
     color: var(--badge-color, #{c.$primary_black100});
     font-family: ft.$font;
@@ -45,8 +40,7 @@
     backdrop-filter: blur(4px);
 }
 
-// Gennemsigtig med lysegrøn kant og tekst – til mørke sektioner
-// (fx "Udforsk terrænet" og "Spørgsmål og svar")
+// Gennemsigtig med lysegrøn kant – til mørke sektioner
 .badge--outline-green {
     --badge-bg: transparent;
     --badge-color: #{c.$forest_green25};

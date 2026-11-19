@@ -1,38 +1,31 @@
 <script setup>
-// KORTSIDEN (adressen /kort, se src/router/index.js)
-// Siden består af to dele: filteret til venstre (KortFilter.vue) og kortet (InteraktivtKort.vue).
-// De to kan ikke tale direkte sammen. Derfor går beskeden gennem denne fil:
-//   1. Man sætter et flueben i filteret
-//   2. Filteret sender de valgte baner op hertil med emit ('filter-changed')
-//   3. Vi gemmer dem i nuvaerendeFilter
-//   4. nuvaerendeFilter sendes ned i kortet som prop (:filter), og kortet toner de andre baner ned
+// Kortsiden på /kort med filteret og kortet. De kan ikke tale direkte sammen, så filteret sender
+// de valgte baner op hertil (emit), og vi sender dem ned i kortet (prop)
+
 import { ref } from 'vue'
+
 import InteraktivtKort from '@/components/InteraktivtKort.vue'
+
 import KortFilter from '@/components/KortFilter.vue'
 
-// Id på den bane, man har klikket på i kortet (kortet sender det med emit 'bane-valgt').
-// Det gemmes her, så siden kan bruge det – lige nu vises popup'en dog inde i selve kortet
+// Id på den bane, man har klikket på i kortet
 const valgtBaneId = ref(null)
 
-// Hvilke baner filteret viser: 'alle' – eller en liste af bane-id'er, fx ['bane-1', 'bane-3']
+// Hvilke baner filteret viser: 'alle' eller en liste af bane-id'er
 const nuvaerendeFilter = ref('alle')
 
-// Kører, når filteret sender beskeden 'filter-changed' med de valgte baner.
-// Vi gemmer dem – og fordi kortet får nuvaerendeFilter som prop, opdateres kortet af sig selv
+// Gemmer filterets valg. Kortet får det som prop og opdateres af sig selv
 function haandterFilterAendring(nytFilter) {
   nuvaerendeFilter.value = nytFilter
 }
 </script>
 
 <template>
-  <!-- Siden er delt i to: filteret til venstre og kortet til højre.
-       Vejen for beskeden: KortFilter → (emit, op) → KortView → (prop, ned) → InteraktivtKort -->
+  <!-- Filteret til venstre og kortet til højre -->
   <main class="kort-app">
-    <!-- Filter. @filter-changed lytter efter beskeden fra filteret -->
     <KortFilter @filter-changed="haandterFilterAendring" />
 
-    <!-- Kortet. :filter sender filteret ind som prop.
-         @bane-valgt gemmer den bane, man klikker på ($event = bane-id'et) -->
+    <!-- Kortet får filteret som prop og sender den valgte bane tilbage -->
     <div class="kort-side">
       <InteraktivtKort
         :filter="nuvaerendeFilter"
@@ -42,25 +35,20 @@ function haandterFilterAendring(nytFilter) {
   </main>
 </template>
 
-<!-- IKKE scoped. Kortets SVG bliver sat ind med JavaScript (ikke via templaten),
-     og så virker scoped-styles ikke på den.
-     Alt ligger under .kort-app, så intet rammer resten af sitet (admin, forside osv.).
-     Farverne kommer fra _colors.scss, så kortet passer til resten af siderne -->
+<!-- Ikke scoped, fordi kortets SVG sættes ind med JavaScript, og scoped-styles ikke virker på den.
+     Alt ligger under .kort-app, så intet rammer resten af siden -->
 <style lang="scss">
 @use '@/assets/styles/fonts' as ft;
 @use '@/assets/styles/colors' as c;
 
-// Kortets egen baggrundsfarve. Den er ikke en del af farvepaletten,
-// men skal matche selve kort-tegningen (public/kort-base.svg)
+// Kortets baggrundsfarve, så den matcher kort-tegningen
 $kort-baggrund: #a9b790;
 
-// Skygge under de bokse, der ligger oven på kortet
+// Skygge under boksene oven på kortet
 $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 
-// Hele kortsiden: fylder skærmens fulde højde.
-// display: flex lægger filteret og kortet ved siden af hinanden.
-// 100dvh er højden på mobil uden browserens adresselinje. 100vh er en reserve
-// til ældre browsere, der ikke kender dvh
+// Kortsiden fylder hele skærmens højde, med filteret og kortet ved siden af hinanden.
+// 100dvh er højden på mobil uden adresselinjen, 100vh er reserven til ældre browsere
 .kort-app {
   position: fixed;
   top: 0;
@@ -78,7 +66,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   background: c.$primary_light25;
   font-synthesis: none;
 
-  // border-box: padding og kant tælles med i bredden, så elementer ikke bliver for brede
+  // Padding og kant tælles med i bredden
   *,
   *::before,
   *::after {
@@ -89,16 +77,14 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     cursor: pointer;
   }
 
-  // Lukkekryds øverst til højre. Udseendet kommer fra .button-close i _buttons.scss –
-  // her får det kun skygge, så det kan ses oven på kortet.
-  // pointer-events: auto, fordi .kort-tophoejre lader klik gå igennem
+  // Lukkekrydset får skygge, så det kan ses oven på kortet
   .kort-luk {
     pointer-events: auto;
     align-self: center;
     box-shadow: $skygge;
   }
 
-  // Tydelig lilla ramme, når man bruger tastaturet (Tab) til at gå mellem knapper
+  // Lilla ramme, når man bruger tastaturet til at gå mellem knapper
   button:focus-visible,
   .kort-visning:focus-visible {
     outline: 3px solid c.$secondary_purple100;
@@ -107,13 +93,8 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 
   // ---------- Banefarver ----------
 
-  // Farverne kommer fra listen $kort-bane-farver i _colors.scss.
-  // @each er en løkke i SCSS: den kører én gang for hver bane i listen.
-  // 1) Hver farve bliver en CSS-variabel, fx --kort-bane-bane-1: <farve>.
-  //    Kortet, filteret og BanePopup.vue bruger variablerne, så farven er ens overalt.
-  // 2) Banens farvede streg på kortet får samme farve.
-  //    Hvert stykke bane har tre streger: lys kant, farve (nr. 2) og reb (se kortStier.js).
-  //    Reglen her er stærkere end SVG'ens egne klasser (fx .st27), så den vinder
+  // Laver en CSS-variabel med farven for hver bane i $kort-bane-farver, fx --kort-bane-bane-1.
+  // Banens farvestreg (nr. 2) på kortet får samme farve
   @each $id, $farve in c.$kort-bane-farver {
     --kort-bane-#{$id}: #{$farve};
 
@@ -129,7 +110,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     flex: 1;
     min-width: 0;
     height: 100%;
-    // Samme farve som kortet, så der aldrig kan skinne hvidt igennem
+    // Samme farve som kortet, så der aldrig skinner hvidt igennem
     background: $kort-baggrund;
     border-radius: 0;
     overflow: hidden;
@@ -138,19 +119,16 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     position: relative;
   }
 
-  // Skal fylde hele højden, ellers bliver kortet kortere end området
   .kort-shell {
     flex: 1;
     min-width: 0;
     min-height: 0;
     width: 100%;
-    // main.scss giver alle <section> padding – det skal kortet ikke have
+    // Kortet skal ikke have den padding, som main.scss giver alle sektioner
     padding: 0;
   }
 
-  // Scenen. position: relative gør, at knapperne med position: absolute
-  // placeres i forhold til scenen og ikke i forhold til hele siden.
-  // isolation: isolate holder z-index for knapperne inde i scenen
+  // Knapperne placeres i forhold til scenen og ikke hele siden
   .kort-stage {
     position: relative;
     isolation: isolate;
@@ -162,9 +140,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     background: $kort-baggrund;
   }
 
-  // Boksen, som SVG'en sættes ind i.
-  // user-select: none forhindrer, at man markerer tekst, når man trækker.
-  // cursor: grab viser en hånd, og grabbing en lukket hånd, mens man trækker
+  // Boksen, som SVG'en sættes ind i. Man kan ikke markere tekst, og markøren er en hånd
   .kort-visning {
     width: 100%;
     height: 100%;
@@ -182,7 +158,6 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
       outline-offset: -4px;
     }
 
-    // Selve SVG-tegningen
     svg {
       width: 100%;
       height: 100%;
@@ -192,10 +167,8 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 
   // ---------- Toplinje ----------
 
-  // Øverst til højre: "Vis hele parken" og lukkeknappen ligger oven på kortet (z-index: 4).
-  // pointer-events: none lader klik gå igennem til kortet – undtagen på knapperne,
-  // som får pointer-events: auto igen.
-  // clamp(16px, 3vw, 42px) = afstand fra kanten, der skalerer med skærmen
+  // "Vis hele parken" og lukkeknappen øverst til højre.
+  // Klik går igennem til kortet, undtagen på knapperne
   .kort-tophoejre {
     position: absolute;
     z-index: 4;
@@ -207,15 +180,13 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     pointer-events: none;
   }
 
-  // "Vis hele parken": udseendet kommer fra .button-primary i _buttons.scss.
-  // pointer-events: auto, fordi .kort-tophoejre lader klik gå igennem
   .kort-reset-top {
     pointer-events: auto;
   }
 
   // ---------- Zoomknapper ----------
 
-  // Den lyse boks med + og − nederst til højre
+  // Boksen med + og − nederst til højre
   .kort-vaerktoejer {
     position: absolute;
     bottom: 29px;
@@ -256,14 +227,14 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     }
   }
 
-  // Den tynde streg mellem + og −
+  // Stregen mellem + og −
   .kort-vaerktoej-linje {
     height: 1px;
     width: 31px;
     background: c.$primary_black25;
   }
 
-  // Zoomniveauet (fx "1.3×") lige over zoomknapperne
+  // Zoomniveauet over zoomknapperne
   .kort-zoom {
     position: absolute;
     right: clamp(17px, 3vw, 42px);
@@ -279,9 +250,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 
   // ---------- Valgt bane og vejledning ----------
 
-  // Boksen med den valgte bane nederst til venstre.
-  // Den har z-index 4 og ligger derfor oven på vejledningen (z-index 2).
-  // backdrop-filter: blur slører kortet bag den halvgennemsigtige boks
+  // Boksen med den valgte bane nederst til venstre. Den slører kortet bagved
   .kort-valgt {
     position: absolute;
     left: clamp(16px, 3vw, 42px);
@@ -318,7 +287,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     }
   }
 
-  // Den runde prik i banens farve. border-radius: 50% gør firkanten rund
+  // Prik i banens farve
   .bane-prik {
     width: 14px;
     height: 14px;
@@ -343,8 +312,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 
   // ---------- Indlæsning og fejl ----------
 
-  // Boksen med "Kortet indlæses…" eller en fejl, midt på kortet.
-  // top/left 50% + translate(-50%, -50%) er et klassisk trick til at centrere
+  // Boksen med "Kortet indlæses…" eller en fejl, midt på kortet
   .kort-status {
     z-index: 5;
     position: absolute;
@@ -361,7 +329,6 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
       color: c.$secondary_orange100;
     }
 
-    // "Prøv igen" ser ud som button-primary
     button {
       border: 0;
       background: c.$primary_black100;
@@ -378,12 +345,9 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 
   // ---------- Desktop ----------
 
-  // Filteret svæver oven på kortet til venstre (24px luft + 360px bredde, se KortFilter.vue).
-  // Vejledningen og "valgt bane" nederst til venstre rykkes til højre for filteret,
-  // så de ikke bliver gemt bag det
+  // Filteret svæver oven på kortet til venstre, så teksterne nederst rykkes til højre for det
   @media (min-width: 801px) {
-    // Fortæller kortet (InteraktivtKort.vue), at de første 384px (24px + 360px)
-    // i venstre side er dækket af filteret, så kortet rykkes til højre for det
+    // Fortæller kortet, at de første 384px i venstre side er dækket af filteret
     --kort-daekket-venstre: 384px;
 
     .kort-valgt,
@@ -394,8 +358,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 
   // ---------- Mobil ----------
 
-  // Gælder kun skærme op til 800px brede.
-  // Her skjules "Vis hele parken" og vejledningen for at give kortet plads
+  // Op til 800px: "Vis hele parken" og vejledningen skjules for at give kortet plads
   @media (max-width: 800px) {
     margin: 0;
     padding: 0;
@@ -417,7 +380,6 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
       display: none !important;
     }
 
-    // Lukkeknappen bliver øverst til højre, lidt tættere på kanten
     .kort-tophoejre {
       top: 15px;
       right: 15px;
@@ -434,15 +396,12 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   }
 }
 
-// Knapper på kortsiden bruger samme skrift som resten af siden.
-// :where() gør reglen så "svag" som muligt, så alle andre regler vinder over den
-// – også knap-klasserne som .button-primary fra _buttons.scss.
-// (Uden :where() ville denne regel vinde og ødelægge knappernes skrift)
+// Knapperne bruger sidens skrift. :where() gør reglen svag, så knap-klasserne vinder over den
 :where(.kort-app button) {
   font: inherit;
 }
 
-// Respektér brugere, der har slået animationer fra i deres styresystem
+// Ingen animationer, hvis brugeren har slået dem fra
 @media (prefers-reduced-motion: reduce) {
   .kort-app *,
   .kort-app *::before,

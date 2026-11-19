@@ -1,8 +1,9 @@
+/* Størrelser og tykkelser på overskrifter, tekst og knapper. Først mobil, derefter desktop */
+
 @use 'fonts' as ft;
 @use 'spacings' as s;
 @use 'colors' as c;
 
-/* --- MOBILE-FIRST (Bygget på 8-punkts systemet) --- */
 h1 {
     font-family: ft.$font;
     font-weight: 900;
@@ -19,9 +20,7 @@ h2 {
     padding-top: s.$spacing-xs;
 }
 
-/* h3 – og klassen .h3, som giver en anden overskrift (fx en h2) præcis samme udseende.
-   Brug .h3, når strukturen kræver en h2, men teksten skal se ud som en h3:
-   <h2 class="h3">Undertitel</h2> */
+/* h3 og klassen .h3, så fx en h2 kan se ud som en h3 */
 h3,
 .h3 {
     font-family: ft.$font;
@@ -55,6 +54,7 @@ ul {
     padding-top: s.$spacing-m;
 }
 
+/* Skriften på knapper */
 @mixin button {
     font-family: ft.$font;
     font-weight: 900;
@@ -62,6 +62,7 @@ ul {
     text-decoration: none;
 }
 
+/* Skriften på menupunkterne i headeren */
 @mixin button_header {
     font-family: ft.$font;
     font-weight: 500;
@@ -69,7 +70,7 @@ ul {
 }
 
 
-/* --- DESKTOP VERSION (Fra 768px og opefter) --- */
+/* Større skrift fra 768px og op */
 @media (min-width: 768px) {
     h1 {
         font-size: 72px; /* 8 x 10 */
@@ -94,7 +95,7 @@ ul {
 }
 
 
-/* --- Fremhævet ord i en overskrift --- */
+/* Fremhævet ord i en overskrift: pink og kursiv med en streg under, der tegnes ind */
 .fremhaev {
     position: relative;
     display: inline-block;
@@ -117,11 +118,13 @@ ul {
     }
 }
 
+/* Stregen vokser fra ingen bredde til fuld bredde */
 @keyframes fremhaev-streg {
     from { transform: rotate(-2deg) scaleX(0); }
     to { transform: rotate(-2deg) scaleX(1); }
 }
 
+/* Har brugeren slået animationer fra, vises stregen med det samme */
 @media (prefers-reduced-motion: reduce) {
     .fremhaev::after {
         animation: none;

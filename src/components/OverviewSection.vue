@@ -1,19 +1,15 @@
 <script setup>
-// OVERBLIK OVER PARKEN
-// Sektion på forsiden med et billede af kortet (klik = gå til /kort)
-// og en forklaring af banernes farver.
-//
-// Farveforklaringen: navnene og rækkefølgen (fra let til svær) hentes fra Firebase
-// via services/baner.js, så den altid passer med forsiden, kortet og filtret.
-// Selve farven kommer fra $kort-bane-farver i _colors.scss ud fra banens id (fx 'bane-1')
+// Sektionen på forsiden med et billede af kortet (link til /kort) og en forklaring af banernes farver.
+// Navnene hentes fra Firebase, farverne kommer fra $kort-bane-farver i _colors.scss
+
 import { ref, onMounted } from 'vue'
+
 import { hentBaner } from '@/services/baner.js'
 
 // Listen til farveforklaringen: [{ navn: 'Grøn', klasse: 'bane-1' }, ...]
 const baneFarver = ref([])
 
-// Når sektionen vises: hent banerne og behold kun navn og id.
-// .map laver hver bane om til et lille objekt med kun det, vi skal bruge
+// Henter banerne og beholder kun navn og id. Fejler det, forbliver listen tom
 onMounted(async () => {
   try {
     baneFarver.value = (await hentBaner()).map((bane) => ({ navn: bane.name, klasse: bane.id }))
@@ -34,12 +30,10 @@ onMounted(async () => {
           class="overblik-kort"
         >
         <div class="kort-overlay">
-          <!-- .button-primary + .button-pink fra _buttons.scss -->
           <span class="button-primary button-pink kort-knap">Se det fulde kort</span>
         </div>
       </RouterLink>
 
-      <!-- Tekstindhold i mørkt kort -->
       <div id="overblik-tekst" class="tekst-indhold">
         <span class="badge badge--outline-green">Udforsk terrænet</span>
         <h2>Overblik over parken</h2>
@@ -50,11 +44,10 @@ onMounted(async () => {
           Hver bane har sin egen unikke farve og sværhedsgrad, så du nemt kan finde den perfekte udfordring for dig.
         </p>
 
-        <!-- Farveforklaring: hvilken farve hver bane har på kortet -->
+        <!-- Hvilken farve hver bane har på kortet -->
         <div class="farve-forklaring">
           <h3 id="banefarver-titel" class="farve-titel">Banernes farver</h3>
 
-          <!-- Små mærker side om side, der bryder over på flere linjer, når pladsen slipper op -->
           <ul class="farve-liste" aria-labelledby="banefarver-titel">
             <li v-for="f in baneFarver" :key="f.klasse">
               <span class="markering" :class="`farve--${f.klasse}`" aria-hidden="true"></span>
@@ -74,29 +67,26 @@ onMounted(async () => {
 
 #overblik {
   @include m.section-black100;
-  // Luften i top og sider kommer fra section-reglen i main.scss.
-  // Ingen luft i bunden, så sektionen går direkte over i TrackPickerSection (også sort)
+  // Ingen luft i bunden, så sektionen går direkte over i den næste (også sort)
   padding-bottom: 0;
 
   // Tekst 2/5 til venstre, kort 3/5 til højre
   .overblik-container {
     display: grid;
     grid-template-columns: 1fr;
-    align-items: stretch; // Kort og tekstkort får samme højde
+    align-items: stretch;  // kort og tekst får samme højde
     gap: s.$spacing-m;
 
     @media (min-width: 901px) {
       grid-template-columns: 2fr 3fr;
 
-      // Kortet står først i HTML'en (så det ligger øverst på mobil),
-      // men flyttes til højre kolonne på større skærme
+      // Kortet står først i HTML'en (øverst på mobil), men flyttes til højre på større skærme
       .kort-kort {
         order: 2;
       }
     }
   }
 
-  // "Udforsk terrænet"-badget bruger badge--outline-green fra _badges.scss
 
   /* --- Tekst i mørkt kort --- */
   .tekst-indhold {
@@ -149,7 +139,7 @@ onMounted(async () => {
     margin-top: 0.25rem;
   }
 
-  // Lille overskrift med store bogstaver, så den ikke konkurrerer med h2
+  // Lille overskrift med store bogstaver
   .farve-titel {
     margin: 0 0 0.6rem;
     padding: 0;
@@ -160,8 +150,7 @@ onMounted(async () => {
     color: rgba(c.$primary_light25, 0.7);
   }
 
-  // 4 mærker pr. linje i lige brede kolonner, så de står præcis under hinanden,
-  // uanset hvor langt navnet er
+  // 4 lige brede mærker pr. linje, så de står præcis under hinanden
   .farve-liste {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -170,14 +159,12 @@ onMounted(async () => {
     margin: 0;
     padding: 0;
 
-    // Mobil: der er ikke plads til 4 på en række, så de står 2 og 2.
-    // Stadig lige brede kolonner, så de står præcis under hinanden
+    // Mobil: 2 mærker pr. linje
     @media (max-width: 520px) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    // Ét mærke pr. bane: svag lys baggrund med runde hjørner.
-    // Fylder hele kolonnens bredde, så alle mærker er lige brede
+    // Ét mærke pr. bane med svag lys baggrund
     li {
       display: flex;
       align-items: center;
@@ -192,8 +179,7 @@ onMounted(async () => {
       line-height: 1.2;
     }
 
-    // Prik i banens farve.
-    // Tynd lys kant, så den sorte bane kan ses på den mørke baggrund
+    // Prik i banens farve med en tynd lys kant, så den sorte bane kan ses
     .markering {
       flex-shrink: 0;
       width: 0.65rem;
@@ -204,7 +190,6 @@ onMounted(async () => {
     }
   }
 
-  // Farverne kommer fra $kort-bane-farver i _colors.scss (samme som på kortet)
   @each $navn, $farve in c.$kort-bane-farver {
     .farve--#{$navn} {
       background-color: $farve;
@@ -227,13 +212,13 @@ onMounted(async () => {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      // Let sløring – scale skjuler de bløde kanter, som blur giver
+      // Let sløring. scale skjuler de bløde kanter, som blur giver
       filter: blur(3px) brightness(0.85);
       transform: scale(1.05);
       transition: transform 0.6s ease, filter 0.4s ease;
     }
 
-    // Let mørk tone over hele kortet, knappen står i midten
+    // Mørk tone over kortet med knappen i midten
     .kort-overlay {
       position: absolute;
       inset: 0;
@@ -256,7 +241,7 @@ onMounted(async () => {
         background-color: rgba(c.$primary_black100, 0.1);
       }
 
-      // Samme hover som .button-primary: lilla baggrund, her med lys tekst
+      // Lilla ved hover ligesom .button-primary
       .kort-knap {
         background-color: c.$secondary_purple100;
         color: c.$primary_light25;

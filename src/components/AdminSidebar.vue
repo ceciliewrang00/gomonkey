@@ -1,32 +1,25 @@
 <script setup>
-// Denne side er primærl lavet af claude (AI)
-// SIDEBAR PÅ ADMIN-SIDEN
-// En indholdsfortegnelse i venstre side: en liste med overskrifterne (h2 og h3) i den åbne fane.
-// Klikker man på en overskrift, ruller siden ned til den.
-// Listen laves automatisk ved at kigge efter overskrifter på siden. Derfor virker den for
-// Baner, Quiz og Kort, uden at de tre filer skal ændres.
+// Denne side er primært lavet af Claude (AI).
+// Indholdsfortegnelse over overskrifterne i den åbne admin-fane. Et klik ruller ned til overskriften
 
 import { ref, watch, onUnmounted } from 'vue'
 
-// omraade = boksen med fanens indhold, hvor vi leder efter overskrifter (sendes ind fra AdminView)
+// omraade = boksen med fanens indhold, hvor vi leder efter overskrifter
 const props = defineProps({
   omraade: { type: Object, default: null },
 })
 
-// Listen, der vises i sidebaren: [{ id: 'admin-afsnit-0', tekst: 'Grøn' }, ...]
+// Listen i sidebaren: [{ id, tekst }, ...]
 const overskrifter = ref([])
 
-// En tæller, så hver overskrift får sit eget id: admin-afsnit-0, admin-afsnit-1 ...
+// Tæller, så hver overskrift får sit eget id
 let naesteId = 0
 
-// "Vagten", der holder øje med, om indholdet ændrer sig (se watch længere nede)
+// Holder øje med, om fanens indhold ændrer sig
 let observer = null
 
-// Finder alle h2 og h3 i boksen og laver listen.
-// Disse springes over:
-//  - overskrifter inde i en åben redigeringsformular (.redigering)
-//  - overskrifter, der starter med "Rediger" (fx "Rediger baner").
-//    /^rediger/i er et regex: ^ = starter med, i = ligegyldigt om det er store eller små bogstaver
+// Finder alle h2 og h3 i boksen og laver listen. Overskrifter i en åben
+// redigeringsformular, og dem der starter med "Rediger", springes over
 function opdater() {
   const el = props.omraade
   if (!el) {
@@ -39,8 +32,7 @@ function opdater() {
   )
 
   overskrifter.value = fundne.map((h) => {
-    // Giv overskriften et id, hvis den ikke har et – det skal bruges til at rulle hen til den.
-    // naesteId++ = brug tallet, og læg så 1 til, så det næste bliver anderledes
+    // Giver overskriften et id, hvis den ikke har et, så vi kan rulle hen til den
     if (!h.id) h.id = 'admin-afsnit-' + naesteId++
     return {
       id: h.id,
@@ -49,18 +41,14 @@ function opdater() {
   })
 }
 
-// Klik på et punkt: find overskriften med det id, og rul blødt ned til den
+// Ruller blødt ned til overskriften med det id
 function rulTil(id) {
   const maal = document.getElementById(id)
   if (maal) maal.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-// Listen skal laves om, hver gang indholdet ændrer sig: når data er hentet, når man skifter fane,
-// og når man opretter eller sletter noget.
-// En MutationObserver er browserens "vagt": den kører en funktion (her opdater),
-// hver gang der kommer eller forsvinder noget i boksen, eller en tekst ændres.
-// watch herunder starter vagten, så snart boksen findes (immediate: true = med det samme).
-// disconnect = stop den gamle vagt, før en ny startes
+// Laver listen igen, hver gang der kommer eller forsvinder noget i boksen.
+// Den gamle vagt stoppes, før en ny startes
 watch(
   () => props.omraade,
   (el) => {
@@ -73,7 +61,7 @@ watch(
   { immediate: true },
 )
 
-// Når man forlader admin-siden, stoppes vagten
+// Stopper vagten, når man forlader admin-siden
 onUnmounted(() => {
   observer?.disconnect()
 })
@@ -98,7 +86,7 @@ onUnmounted(() => {
   background-color: c.$forest_green25;
   border: 2px solid c.$forest_green100;
   border-radius: 1rem;
-  // Lange lister (fx mange quizspørgsmål) kan rulles inde i sidebaren
+  // Lange lister kan rulles inde i sidebaren
   max-height: 40vh;
   overflow-y: auto;
 

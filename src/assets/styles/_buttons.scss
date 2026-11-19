@@ -1,7 +1,10 @@
+/* Alle knap-styles. BaseButton.vue vælger klassen ud fra sin variant */
+
 @use 'fonts' as ft;
 @use '_colors' as c;
 @use '_typography' as t;
 
+/* Primær knap: sort med lys tekst, lilla ved hover */
 .button-primary {
     background-color: c.$primary_black100;
     color: c.$primary_light25;
@@ -16,9 +19,7 @@
     }
 }
 
-/* Lyserød variant – til mørke baggrunde og billeder.
-   Brug sammen med .button-primary:  <a class="button-primary button-pink">
-   eller <BaseButton variant="pink">. Hover er lilla med lys tekst ligesom .button-primary */
+/* Lyserød variant af .button-primary – til mørke baggrunde og billeder */
 .button-pink {
     background-color: c.$forest_pink100;
     color: c.$primary_black100;
@@ -35,9 +36,7 @@
     }
 }
 
-/* Lys variant – lys knap med mørk tekst til mørke baggrunde.
-   Brug sammen med .button-primary:  <a class="button-primary button-light">
-   Hover er lilla med lys tekst ligesom .button-primary */
+/* Lys variant af .button-primary – til mørke baggrunde */
 .button-light {
     background-color: c.$primary_light25;
     color: c.$primary_darkgreen;
@@ -54,6 +53,7 @@
     }
 }
 
+/* Sekundær knap: gennemsigtig med sort kant, lilla ved hover */
 .button-secondary {
     background-color: none;
     padding:0.5rem 1.5rem;
@@ -70,9 +70,7 @@
     }
 }
 
-/* Lys variant af .button-secondary – hvid kant og hvid tekst til mørke baggrunde.
-   Brug: <a class="button-secondary button-secondary--light">
-   Ved hover bliver den lys med mørk tekst */
+/* Lys variant af .button-secondary – hvid kant og tekst til mørke baggrunde */
 .button-secondary--light {
     border-color: c.$primary_light25;
     color: c.$primary_light25;
@@ -90,24 +88,14 @@
     }
 }
 
-/* Tekst-link med pil, der rykker til højre ved hover. Lyserød som standard.
-   Brug: <a class="button-arrow" href="#bane-info">
-           Se banerne
-           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-         </a>
-   Anden farve: sæt color på knappen i komponenten – pilen følger med (currentColor)
-
-   Tilbage-variant (pil mod venstre, før teksten): tilføj klassen button-arrow--tilbage
-   <button type="button" class="button-arrow button-arrow--tilbage">
-     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
-     Tilbage
-   </button> */
+/* Tekst-link med en pil, der rykker til højre ved hover.
+   Med button-arrow--tilbage peger pilen mod venstre */
 .button-arrow {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     width: fit-content;
-    // Nulstiller browserens standard, så den også ser rigtig ud som <button>
+    // Fjerner browserens standard-udseende på <button>
     background: none;
     border: none;
     padding: 0;
@@ -133,7 +121,6 @@
         transform: translateX(4px);
     }
 
-    // Tilbage: pilen rykker mod venstre i stedet
     &.button-arrow--tilbage:hover svg {
         transform: translateX(-4px);
     }
@@ -150,10 +137,7 @@
     }
 }
 
-/* Rund lukkeknap med kryds. Placeringen styres i komponenten.
-   Brug: <RouterLink to="/" class="button-close" aria-label="Luk">
-           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
-         </RouterLink> */
+/* Rund lukkeknap med kryds */
 .button-close {
     display: grid;
     place-items: center;
@@ -187,6 +171,7 @@
     }
 }
 
+/* Menupunkterne i headeren: tekst, der bliver lilla ved hover */
 .button-header {
     @include t.button_header;
     color: c.$primary_black100;

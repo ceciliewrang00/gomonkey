@@ -1,12 +1,12 @@
 <script setup>
-// SIDEHOVEDET
-// Logo, menu og "BOOK"-knap øverst på siden. Bruges på forsiden (HomeView) og i quizzen (QuizView).
-// Det bliver hængende i toppen, når man scroller (position: sticky i CSS'en).
-// På mobil er menuen skjult bag en burgerknap (☰). Et klik skifter isOpen mellem true og false,
-// og når isOpen er true, får <nav> klassen "open", som viser menuen (se CSS nederst).
+// Sidehovedet med logo, menu og "BOOK"-knap. Det bliver i toppen, når man scroller.
+// På mobil åbner og lukker burgerknappen menuen
+
 import { ref } from 'vue'
+
 import BaseButton from './BaseButton.vue'
-// Link til booking – samme som "Book nu" i hero (står ét sted i services/api.js)
+
+// Link til booking
 import { BOOK_URL } from '@/services/api.js'
 
 // false = menuen er lukket, true = menuen er åben
@@ -19,7 +19,7 @@ const isOpen = ref(false)
         <img src="@/assets/images/logo.svg" alt="GoMonkey – se Forest lokationer">
       </a>
       <div class="menu">
-        <!-- :class="{ open: isOpen }" = klassen "open" sættes kun på, når isOpen er true -->
+        <!-- Klassen "open" sættes på, når menuen er åben -->
         <nav :class="{ open: isOpen }">
           <BaseButton variant="header" href="#">Cave</BaseButton>
           <BaseButton variant="header" href="#">Forest</BaseButton>
@@ -28,7 +28,7 @@ const isOpen = ref(false)
         </nav>
 
         <div class="actions">
-          <!-- Burgerknappen (kun på mobil). Viser ✕ når menuen er åben, ellers ☰ -->
+          <!-- Burgerknappen (kun på mobil). Viser ✕, når menuen er åben -->
           <button class="burger" aria-label="Menu" @click="isOpen = !isOpen">
             {{ isOpen ? '✕' : '☰' }}
           </button>
@@ -53,7 +53,7 @@ header {
   padding: s.$spacing-xs s.$spacing-m;
 }
 
-// Linket om logoet – display: flex fjerner ekstra luft under billedet
+// Fjerner ekstra luft under logoet
 .logo-link {
   display: flex;
 }
@@ -78,7 +78,7 @@ header {
   cursor: pointer;
 }
 
-/* MOBIL: menuen er skjult, og vises kun når den har klassen "open" */
+/* Mobil: menuen er skjult og vises kun med klassen "open" */
 nav {
   display: none;
   position: absolute;
@@ -96,7 +96,7 @@ nav.open {
   display: flex;
 }
 
-/* DESKTOP: burgeren skjules, og menuen vises som en række */
+/* Desktop: burgeren skjules, og menuen står på en række */
 @media (min-width: 48rem) {
   .burger {
     display: none;

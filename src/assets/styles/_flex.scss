@@ -1,5 +1,8 @@
+// Mixins til at stille ting ved siden af eller under hinanden, fx @include f.flex-row
+
 @use 'spacings' as s;
 
+// Knapper ved siden af hinanden, der ryger ned på næste linje, hvis der ikke er plads
 @mixin flex-buttons {
     display: flex;
     flex-direction: row;
@@ -7,6 +10,7 @@
     gap: 1.5rem; 
 }
 
+// Ting ved siden af hinanden i en række
 @mixin flex-row {
     display: flex;
     flex-wrap: wrap;
@@ -15,23 +19,23 @@
     margin: 0 auto;
 }
 
+// Som flex-row, men i omvendt rækkefølge
 @mixin flex-row-reverse {
     display: flex;
     flex-wrap: wrap;
     flex-direction: row-reverse;
-    // I row-reverse betyder flex-end venstre. Så alt lægger sig til venstre,
-    // også når elementerne ryger ned på hver sin linje
+    // I row-reverse betyder flex-end venstre, så alt lægger sig til venstre
     justify-content: flex-end;
     gap: s.$spacing-xl;
     margin: 0 auto;
 
-    // Det sidste element i HTML'en står længst til venstre.
-    // margin-right: auto skubber de andre ud til højre kant, når de står på samme linje
+    // Skubber de andre elementer ud til højre kant
     > :last-child {
         margin-right: auto;
     }
 }
 
+// Ting under hinanden i en kolonne
 @mixin flex-column {
     display: flex;
     flex-direction: column;

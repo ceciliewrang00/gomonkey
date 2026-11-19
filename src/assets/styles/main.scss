@@ -1,5 +1,6 @@
+/* De fælles styles, som gælder på alle sider. Filen hentes i main.js */
+
 @use 'fonts' as ft;
-/* --- IMPORT AF FILER */
 @use 'buttons';
 @use 'badges';
 @use 'typography';
@@ -7,18 +8,20 @@
 @use 'colors' as c;
 @use 'flex' as f;
 
+// Blød scroll, når man klikker på et link til en sektion
 html {
     scroll-behavior: smooth;
 }
 
+// Hele siden er højst 100rem bred og står i midten
 body {
     max-width: 100rem;
     margin: 0 auto;
     background-color: c.$primary_light25;
-    // Standardfont for hele siden, så fx span og a også bruger den
     font-family: ft.$font;
 }
 
+// Logo i venstre side og menu i højre side
 header {
     padding: s.$spacing-xs s.$spacing-m;
     display: flex;
@@ -26,14 +29,14 @@ header {
     justify-content: space-between;
 }
 
+// Luft i alle sektioner. scroll-margin-top sørger for, at headeren ikke dækker toppen
 section, article {
     padding: s.$sektion-luft s.$spacing-m;
     scroll-margin-top: 5rem;
 }
 
-// Forsidens sektioner får samme indholdsbredde, så alle kanter flugter.
-// Baggrunden fylder stadig hele bredden, men padding til siderne vokser,
-// når skærmen er bredere end $indhold-bredde. Den bliver aldrig mindre end spacing-m
+// Forsidens sektioner får samme indholdsbredde, så kanterne flugter.
+// Baggrunden fylder hele bredden, men luften i siderne vokser på store skærme
 .forside > section,
 .forside > article {
     padding-inline: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));

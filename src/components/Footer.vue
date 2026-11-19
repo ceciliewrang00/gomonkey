@@ -1,10 +1,8 @@
 <script setup>
-// SIDEFODEN
-// Nederst på forsiden (HomeView). Der er ingen data fra Firebase – alle links står i
-// listerne herunder, og templaten laver et link for hvert punkt med v-for.
-// Vil du tilføje eller rette et link, så gør det i listerne.
+// Sidefoden. Alle links står i listerne herunder, og templaten laver et link for hvert punkt.
+// navn = teksten, href = hvor linket går hen ('#' = intet link endnu)
 
-// Links i de to kolonner til højre
+// Links i kolonnen "Lokationer"
 const lokationer = [
   { navn: 'Forest Gladsaxe', href: '#' },
   { navn: 'Forest København', href: '#' },
@@ -12,6 +10,7 @@ const lokationer = [
   { navn: 'Cave Gladsaxe', href: '#' },
 ]
 
+// Links i kolonnen "Alt godt"
 const altGodt = [
   { navn: 'Praktisk info', href: '#' },
   { navn: 'Inspiration', href: '#' },
@@ -19,7 +18,7 @@ const altGodt = [
   { navn: 'Gavekort', href: '#' },
 ]
 
-// Sociale medier – path er SVG-ikonet (24x24 viewBox)
+// Sociale medier. path er tegningen af ikonet
 const sociale = [
   {
     navn: 'LinkedIn',
@@ -48,7 +47,7 @@ const sociale = [
   },
 ]
 
-// Årstallet i "© 2026 GoMonkey ApS" – tages fra datoen i dag, så det aldrig skal rettes
+// Årstallet tages fra dagens dato, så det aldrig skal rettes
 const aar = new Date().getFullYear()
 </script>
 
@@ -142,9 +141,9 @@ $linje: rgba(239, 233, 229, 0.08);
   }
 }
 
-// Samme sidemargin som forsidens sektioner (se .forside > section i main.scss)
+// Samme sidemargin som forsidens sektioner
 .footer__inner {
-  // Samme luft i top og bund som sektionerne (se section i main.scss)
+  // Samme luft i top og bund som sektionerne
   padding-block: s.$sektion-luft;
   padding-inline: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
 }
@@ -165,7 +164,7 @@ $linje: rgba(239, 233, 229, 0.08);
 .footer__logo {
   width: clamp(9rem, 14vw, 10rem);
   height: auto;
-  // Logoet er mørkt – gør det lyst på den mørke baggrund
+  // Gør det mørke logo lyst
   filter: brightness(0) invert(1);
   opacity: 0.93;
 }

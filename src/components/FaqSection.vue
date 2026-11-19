@@ -1,26 +1,13 @@
 <script setup>
-// FAQ – OFTE STILLEDE SPØRGSMÅL
-// Sektionen nederst på forsiden med spørgsmål, man kan klikke på for at se svaret.
-// Spørgsmålene står direkte i listen SPOERGSMAAL nedenfor (ikke i Firebase).
-// Vil du rette eller tilføje et, så gør det dér.
-//
-// Hvert spørgsmål ser sådan ud:
-//   sp   = spørgsmålet
-//   svar = en liste af tekststykker, der sættes sammen til én sætning.
-//          Det er en liste, så man kan putte links ind midt i en sætning. Et stykke kan være:
-//   'almindelig tekst'
-//   { tekst: 'link-tekst', href: 'https://...' }   – link til en anden side, telefon eller mail
-//   { tekst: 'link-tekst', til: '/banequiz' }      – link til en side på vores eget site
-// liste = punktopstilling under svaret (valgfri)
-// mangler: true = svaret er ikke skrevet endnu. Spørgsmålet bliver skjult,
-//                 indtil svaret er udfyldt og "mangler" er fjernet
+// Ofte stillede spørgsmål. Hvert svar er en liste af stykker, så der kan være links midt i:
+// tekst, { tekst, href } (andet site, tlf, mail) eller { tekst, til } (vores eget site)
 
 const SPOERGSMAAL = [
   {
     sp: 'Skal jeg have erfaring med klatring?',
     svar: ['Nej. Vores instruktører lærer dig alt, hvad du skal vide, før du går i gang.'],
   },
-  // Sikkerhed – teksterne bygger på gomonkey.dk/inspiration/sikkerhedssystem/
+  // Teksterne bygger på gomonkey.dk/inspiration/sikkerhedssystem/
   {
     sp: 'Er det sikkert at klatre?',
     svar: [
@@ -137,7 +124,7 @@ const SPOERGSMAAL = [
   },
 ]
 
-// Kun spørgsmål med et færdigt svar bliver vist (! = "ikke", så: dem uden mangler: true)
+// Kun spørgsmål med et færdigt svar vises (dem uden mangler: true)
 const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
 </script>
 
@@ -152,16 +139,13 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
         så kontakt os.
       </p>
 
-      <!-- Hurtig kontakt -->
-      <!-- .double-button og knapperne kommer fra main.scss og _buttons.scss -->
       <div class="double-button faq__kontakt">
         <a href="tel:+4525533022" class="button-primary button-light">Ring 25 53 30 22</a>
         <a href="mailto:forestodense@gomonkey.dk" class="button-secondary button-secondary--light">Skriv til os</a>
       </div>
     </div>
 
-    <!-- Spørgsmålene. <details> og <summary> kan åbnes og lukkes af sig selv – også med tastaturet –
-         og skærmlæsere ved automatisk, om svaret er åbent eller lukket -->
+    <!-- Spørgsmålene. <details> og <summary> kan åbnes og lukkes af sig selv – også med tastaturet -->
     <div class="faq__liste">
       <details v-for="s in synlige" :key="s.sp" class="faq__punkt">
         <summary class="faq__spoergsmaal">
@@ -171,10 +155,7 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
         </summary>
 
         <div class="faq__svar">
-          <!-- Svaret sættes sammen stykke for stykke:
-               har stykket "til" → link til vores egen side (RouterLink)
-               har stykket "href" → almindeligt link (anden side, telefon eller mail)
-               ellers → bare tekst -->
+          <!-- Svaret sættes sammen stykke for stykke: link til vores egen side, almindeligt link eller tekst -->
           <p>
             <template v-for="(del, i) in s.svar" :key="i">
               <RouterLink v-if="del.til" :to="del.til">{{ del.tekst }}</RouterLink>
@@ -196,16 +177,14 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
 @use '@/assets/styles/spacings' as s;
 @use '@/assets/styles/mixins' as m;
 
-// Samme mørke baggrund og lyse tekst som OverviewSection (mixin fra _mixins.scss).
-// Sidemargin kommer fra .forside > section i main.scss
+// Mørk baggrund med lys tekst
 .faq {
   @include m.section-black100;
   display: grid;
   grid-template-columns: 1fr;
   gap: s.$spacing-xl;
 
-  // Desktop: overskrift til venstre (smal), spørgsmål til højre (bred).
-  // align-items: center = teksten til venstre står lodret i midten ud for spørgsmålene
+  // Desktop: overskrift til venstre, spørgsmål til højre
   @media (min-width: 900px) {
     grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
     align-items: center;
@@ -230,10 +209,8 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
 }
 
 /* --- Spørgsmålene --- */
-// Hvert spørgsmål er et mørkegrønt kort ($primary_darkgreen) med luft imellem.
-// Listen har en fast højde og kan scrolles, så sektionen ikke bliver for lang.
-// Ret max-height for at vise flere eller færre spørgsmål ad gangen.
-// overscroll-behavior: contain = når man er nået bunden af listen, scroller siden ikke med
+// Hvert spørgsmål er et mørkegrønt kort. Listen har en fast højde og kan scrolles,
+// så sektionen ikke bliver for lang
 .faq__liste {
   display: flex;
   flex-direction: column;
@@ -241,21 +218,20 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
   max-height: 30rem;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding-right: s.$spacing-s; // Luft mellem kortene og scrollbaren
-  padding-bottom: 4rem; // Så det sidste spørgsmål kan scrolles fri af udtoningen
-  // Svag udtoning i bunden, så man kan se, at der er flere spørgsmål længere nede
+  padding-right: s.$spacing-s;  // luft mellem kortene og scrollbaren
+  padding-bottom: 4rem;  // så det sidste spørgsmål kan scrolles fri af udtoningen
+  // Svag udtoning i bunden, som viser, at der er flere spørgsmål
   mask-image: linear-gradient(to bottom, #000 85%, transparent 100%);
 }
 
 .faq__punkt {
-  flex-shrink: 0; // Kortene må ikke klemmes sammen i den scrollbare liste
+  flex-shrink: 0;  // kortene må ikke klemmes sammen
   padding: 0 s.$spacing-s;
   border-radius: 0.75rem;
   background-color: c.$primary_darkgreen;
 }
 
-// Spørgsmålet: fed tekst til venstre, plus-ikon til højre.
-// list-style: none fjerner browserens egen trekant
+// Spørgsmålet: fed tekst til venstre, plus til højre. Browserens egen trekant fjernes
 .faq__spoergsmaal {
   display: flex;
   justify-content: space-between;
@@ -269,7 +245,7 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
   cursor: pointer;
   transition: color 0.2s ease;
 
-  // Safari viser sin egen trekant – den skjules her
+  // Skjuler Safaris egen trekant
   &::-webkit-details-marker {
     display: none;
   }
@@ -279,7 +255,7 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
     color: c.$forest_pink100;
   }
 
-  // Fokusramme inde i kortet (negativ offset, så den ikke bliver skåret af listen)
+  // Fokusramme inde i kortet, så den ikke bliver skåret af
   &:focus-visible {
     outline: 3px solid c.$forest_pink100;
     outline-offset: -3px;
@@ -287,7 +263,7 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
   }
 }
 
-// Plus-ikonet: to streger (::before og ::after) i en rund ring
+// Plusset: to streger i en rund ring
 .faq__ikon {
   position: relative;
   flex-shrink: 0;
@@ -315,14 +291,13 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
   }
 }
 
-// Åbent svar: plusset drejer og bliver til et kryds, og ringen bliver lys
+// Åbent svar: plusset drejer og bliver til et kryds
 .faq__punkt[open] .faq__ikon {
   transform: rotate(45deg);
   background-color: c.$primary_light25;
   color: c.$primary_darkgreen;
 }
 
-// Selve svaret
 .faq__svar {
   padding: 0 s.$spacing-xl s.$spacing-s 0;
 
@@ -343,7 +318,7 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
     }
   }
 
-  // Punktopstilling. Nulstiller den ekstra luft, som ul har i _typography.scss
+  // Punktopstilling uden den ekstra luft fra _typography.scss
   ul {
     margin: 0.75rem 0 0;
     padding: 0 0 0 1.25rem;

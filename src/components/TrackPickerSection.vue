@@ -1,20 +1,12 @@
-<!--
-  FIND DIN BANE
-  Sektion på forsiden (HomeView) med et billede og et kort med tekst.
-  Den har intet script, fordi der ikke er nogen data eller logik – kun to links:
-  - "Start banevælger" går til quizzen på /banequiz (QuizView → QuizSide.vue)
-  - "Se banerne" ruller ned til banekortene (#bane-info i TrackInfo.vue)
-  id="baner" bruges af "Find din bane"-knappen i hero (href="#baner")
--->
+<!-- Sektionen "Find din bane" på forsiden. Den har kun et billede, en tekst og to links:
+     til quizzen (/banequiz) og ned til banekortene (#bane-info) -->
 <template>
   <section id="baner" class="baner-section">
     <div class="baner-container">
-      <!-- Billede -->
       <div class="billede-ramme">
         <img src="@/assets/images/bane-img.webp" alt="Klatrebaner" class="baner-img">
       </div>
 
-      <!-- Kort med tekst -->
       <div id="baner-content" class="baner-kort">
         <div class="tekst-indhold">
           <h2>Find din <strong>bane</strong></h2>
@@ -25,9 +17,7 @@
         </div>
 
         <div class="kort-bund">
-          <!-- .button-primary + .button-pink fra _buttons.scss -->
           <RouterLink class="button-primary button-pink" to="/banequiz">Start banevælger</RouterLink>
-          <!-- .button-arrow fra _buttons.scss: tekst med pil, der rykker ved hover -->
           <a class="button-arrow" href="#bane-info">
             Se banerne
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
@@ -48,12 +38,11 @@ $pink: c.$forest_pink100;
 
 #baner {
   @include m.section-black100;
-  // Luften i top, bund og sider kommer fra section-reglen i main.scss
 
   .baner-container {
     display: grid;
     grid-template-columns: 2fr 3fr;
-    align-items: stretch; // Billede og kort får samme højde
+    align-items: stretch;  // billede og kort får samme højde
     gap: s.$spacing-m;
 
     @media (max-width: 900px) {
@@ -128,6 +117,4 @@ $pink: c.$forest_pink100;
   gap: s.$spacing-s;
 }
 
-// "Start banevælger" (.button-primary + .button-pink) og
-// "Se banerne" (.button-arrow) styles helt i _buttons.scss
 </style>

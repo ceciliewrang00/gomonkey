@@ -1,13 +1,7 @@
 <script setup>
-// STEN-BUE – ren pynt
-// En stor farvet bue (formen fra public/sten4.svg), der hænger hen over overgangen
-// mellem to sektioner på forsiden. Den sættes ind i HomeView.vue mellem to sektioner.
-// aria-hidden="true" i templaten = skærmlæsere springer den over, da den kun er pynt.
-//
-// Props (det, man giver den med i HomeView):
-//   side:  'venstre' eller 'hoejre' – hvilken kant buen sidder ved (den er lidt skåret af kanten)
-//   farve: 'pink' eller 'blaa'
-// De bliver til klasser, fx sten-bue--hoejre og sten-bue__form--pink, som CSS'en styler
+// Pynt: en farvet bue, der hænger hen over overgangen mellem to sektioner på forsiden
+
+// side = hvilken kant buen sidder ved ('venstre' eller 'hoejre'), farve = 'pink' eller 'blaa'
 defineProps({
   side: { type: String, default: 'hoejre' },
   farve: { type: String, default: 'pink' },
@@ -23,18 +17,17 @@ defineProps({
 <style lang="scss" scoped>
 @use '@/assets/styles/colors' as c;
 
-// Bredden på buen – bruges også til at skubbe den lidt ud over kanten
+// Buens bredde – bruges også til at skubbe den lidt ud over kanten
 $bredde: clamp(8rem, 15vw, 13rem);
 
-/* Rækken har ingen højde, så den ikke skubber noget. Buen sidder hen over overgangen
-   – mest oppe i sektionen over. overflow-x: clip skærer det af, der stikker ud til siden
-   (så siden ikke kan scrolles sidelæns), mens buen stadig må stikke op og ned */
+/* Rækken har ingen højde, så den ikke skubber noget.
+   Det, der stikker ud til siden, skæres af, så siden ikke kan scrolles sidelæns */
 .sten-bue {
   position: relative;
   z-index: 1;
   height: 0;
   display: flex;
-  // flex-start: ellers bliver buen strakt ud til rækkens højde (0) og forsvinder
+  // Ellers bliver buen strakt ud til rækkens højde (0) og forsvinder
   align-items: flex-start;
   overflow-x: clip;
   overflow-y: visible;
@@ -58,13 +51,13 @@ $bredde: clamp(8rem, 15vw, 13rem);
   mask: url('/sten4.svg') center / contain no-repeat;
 }
 
-// Højre: spejlvendt, så åbningen vender ind mod siden. En lille del er ude over højre kant
+// Højre: spejlvendt og lidt ude over højre kant
 .sten-bue--hoejre .sten-bue__form {
   margin-right: calc(#{$bredde} * -0.15);
   transform: translateY(-62%) scaleX(-1);
 }
 
-// Venstre: åbningen vender mod højre. En lille del er ude over venstre kant
+// Venstre: lidt ude over venstre kant
 .sten-bue--venstre .sten-bue__form {
   margin-left: calc(#{$bredde} * -0.15);
   transform: translateY(-62%);

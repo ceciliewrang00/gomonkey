@@ -1,16 +1,15 @@
 <script setup>
-// POPUP PÅ KORTET
-// Boksen, der dukker op, når man klikker på en bane på kortet (InteraktivtKort.vue).
-// Den viser banens navn, beskrivelse, sværhedsgrad, fakta og krav.
-// Alle tekster og tal kommer fra Firebase via services/baner.js – de samme data
-// som banekortene på forsiden (TrackInfo.vue).
+// Popup'en, der vises, når man klikker på en bane på kortet.
+// Teksterne kommer fra Firebase "baner", ligesom banekortene på forsiden
+
 import { computed } from 'vue'
 
-// GoMonkey-aben, der bruges som "trin" i sværhedsgraden (3 aber)
+// GoMonkey-aben, der bruges som trin i sværhedsgraden
 import logoUrl from '@/assets/images/gomonkey-logo.svg'
+
 import { trinFor, niveauFor, harSvaerhedsgrad, faktaFor } from '@/services/baner.js'
 
-// bane = den bane, der skal vises. Den sendes ind fra InteraktivtKort.vue (:bane="valgtBane")
+// bane = den bane, der skal vises
 const props = defineProps({
   bane: {
     type: Object,
@@ -18,22 +17,20 @@ const props = defineProps({
   }
 })
 
-// 'luk' = beskeden, der sendes til kortet, når man trykker på krydset. Kortet lukker så popup'en
+// 'luk' sendes til kortet, når man trykker på krydset
 defineEmits(['luk'])
 
-// Niveauet med ord (Let, Mellem, Svær – eller "For alle" for Bounce) og som trin 1–3
+// Niveauet som ord og som trin 1–3, og om banen har en sværhedsgrad
 const niveau = computed(() => niveauFor(props.bane))
 const trin = computed(() => trinFor(props.bane))
 const medSvaerhedsgrad = computed(() => harSvaerhedsgrad(props.bane))
 
-// Faktatallene i 2×2-gitteret: Banehøjde, Banelængde, Forhindringer, Antal svæv
+// De faktatal, der er plads til i popup'en
 const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
 </script>
 
 <template>
-  <!-- --bane-farve bruges til farvestregen i toppen og prikken ved navnet.
-       Farven kommer fra $kort-bane-farver i _colors.scss (via --kort-bane-<id> i KortView.vue).
-       Findes den ikke (fx en ny bane fra admin), bruges banens egen farve, og ellers en grå -->
+  <!-- Banens farve til stregen i toppen og prikken ved navnet. Nye baner bruger deres egen farve -->
   <div
     class="bane-popup"
     role="dialog"
@@ -55,13 +52,12 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
       </button>
     </div>
 
-    <!-- Beskrivelsen – samme tekst som på forsiden. Skjules på smalle skærme -->
+    <!-- Beskrivelsen. Skjules på smalle skærme -->
     <p v-if="bane.description" class="popup-beskrivelse">
       {{ bane.description }}
     </p>
 
-    <!-- Sværhedsgrad: 3 aber (fyldte = niveau) og ordet skrevet ud ved siden af.
-         Samme 3 trin som bjælken på forsiden. Bounce viser 3 tomme aber og "For alle" -->
+    <!-- Sværhedsgraden som 3 aber (de fyldte = niveauet) og ordet ved siden af -->
     <div class="skala">
       <span class="skala-label">Sværhedsgrad</span>
       <span class="skala-vaerdi">
@@ -83,7 +79,7 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
       </span>
     </div>
 
-    <!-- Faktatal i 2×2-gitter – samme tal som på forsiden -->
+    <!-- Faktatal i et 2×2-gitter -->
     <dl v-if="fakta.length" class="popup-fakta">
       <div v-for="f in fakta" :key="f.key" class="popup-fakta__boks">
         <dt>{{ f.label }}</dt>
@@ -91,17 +87,16 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
       </div>
     </dl>
 
-    <!-- Kravet under faktatallene -->
     <p v-if="bane.requirements" class="popup-krav">
       <strong>Krav:</strong> {{ bane.requirements }}
     </p>
 
-    <!-- Ekstra pris oven i klatreprisen, fx frit fald på Sort. Kun hvis banen har et -->
+    <!-- Ekstra pris, fx frit fald på Sort. Vises kun, hvis banen har en -->
     <p v-if="bane.addOn" class="popup-krav">
       <strong>Tilkøb:</strong> {{ bane.addOn }}
     </p>
 
-    <!-- Link til banens kort på forsiden (artiklen har banens id, fx /#bane-6) -->
+    <!-- Link til banens kort på forsiden, fx /#bane-6 -->
     <RouterLink :to="{ path: '/', hash: `#${bane.id}` }" class="button-arrow popup-link">
       Læs mere om banen
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
@@ -116,7 +111,7 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
 
 .bane-popup {
   position: absolute;
-  // Under knapperne øverst til højre ("Vis hele parken" og "Luk kort")
+  // Under knapperne øverst til højre
   top: 5.5rem;
   right: clamp(16px, 3vw, 42px);
   z-index: 10;
@@ -127,10 +122,9 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
   background-color: c.$primary_light25;
   color: c.$primary_black100;
   box-shadow: 0 0.75rem 2rem rgba(c.$primary_darkgreen, 0.2);
-  font-family: ft.$font; // Samme font som resten af siden
+  font-family: ft.$font;
   animation: popup-glid-ind 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 
-  // Farvestreg i toppen i banens farve
   &::before {
     content: '';
     position: absolute;
@@ -141,14 +135,14 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
     background-color: var(--bane-farve);
   }
 
-  // Mobil: popuppen ligger i bunden af kortet i fuld bredde
+  // Mobil: popup'en ligger i bunden af kortet i fuld bredde
   @media (max-width: 600px) {
     top: auto;
     left: s.$spacing-xs;
     right: s.$spacing-xs;
     bottom: s.$spacing-xs;
     width: auto;
-    // Dækker højst ca. halvdelen af kortet – resten kan scrolles inde i popup'en
+    // Dækker højst halvdelen af kortet – resten kan scrolles
     max-height: 50%;
     overflow-y: auto;
   }
@@ -181,7 +175,7 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
 
   h3 {
     margin: 0;
-    padding-top: 0; // Nulstiller padding fra h3 i _typography.scss
+    padding-top: 0;  // fjerner padding fra h3
     font-size: 1.25rem;
     font-weight: 900;
     line-height: 1.2;
@@ -254,7 +248,7 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
   padding: 0.6rem 0.9rem;
   border-radius: 0.75rem;
   background-color: c.$forest_green25;
-  font-size: 0.875rem; // 14px
+  font-size: 0.875rem;
   line-height: 1.3;
 }
 
@@ -294,7 +288,6 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
 }
 
 /* --- Faktatal (2×2) --- */
-// Samme mørke bokse som faktaboksene på forsiden
 .popup-fakta {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -309,7 +302,7 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
   color: c.$primary_light25;
 
   dt {
-    font-size: 0.875rem; // 14px
+    font-size: 0.875rem;
     font-weight: 400;
     opacity: 0.85;
   }
@@ -324,7 +317,7 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
 /* --- Krav --- */
 .popup-krav {
   margin: 0.6rem 0 0;
-  font-size: 0.875rem; // 14px
+  font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.4;
 
@@ -334,7 +327,7 @@ const fakta = computed(() => faktaFor(props.bane, { kunKort: true }))
 }
 
 /* --- Link til forsiden --- */
-// .button-arrow fra _buttons.scss – her mørk, så den kan læses på den lyse baggrund
+// Mørk, så den kan læses på den lyse baggrund
 .popup-link {
   margin-top: 0.75rem;
   color: c.$primary_darkgreen;
