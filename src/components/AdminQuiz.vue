@@ -388,10 +388,12 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
       <section v-if="redigerer?.id === sp.id" class="redigering">
         <h3>Rediger spørgsmål</h3>
 
-        <label :for="'rediger-tekst-' + sp.id">Spørgsmålstekst</label>
-        <input :id="'rediger-tekst-' + sp.id" v-model="redigerer.tekst" type="text" required />
+        <div class="underline">
+          <label :for="'rediger-tekst-' + sp.id">Spørgsmålstekst</label>
+          <input :id="'rediger-tekst-' + sp.id" v-model="redigerer.tekst" type="text" required />
+        </div>
 
-        <div v-for="(svar, indeks) in redigerer.svar" :key="svar.id">
+        <div v-for="(svar, indeks) in redigerer.svar" :key="svar.id" class="underline">
           <label :for="'rediger-svar-' + sp.id + '-' + svar.id">
             Svarmulighed {{ indeks + 1 }}
           </label>
@@ -489,19 +491,8 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
           </div>
         </div>
 
-        <div class="knapper">
-          <BaseButton
-            type="button"
-            variant="secondary"
-            :disabled="sletterId !== ''"
-            @click="sletSpoergsmaal(sp)"
-          >
-            {{ sletterId === sp.id ? 'Sletter...' : 'Slet spørgsmål' }}
-          </BaseButton>
-        </div>
-
-        <div class="knapper">
-          <BaseButton type="button" variant="pink" @click="annullerRedigering">Annuller</BaseButton>
+        <div class="knapper knapper--gem">
+          <BaseButton type="button" variant="secondary" @click="annullerRedigering">Annuller</BaseButton>
           <BaseButton
             type="button"
             variant="primary"
@@ -509,6 +500,17 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             @click="gemRedigering"
           >
             {{ gemmerRedigering ? 'Gemmer...' : 'Gem ændringer' }}
+          </BaseButton>
+        </div>
+
+        <div class="knapper knapper--slet">
+          <BaseButton
+            type="button"
+            variant="secondary"
+            :disabled="sletterId !== ''"
+            @click="sletSpoergsmaal(sp)"
+          >
+            {{ sletterId === sp.id ? 'Sletter...' : 'Slet spørgsmål' }}
           </BaseButton>
         </div>
       </section>
@@ -519,11 +521,13 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
   <section class="admin-kort">
     <h2>Opret spørgsmål</h2>
 
-    <label for="nyt-spoergsmaal">Spørgsmålstekst</label>
-    <input id="nyt-spoergsmaal" v-model="nytSpoergsmaal.tekst" type="text" required />
+    <div class="underline">
+      <label for="nyt-spoergsmaal">Spørgsmålstekst</label>
+      <input id="nyt-spoergsmaal" v-model="nytSpoergsmaal.tekst" type="text" required />
+    </div>
 
     <!-- Felter pr. svarmulighed -->
-    <div v-for="(svar, indeks) in nytSpoergsmaal.svar" :key="svar.id">
+    <div v-for="(svar, indeks) in nytSpoergsmaal.svar" :key="svar.id" class="underline">
       <label :for="'nyt-svar-' + svar.id">Svarmulighed {{ indeks + 1 }}</label>
       <input :id="'nyt-svar-' + svar.id" v-model="svar.tekst" type="text" required />
 
@@ -618,7 +622,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
       </div>
     </div>
 
-    <div class="knapper">
+    <div class="knapper knapper--gem">
       <BaseButton type="button" variant="secondary" :disabled="gemmer" @click="tilfoejSvarmulighed">
         Tilføj svarmulighed
       </BaseButton>
@@ -630,3 +634,13 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     <p v-if="gemBesked" role="status">{{ gemBesked }}</p>
   </section>
 </template>
+
+<style lang="scss" scoped>
+
+@use '@/assets/styles/colors' as c;
+
+.underline {
+  padding-bottom: 1.5rem;
+  border-bottom: 1.5px solid c.$forest_green100;
+}
+</style>

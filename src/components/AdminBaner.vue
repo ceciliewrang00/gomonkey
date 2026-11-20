@@ -289,8 +289,8 @@ onMounted(hentBaner)
           <p v-if="billedBeskeder[bane.id]" role="status">{{ billedBeskeder[bane.id] }}</p>
         </div>
 
-        <div class="knapper">
-          <BaseButton type="button" variant="pink" @click="annullerRedigering(bane)">Annuller</BaseButton>
+        <div class="knapper knapper--gem">
+          <BaseButton type="button" variant="secondary" @click="annullerRedigering(bane)">Annuller</BaseButton>
           <BaseButton type="submit" variant="primary" :disabled="gemmerId !== ''">
             {{ gemmerId === bane.id ? 'Gemmer...' : 'Gem bane' }}
           </BaseButton>
@@ -299,3 +299,4 @@ onMounted(hentBaner)
     </article>
   </div>
 </template>
+
