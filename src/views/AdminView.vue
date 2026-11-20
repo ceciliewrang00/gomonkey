@@ -378,11 +378,6 @@ onUnmounted(() => {
     margin-top: 1rem;
   }
 
-  // Gem-rækken står til højre, så Gem altid er yderst til højre
-  .knapper--gem {
-    justify-content: flex-end;
-  }
-
   // Slet står for sig selv under en streg, langt fra Gem
   .knapper--slet {
     margin-top: 2rem;
