@@ -152,11 +152,16 @@ onUnmounted(() => {
       </h1>
 
       <!-- h2 for strukturen, men samme udseende som h3 -->
-      <h2 class="h3">Klatring, svæv og frit fald midt i skoven</h2>
+      <!-- På mobil starter "frit fald midt i skoven" på linje 2 -->
+      <h2 class="h3">Klatring, svæv &<br class="hero__mobil-skift"> frit fald midt i skoven</h2>
 
       <div class="double-button hero__knapper">
         <a href="#baner" class="button-primary button-pink">Find din bane</a>
-        <RouterLink to="/kort" class="button-secondary button-secondary--light">Se oversigtskort</RouterLink>
+        <RouterLink to="/kort" class="button-secondary button-secondary--light hero__kort-knap">
+          Se oversigtskort
+          <!-- Samme pil som i "Se banerne"-knappen -->
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+        </RouterLink>
       </div>
 
       <ul class="hero__fakta">
@@ -380,9 +385,69 @@ onUnmounted(() => {
   filter: brightness(0) invert(1);
 }
 
+// Linjeskiftet i undertitlen gælder kun på mobil
+.hero__mobil-skift {
+  display: none;
+
+  @media (max-width: 767px) {
+    display: inline;
+  }
+}
+
+// "Se oversigtskort": sort knap med lys tekst. Ved hover bliver den lys som før
+.hero__kort-knap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: c.$primary_black100;
+  border-color: c.$primary_black100;
+  color: c.$primary_light25;
+
+  // Pilen, som i .button-arrow
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    background-color: c.$primary_light25;
+    border-color: c.$primary_light25;
+    color: c.$primary_darkgreen;
+
+    // Pilen rykker lidt til højre ved hover
+    svg {
+      transform: translateX(4px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    svg {
+      transition: none;
+    }
+  }
+}
+
 .hero__knapper {
   margin-top: s.$spacing-l;
   text-shadow: none;
+
+  // Mobil: lidt luft over knapperne, og de står ved siden af hinanden
+  @media (max-width: 767px) {
+    margin-top: s.$spacing-s;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+
+    > * {
+      padding-inline: 0.9rem;
+      white-space: nowrap;
+    }
+  }
 }
 
 .hero__fakta {
@@ -404,22 +469,29 @@ onUnmounted(() => {
     margin: 0 0.6rem;
   }
 
-  // Mobil: hvert faktum bliver en lille pille, så de bryder pænt over på flere linjer
+  // Mobil: de tre fakta står under hinanden, hver med en prik foran
   @media (max-width: 767px) {
-    gap: 0.4rem;
+    flex-direction: column;
+    gap: 0.2rem;
 
     li {
-      padding: 0.2rem 0.75rem;
-      border: 1px solid rgba(c.$primary_light25, 0.45);
-      border-radius: 2rem;
-      background-color: rgba(c.$primary_black100, 0.25);
-      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
       line-height: 1.5;
-      white-space: nowrap;
     }
 
+    // Prikken står foran alle tre i stedet for imellem dem
+    li::before,
     li + li::before {
-      content: none;
+      content: '' / '';
+      flex-shrink: 0;
+      width: 0.35rem;
+      height: 0.35rem;
+      margin: 0;
+      border-radius: 50%;
+      background-color: c.$forest_pink100;
     }
   }
 }

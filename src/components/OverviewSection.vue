@@ -4,15 +4,20 @@
 
 import { ref, onMounted } from 'vue'
 
-import { hentBaner } from '@/services/baner.js'
+import { hentBaner, harSvaerhedsgrad } from '@/services/baner.js'
 
-// Listen til farveforklaringen: [{ navn: 'Grøn', klasse: 'bane-1' }, ...]
+// Listerne til farveforklaringen: [{ navn: 'Grøn', klasse: 'bane-1' }, ...]
+// Klatrebanerne for sig, og aktiviteter uden sværhedsgrad (Bounce) for sig
 const baneFarver = ref([])
+const andreAktiviteter = ref([])
 
-// Henter banerne og beholder kun navn og id. Fejler det, forbliver listen tom
+// Henter banerne og beholder kun navn og id. Fejler det, forbliver listerne tomme
 onMounted(async () => {
   try {
-    baneFarver.value = (await hentBaner()).map((bane) => ({ navn: bane.name, klasse: bane.id }))
+    const baner = await hentBaner()
+    const tilMaerke = (bane) => ({ navn: bane.name, klasse: bane.id })
+    baneFarver.value = baner.filter(harSvaerhedsgrad).map(tilMaerke)
+    andreAktiviteter.value = baner.filter((bane) => !harSvaerhedsgrad(bane)).map(tilMaerke)
   } catch (e) {
     console.error('Banerne kunne ikke hentes til farveforklaringen', e)
   }
@@ -54,6 +59,18 @@ onMounted(async () => {
               {{ f.navn }}
             </li>
           </ul>
+
+          <!-- Bounce er ikke en klatrebane og står derfor for sig selv -->
+          <template v-if="andreAktiviteter.length">
+            <h3 id="andre-aktiviteter-titel" class="farve-titel farve-titel--andre">Andre aktiviteter</h3>
+
+            <ul class="farve-liste" aria-labelledby="andre-aktiviteter-titel">
+              <li v-for="f in andreAktiviteter" :key="f.klasse" class="farve-liste__andet">
+                <span class="markering" :class="`farve--${f.klasse}`" aria-hidden="true"></span>
+                {{ f.navn }}
+              </li>
+            </ul>
+          </template>
         </div>
       </div>
     </div>
@@ -148,6 +165,11 @@ onMounted(async () => {
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: rgba(c.$primary_light25, 0.7);
+
+    // Luft over overskriften til Bounce
+    &--andre {
+      margin-top: s.$spacing-s;
+    }
   }
 
   // 4 lige brede mærker pr. linje, så de står præcis under hinanden
@@ -187,6 +209,12 @@ onMounted(async () => {
       border-radius: 50%;
       box-sizing: border-box;
       border: 1px solid rgba(c.$primary_light25, 0.3);
+    }
+
+    // Bounce: stiplet kant og ingen fyldt baggrund, så det ikke ligner en bane
+    .farve-liste__andet {
+      background-color: transparent;
+      border: 1px dashed rgba(c.$primary_light25, 0.35);
     }
   }
 
