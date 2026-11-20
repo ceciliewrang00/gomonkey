@@ -15,14 +15,14 @@ const BANE_FIELDS = [
   { key: 'name', label: 'Navn', type: 'text' },
   { key: 'description', label: 'Beskrivelse', type: 'textarea' },
   { key: 'requirements', label: 'Krav', type: 'text' },
-  { key: 'addOn', label: 'Tilkøb (fx 30 kr.) – tom = intet tilkøb', type: 'text' },
   { key: 'trackHeight', label: 'Banehøjde', type: 'text' },
   { key: 'obstacles', label: 'Forhindringer', type: 'text' },
   { key: 'longestGlide', label: 'Længste svæv', type: 'text' },
   { key: 'glideAmount', label: 'Antal svæv', type: 'text' },
-  { key: 'freeFall', label: 'Frit fald (fx 16 m) – tom = intet frit fald', type: 'text' },
   { key: 'trackLength', label: 'Banelængde', type: 'text' },
   { key: 'difficulty', label: 'Sværhedsgrad (fx 37.5%)', type: 'text' },
+  { key: 'addOn', label: 'Tilkøb (fx 30 kr.) – tom = intet tilkøb', type: 'text' },
+  { key: 'freeFall', label: 'Frit fald (fx 16 m) – tom = intet frit fald', type: 'text' },
   { key: 'altImg', label: 'Alt-tekst til billede', type: 'text' },
   { key: 'class', label: 'Layout', type: 'select', options: ['img-right', 'img-left'] }
 ]
@@ -139,7 +139,7 @@ async function gemBane(bane) {
   }
 }
 
-// ---------- Banens billede (SVG) ---------- lavet med hjælp fra Claude (AI)
+// ---------- Banens billede (SVG) ---------- 
 // Beskeden om billedet under hver bane
 const billedBeskeder = ref({})
 

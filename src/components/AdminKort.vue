@@ -1,5 +1,5 @@
 <script setup>
-// Filen vises i AdminView.vue, når man klikker på fanen "Kort".
+// Denne del er primært lavet af Claude 
 
 // Hent vores egen knap
 import BaseButton from '@/components/BaseButton.vue'
