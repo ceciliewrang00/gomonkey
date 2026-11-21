@@ -6,7 +6,6 @@
   import BannerSection from '@/components/BannerSection.vue'
   import OverviewSection from '@/components/OverviewSection.vue'
   import TrackPickerSection from '@/components/TrackPickerSection.vue'
-  import SkalaForklaring from '@/components/SkalaForklaring.vue'
   import TrackInfo from '@/components/TrackInfo.vue'
   import FoelgBarnetSection from '@/components/FoelgBarnetSection.vue'
   import FaqSection from '@/components/FaqSection.vue'
@@ -27,8 +26,6 @@
     <BannerSection />
     <!-- Pynt: en lyserød bue mellem banneret og banerne -->
     <StenBue side="hoejre" farve="pink" />
-    <!-- Forklaringen af sværhedsgraden står over baneoversigten -->
-    <SkalaForklaring />
     <TrackInfo />
     <!-- Hvad den voksne kan gøre, mens barnet klatrer -->
     <FoelgBarnetSection />

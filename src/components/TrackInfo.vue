@@ -1,9 +1,11 @@
 <script setup>
-// Banekortene på forsiden: en kort intro og ét kort pr. bane.
-// Forklaringen af sværhedsgraden ligger i SkalaForklaring.vue lige over.
+// Banekortene på forsiden: en kort intro, forklaringen af sværhedsgraden og ét kort pr. bane.
+// Forklaringen er sin egen komponent (SkalaForklaring.vue) og sættes ind mellem intro og baner.
 // Hvert kort har banens id (fx id="bane-6"), så andre sider kan linke til det med /#bane-6
 
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+
+import SkalaForklaring from './SkalaForklaring.vue'
 
 import { hentBaner, trinFor, niveauFor, harSvaerhedsgrad, faktaFor, kravTekst } from '@/services/baner.js'
 
@@ -106,17 +108,26 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 <template>
     <!-- Intro over banerne. "Se banerne"-knapperne linker hertil (#bane-info) -->
     <div id="bane-info" class="baner-intro">
+        <!-- Venstre: overskrift og kort intro -->
         <div class="baner-intro__tekst">
-            <span class="badge baner-intro__badge">Baner i Forest Odense</span>
+            <span class="badge baner-intro__badge">Fra let til svær</span>
             <h2>Vores baner i Forest Odense</h2>
-            <p>
-                Banerne står i rækkefølge efter sværhedsgrad – fra de letteste, hvor alle kan være med,
-                til de vildeste, der kræver mod og erfaring.
+            <p class="baner-intro__lead">
+                Banerne står i rækkefølge fra de letteste, hvor alle kan være med, til de vildeste,
+                der kræver mod og erfaring. Hver bane har sin egen farve, så du nemt kan genkende den i parken.
             </p>
-            <p>Hver bane har sin egen farve, så du nemt
-                kan genkende den i parken.</p>
+        </div>
+
+        <!-- Højre: genvej til banevælgeren, så den er nem at finde lige over banerne -->
+        <div class="baner-intro__quiz">
+            <h4>I tvivl om, hvilken bane der passer til dig?</h4>
+            <p>Svar på et par hurtige spørgsmål, så finder vi den rigtige bane.</p>
+            <RouterLink to="/banequiz" class="button-secondary button-pink baner-intro__quiz-knap">Tag banevælgeren</RouterLink>
         </div>
     </div>
+
+    <!-- Forklaringen af sværhedsgraden mellem introen og banerne -->
+    <SkalaForklaring />
 
     <p v-if="loading" class="status">Henter baner...</p>
     <p v-else-if="error" class="status">{{ error }}</p>
@@ -287,14 +298,22 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 /* --- Intro --- */
 // Samme sidemargin som sektionerne
 .baner-intro {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: s.$spacing-s;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: s.$spacing-l;
     text-align: left;
-    // Samme luft i top og bund som sektionerne
-    padding-block: s.$sektion-luft;
+    // Luft i toppen som sektionerne, mindre i bunden, da forklaringen følger lige efter
+    padding-top: s.$sektion-luft;
+    padding-bottom: s.$spacing-l;
     padding-inline: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
+
+    // Desktop: intro til venstre, banevælgeren til højre, flugter i bunden
+    @media (min-width: 900px) {
+        // Introen er højst så bred som overskriften, og boksen med banevælgeren fylder resten ud til kanten
+        grid-template-columns: minmax(0, 47rem) minmax(0, 1fr);
+        column-gap: s.$spacing-xl;
+        align-items: end;
+    }
     // Samme grønne baggrund som banerne, med en tynd streg over den første bane
     background-color: c.$forest_green25;
     scroll-margin-top: 5rem;  // så headeren ikke dækker overskriften
@@ -315,13 +334,54 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     border: 1.5px solid c.$primary_black100;
 }
 
-// Introteksten står over banerne i en behagelig linjelængde
+// Overskrift og intro
 .baner-intro__tekst {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: s.$spacing-s;
- 
+}
+
+// Introteksten i en behagelig linjelængde
+.baner-intro__lead {
+    max-width: 38rem;
+    line-height: 1.6;
+}
+
+// Genvejen til banevælgeren i en mørkegrøn boks med lys tekst, så den lyserøde knap springer frem.
+// Spørgsmålet er en h4 og følger h4-stilen fra _typography.scss
+.baner-intro__quiz {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: s.$spacing-m;
+    border-radius: 1rem;
+    background-color: c.$primary_darkgreen;
+    color: c.$primary_light25;
+
+    h4 {
+        padding: 0;
+        line-height: 1.25;
+    }
+
+    p {
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .baner-intro__quiz-knap {
+        margin-top: 0.4rem;
+    }
+}
+
+// Lyserød knap: kanten får samme farve som fyldet (lilla ved hover, som button-pink)
+.baner-intro__quiz-knap {
+    border-color: c.$forest_pink100;
+
+    &:hover {
+        border-color: c.$secondary_purple100;
+    }
 }
 
 .status {

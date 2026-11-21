@@ -1,22 +1,25 @@
 <script setup>
-// Forklaringen af sværhedsgraden på forsiden. Står lige over baneoversigten (TrackInfo).
-// (i)-boblen på hver bane linker hertil med #skala-forklaring
+// Forklaringen af sværhedsgraden på forsiden. TrackInfo sætter den ind mellem introen og banerne.
+// (i)-boblen på hver bane linker hertil med #skala-forklaring.
+// Den er bevidst flad og lys (ingen kort, skygger eller hover), så den ikke ligner noget, man kan klikke på
 
 import { NIVEAUER } from '@/services/baner.js'
 </script>
 
 <template>
   <section id="skala-forklaring" class="skala-sektion" aria-labelledby="skala-titel">
-    <!-- Mørk boks med de tre niveauer -->
-    <div class="skala-forklaring">
-      <h4 id="skala-titel" class="skala-titel">Hvad betyder sværhedsgraden?</h4>
-      <p class="skala-tekst">
-        Sværhedsgraden viser, hvor højt oppe du er, hvor lange svævene er, og hvor meget banen kræver af din krop og dit mod. Jo flere trin der er fyldt ud på bjælken, jo sværere er banen.
-      </p>
+    <div class="skala">
+      <!-- Overskrift og én linje om, hvordan bjælken læses -->
+      <div class="skala__intro">
+        <h3 id="skala-titel" class="skala__titel">Sådan læser du sværhedsgraden</h3>
+        <p class="skala__tekst">
+          Bjælken viser højde, svæv og hvor hårdt det er. Jo flere fyldte felter, jo sværere bane.
+        </p>
+      </div>
 
-      <!-- De tre niveauer med samme bjælke som banerne -->
-      <ul class="skala-trin">
-        <li v-for="(niveau, i) in NIVEAUER" :key="niveau.navn">
+      <!-- De tre niveauer som en forklaring med samme bjælke som på banerne -->
+      <ul class="skala__liste">
+        <li v-for="(niveau, i) in NIVEAUER" :key="niveau.navn" class="skala__niveau">
           <div class="trin-bjaelke" aria-hidden="true">
             <span
               v-for="t in 3"
@@ -25,9 +28,9 @@ import { NIVEAUER } from '@/services/baner.js'
               :class="{ 'er-fyldt': t <= i + 1 }"
             ></span>
           </div>
-          <strong class="skala-trin__navn">{{ niveau.navn }}</strong>
-          <p class="skala-trin__tekst">{{ niveau.tekst }}</p>
-          <p v-if="niveau.passer" class="skala-trin__tekst">
+          <strong class="skala__navn">{{ niveau.navn }}</strong>
+          <p class="skala__kort">{{ niveau.kort }}</p>
+          <p v-if="niveau.passer" class="skala__passer">
             <strong>Passer til:</strong> {{ niveau.passer }}
           </p>
         </li>
@@ -40,83 +43,92 @@ import { NIVEAUER } from '@/services/baner.js'
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
 
-// Samme grønne baggrund som banerne under, og ingen luft i bunden,
-// så den går direkte over i baneoversigten
+// Står inde i TrackInfo mellem introen og banerne: samme grønne baggrund og samme sidemargin
+// som forsidens sektioner, og ingen luft i top og bund, da introen og banerne har deres egen
 .skala-sektion {
-  padding-bottom: 0;
+  padding-block: 0;
+  padding-inline: max(#{s.$spacing-m}, calc((100% - #{s.$indhold-bredde}) / 2));
   background-color: c.$forest_green25;
   scroll-margin-top: 6rem;  // så headeren ikke dækker forklaringen
 }
 
-/* --- Den mørke boks --- */
-.skala-forklaring {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  box-sizing: border-box;
-  padding: s.$spacing-l;
-  border-radius: 1rem;
-  background-color: c.$primary_darkgreen;
-  color: c.$primary_light25;
-  // Kortene står under hinanden, når boksen er smal (se @container nedenfor)
-  container-type: inline-size;
+/* --- Selve forklaringen ---
+   Ingen baggrund og ingen kort: kun en tynd streg over og under, som en forklaring på et kort */
+.skala {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: s.$spacing-s;
+  padding-block: s.$spacing-m;
+  border-top: 1px solid rgba(c.$primary_darkgreen, 0.2);
+  border-bottom: 1px solid rgba(c.$primary_darkgreen, 0.2);
+  color: c.$primary_darkgreen;
+
+  // Desktop: overskriften til venstre og de tre niveauer til højre
+  @media (min-width: 900px) {
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    column-gap: s.$spacing-xl;
+    align-items: start;
+  }
 }
 
-.skala-titel {
+.skala__titel {
   margin: 0;
   padding: 0;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.3;
 }
 
-// Teksten holdes i en behagelig linjelængde
-.skala-tekst {
-  max-width: 60ch;
-  margin: 0;
+.skala__tekst {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
-// Let, Mellem og Svær som tre små kort side om side
-.skala-trin {
+// Tre niveauer side om side på større skærme, under hinanden på mobil
+.skala__liste {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.6rem;
-  margin: 0.4rem 0 0;
+  grid-template-columns: 1fr;
+  gap: s.$spacing-s;
+  margin: 0;
   padding: 0;
   list-style: none;
 
-  // Ét kort pr. niveau med samme lyse baggrund som banerne, så bjælken ser ens ud
-  > li {
-    padding: 0.9rem 1rem 1rem;
-    border-radius: 0.75rem;
-    background-color: c.$forest_green25;
-    color: c.$primary_black100;
-  }
-
-  .trin-bjaelke {
-    margin-bottom: 0.75rem;
-  }
-
-  .skala-trin__navn {
-    display: block;
-    font-size: 1rem;
-    font-weight: 800;
-  }
-
-  .skala-trin__tekst {
-    margin: 0.25rem 0 0;
-    font-size: 0.85rem;
-    line-height: 1.45;
-    color: c.$primary_black100;
-
-    strong {
-      font-weight: 700;
-    }
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: s.$spacing-m;
   }
 }
 
-// @container kigger på boksens bredde og ikke skærmens
-@container (max-width: 34rem) {
-  .skala-trin {
-    grid-template-columns: 1fr;
+.skala__niveau {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  // Almindelig pil, så det ikke ligner noget, man kan klikke på
+  cursor: default;
+}
+
+.skala__navn {
+  margin-top: 0.3rem;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.skala__kort {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+// "Passer til": lidt mindre og svagere end beskrivelsen, så det ikke bliver tungt
+.skala__passer {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  opacity: 0.8;
+
+  strong {
+    font-weight: 700;
   }
 }
 
@@ -127,9 +139,10 @@ import { NIVEAUER } from '@/services/baner.js'
   grid-template-columns: repeat(3, 1fr);
   gap: 4px;
   width: 100%;
+  max-width: 9rem;
 
   .trin-bjaelke__trin {
-    height: 0.75rem;
+    height: 0.6rem;
     background-color: c.$primary_light50;
   }
 

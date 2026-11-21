@@ -1,20 +1,24 @@
 // Reglerne for banernes sværhedsgrad. Bruger ikke Firebase,
 // så testscriptet scripts/testQuiz.mjs også kan bruge filen
 
-// De tre niveauer: navn, hvordan banerne er, og hvem de passer til
+// De tre niveauer: navn, hvordan banerne er, og hvem de passer til.
+// kort = én kort linje til forklaringen af sværhedsgraden på forsiden (SkalaForklaring.vue)
 export const NIVEAUER = [
   {
     navn: 'Let',
+    kort: 'Lavt oppe og korte strækninger. God til børn og første gang.',
     tekst: 'Lavt oppe og korte strækninger. Du behøver ingen erfaring, og det er et godt sted at lære udstyret at kende.',
     passer: 'Børn og alle, der prøver klatring for første gang.',
   },
   {
     navn: 'Mellem',
+    kort: 'Højere oppe og lange svæv. Kræver lidt balance og styrke.',
     tekst: 'Højere oppe, flere forhindringer og lange svævebaner. Du skal bruge balance og lidt styrke i arme og ben.',
     passer: 'Dig, der har prøvet det før eller gerne vil have lidt sus i maven.',
   },
   {
     navn: 'Svær',
+    kort: 'Højt i trætoppene og fysisk hårdt. Til erfarne klatrere.',
     tekst: 'Højt oppe mellem trætoppene, mange forhindringer og de længste svæv. Banerne er fysisk hårde og kræver mod på højder.',
     passer: 'Erfarne klatrere, der vil udfordres.',
   },

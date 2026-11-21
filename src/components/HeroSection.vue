@@ -36,8 +36,9 @@ const wireEl = ref(null)
 const TRISSER = [
   { id: 'abe', abe: true, start: 0.17, slut: 0.25, vip: '0deg' },
   { id: 'svaev', titel: '126 m svæv', under: 'parkens længste', start: 0.78, slut: 0.8, snor: '8.5rem', vip: '8deg' },
-  { id: 'baner', titel: null, under: 'Næste stop: trætoppene', start: 0.91, slut: 0.93, snor: '5.25rem', vip: '-2deg' },
+  { id: 'baner', titel: null, under: 'Næste stop: trætoppene', start: 0.91, slut: 0.93, snor: '5.25rem', vip: '-2deg', link: '#bane-info' },
 ]
+// link = skiltet kan klikkes og fører derhen. Skilte uden link er flade, så de ikke ligner knapper
 // Alle trisse-elementerne på siden
 const trisseEls = ref([])
 
@@ -133,7 +134,16 @@ onUnmounted(() => {
       <img v-if="trisse.abe" :src="abeSvaev" alt="" class="hero__abe" aria-hidden="true">
 
       <span v-if="!trisse.abe" class="hero__trisse-snor" aria-hidden="true"></span>
-      <p v-if="!trisse.abe" class="hero__badge">
+      <!-- Skilt med link: kan klikkes og har en pil -->
+      <a v-if="!trisse.abe && trisse.link" :href="trisse.link" class="hero__badge hero__badge--link">
+        <strong>
+          {{ titelTekst(trisse) }}
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+        </strong>
+        <span>{{ trisse.under }}</span>
+      </a>
+      <!-- Skilt uden link: fladt, uden skygge -->
+      <p v-else-if="!trisse.abe" class="hero__badge">
         <strong>{{ titelTekst(trisse) }}</strong>
         <span>{{ trisse.under }}</span>
       </p>
@@ -289,9 +299,8 @@ onUnmounted(() => {
   border-radius: 0.8rem;
   background-color: c.$primary_light25;
   color: c.$primary_darkgreen;
-  box-shadow:
-    0 0.15rem 0.3rem rgba(c.$primary_black100, 0.2),
-    0 0.75rem 1.75rem rgba(c.$primary_black100, 0.35);
+  // Fladt: ingen skygge, så skiltet ikke ligner en knap
+  box-shadow: none;
   font-size: 0.75rem;
   line-height: 1.25;
   text-align: center;
@@ -320,6 +329,52 @@ onUnmounted(() => {
 
   span {
     color: c.$primary_black75;
+  }
+}
+
+/* Skiltet "8 klatrebaner" kan klikkes og fører ned til baneoversigten.
+   Skygge, pil og hover viser, at det er et link */
+.hero__badge--link {
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow:
+    0 0.15rem 0.3rem rgba(c.$primary_black100, 0.2),
+    0 0.75rem 1.75rem rgba(c.$primary_black100, 0.35);
+  transition: background-color 0.2s ease, color 0.2s ease;
+
+  strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  svg {
+    width: 0.9rem;
+    height: 0.9rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    background-color: c.$secondary_purple100;
+    color: c.$primary_light25;
+
+    span {
+      color: c.$primary_light25;
+    }
+
+    svg {
+      transform: translateX(3px);
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid c.$primary_light25;
+    outline-offset: 3px;
   }
 }
 
