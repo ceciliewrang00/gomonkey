@@ -33,6 +33,21 @@ export const FAKTA = [
   { key: 'freeFall', label: 'Frit fald', kort: true },
 ]
 
+// Laver kravet til klatreren om til en sætning til "dig", så det ikke ligner banens egne tal.
+// "Minimum 160 cm høj & 30 kg." → "Du skal være mindst 160 cm høj og veje mindst 30 kg."
+// Kan teksten ikke læses, vises den, som den står i Firebase
+export function kravTekst(bane) {
+  const tekst = bane.requirements ?? ''
+  const cm = tekst.match(/(\d+)\s*cm/i)?.[1]
+  const kg = tekst.match(/(\d+)\s*kg/i)?.[1]
+  if (!cm && !kg) return tekst
+
+  const dele = []
+  if (cm) dele.push(`være mindst ${cm} cm høj`)
+  if (kg) dele.push(`veje mindst ${kg} kg`)
+  return `Du skal ${dele.join(' og ')}.`
+}
+
 // Giver de fakta, banen har udfyldt. Med kunKort: true kun dem til popup'en
 export function faktaFor(bane, { kunKort = false } = {}) {
   return FAKTA.filter((f) => bane[f.key] && (!kunKort || f.kort))

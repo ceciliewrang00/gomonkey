@@ -1,10 +1,14 @@
 <script setup>
-// Banekortene på forsiden: en forklaring af sværhedsgraden og ét kort pr. bane.
+// Banekortene på forsiden: en kort intro og ét kort pr. bane.
+// Forklaringen af sværhedsgraden ligger i SkalaForklaring.vue lige over.
 // Hvert kort har banens id (fx id="bane-6"), så andre sider kan linke til det med /#bane-6
 
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
-import { hentBaner, NIVEAUER, trinFor, niveauFor, harSvaerhedsgrad, faktaFor } from '@/services/baner.js'
+import { hentBaner, trinFor, niveauFor, harSvaerhedsgrad, faktaFor, kravTekst } from '@/services/baner.js'
+
+// Ikonet i boksen med kravet til klatreren
+import hoejdekravIkon from '@/assets/images/hoejdekrav.svg'
 
 // Banerne fra Firebase
 const baner = ref([])
@@ -17,6 +21,11 @@ const visteBaner = computed(() => [
     ...klatrebaner.value,
     ...baner.value.filter((bane) => !harSvaerhedsgrad(bane)),
 ])
+
+// Banens titel, fx "Grøn bane". Bounce er ikke en bane og hedder bare "Bounce"
+function titelFor(bane) {
+    return harSvaerhedsgrad(bane) ? `${bane.name} bane` : bane.name
+}
 
 // Banens nummer som "01", "02" ...
 function nummerFor(bane) {
@@ -99,7 +108,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     <div id="bane-info" class="baner-intro">
         <div class="baner-intro__tekst">
             <span class="badge baner-intro__badge">Baner i Forest Odense</span>
-            <h2><span class="light">Find den bane - </span><br>der passer til dig</h2>
+            <h2>Vores baner i Forest Odense</h2>
             <p>
                 Banerne står i rækkefølge efter sværhedsgrad – fra de letteste, hvor alle kan være med,
                 til de vildeste, der kræver mod og erfaring.
@@ -107,33 +116,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             <p>Hver bane har sin egen farve, så du nemt
                 kan genkende den i parken.</p>
         </div>
-
-        <!-- Forklaring af sværhedsbjælken, som står på hver bane -->
-        <section id="skala-forklaring" class="skala-forklaring" aria-labelledby="skala-titel">
-            <h4 id="skala-titel" class="skala-titel">Hvad betyder sværhedsgraden?</h4>
-            <p class="skala-tekst">
-                Sværhedsgraden viser, hvor højt oppe du er, hvor lange svævene er, og hvor meget banen kræver af din krop og dit mod. Jo flere trin der er fyldt ud på bjælken, jo sværere er banen.
-            </p>
-
-            <!-- De tre niveauer med samme bjælke som banerne -->
-            <ul class="skala-trin">
-                <li v-for="(niveau, i) in NIVEAUER" :key="niveau.navn">
-                    <div class="trin-bjaelke" aria-hidden="true">
-                        <span
-                            v-for="t in 3"
-                            :key="t"
-                            class="trin-bjaelke__trin"
-                            :class="{ 'er-fyldt': t <= i + 1 }"
-                        ></span>
-                    </div>
-                    <strong class="skala-trin__navn">{{ niveau.navn }}</strong>
-                    <p class="skala-trin__tekst">{{ niveau.tekst }}</p>
-                    <p v-if="niveau.passer" class="skala-trin__tekst">
-                        <strong>Passer til:</strong> {{ niveau.passer }}
-                    </p>
-                </li>
-            </ul>
-        </section>
     </div>
 
     <p v-if="loading" class="status">Henter baner...</p>
@@ -152,7 +134,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             <div class="bane__top">
                 <!-- Nummeret i banens farve. Bounce får ikke et nummer -->
                 <span v-if="harSvaerhedsgrad(bane)" class="bane__nr" aria-hidden="true">{{ nummerFor(bane) }}</span>
-                <h2 class="bane__navn">{{ bane.name }}</h2>
+                <h2 class="bane__navn">{{ titelFor(bane) }}</h2>
             </div>
 
             <!-- Klik på billedet åbner det stort -->
@@ -160,7 +142,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                 v-if="bane.svg"
                 type="button"
                 class="bane__billede"
-                :aria-label="`Se billedet af ${bane.name} i stor størrelse`"
+                :aria-label="`Se billedet af ${titelFor(bane)} i stor størrelse`"
                 @click="aabnBillede(bane)"
             >
                 <img :src="billedeSrc(bane)" :alt="bane.altImg" class="bane__img"/>
@@ -173,12 +155,18 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             <div class="bane__content">
                 <p class="bane__beskrivelse">{{ bane.description }}</p>
 
-                <p v-if="bane.requirements" class="bane__krav">
-                    <strong>Krav:</strong> {{ bane.requirements }}
-                </p>
+                <!-- Kravet til klatreren i en lyserød boks, så det ikke ligner banens fakta -->
+                <div v-if="bane.requirements" class="bane__krav">
+                    <!-- Højdekrav-ikonet: en person ved siden af et målebånd -->
+                    <img :src="hoejdekravIkon" alt="" class="bane__krav-ikon" aria-hidden="true">
+                    <div>
+                        <span class="bane__krav-label">Krav for at klatre på banen</span>
+                        <p class="bane__krav-tekst">{{ kravTekst(bane) }}</p>
+                    </div>
+                </div>
 
                 <!-- Ekstra pris, fx frit fald på Sort. Vises kun, hvis banen har en -->
-                <p v-if="bane.addOn" class="bane__krav">
+                <p v-if="bane.addOn" class="bane__tilkoeb">
                     <strong>Tilkøb:</strong> {{ bane.addOn }}
                 </p>
 
@@ -186,7 +174,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                 <dl class="fakta" v-if="faktaFor(bane).length">
                     <div v-for="f in faktaFor(bane)" :key="f.key" class="fakta__boks">
                         <dt>{{ f.label }}</dt>
-                        <dd>{{ bane[f.key] }}</dd>
+                        <dd>{{ f.key === 'trackHeight' ? `${bane[f.key]} over jorden` : bane[f.key] }}</dd>
                     </div>
                 </dl>
 
@@ -251,7 +239,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                 <RouterLink
                     :to="{ path: '/kort', query: { bane: bane.id } }"
                     class="button-arrow bane__kort-link"
-                    :aria-label="`Se ${bane.name} på kortet`"
+                    :aria-label="`Se ${titelFor(bane)} på kortet`"
                 >
                     Se på kortet
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
@@ -264,7 +252,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     <dialog
         ref="billedDialog"
         class="billed-dialog"
-        :aria-label="stortBillede ? `Billede af ${stortBillede.name}` : 'Billede'"
+        :aria-label="stortBillede ? `Billede af ${titelFor(stortBillede)}` : 'Billede'"
         @click="klikPaaDialog"
         @close="stortBillede = null"
     >
@@ -275,7 +263,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             <img :src="billedeSrc(stortBillede)" :alt="stortBillede.altImg" class="billed-dialog__img">
             <figcaption class="billed-dialog__tekst">
                 <span class="billed-dialog__prik" :class="`bane--${stortBillede.id}`" aria-hidden="true"></span>
-                {{ stortBillede.name }}
+                {{ titelFor(stortBillede) }}
             </figcaption>
         </figure>
     </dialog>
@@ -312,13 +300,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     scroll-margin-top: 5rem;  // så headeren ikke dækker overskriften
 
     h2 {
-        
         padding-top: 0;
-
-        // "Find den bane" står tyndt, resten fedt
-        .light {
-            font-weight: 300;
-        }
     }
 
     p {
@@ -333,105 +315,13 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     border: 1.5px solid c.$primary_black100;
 }
 
+// Introteksten står over banerne i en behagelig linjelængde
 .baner-intro__tekst {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: s.$spacing-s;
-}
-
-// Desktop: introteksten til venstre og forklaringsboksen til højre
-@media (min-width: 900px) {
-    .baner-intro {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr);
-        column-gap: s.$spacing-xl;
-        align-items: end;
-    }
-
-    .baner-intro .skala-forklaring {
-        margin-top: 0;
-    }
-}
-
-/* --- Forklaring af sværhedsgraden --- */
-// Boks med mørk kant, der flugter med banerne under
-.skala-forklaring {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-    width: 100%;
-    box-sizing: border-box;
-    margin-top: s.$spacing-xs;
-    padding: s.$spacing-l;
-    border-radius: 1rem;
-    background-color: c.$primary_darkgreen;
-    color: c.$primary_light25;
-}
-
-.skala-titel {
-    margin: 0;
-    padding: 0;
-    font-weight: 700;
-}
-
-// Teksten holdes i en behagelig linjelængde
-.baner-intro .skala-tekst {
-    max-width: 60ch;
-
-
-}
-
-// Let, Mellem og Svær som tre små kort side om side
-.skala-trin {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.6rem;
-    margin: 0.4rem 0 0;
-
-    list-style: none;
-    padding: 0;
-
-    // Ét kort pr. niveau med samme lyse baggrund som banerne, så bjælken ser ens ud
-    > li {
-        padding: 0.9rem 1rem 1rem;
-        border-radius: 0.75rem;
-        background-color: c.$forest_green25;
-        color: c.$primary_black100;
-    }
-
-    .trin-bjaelke {
-        margin-bottom: 0.75rem;
-    }
-
-    .skala-trin__navn {
-        display: block;
-        font-size: 1rem;
-        font-weight: 800;
-    }
-
-    .skala-trin__tekst {
-        margin: 0.25rem 0 0;
-        font-size: 0.85rem;
-        line-height: 1.45;
-        color: c.$primary_black100;
-
-        strong {
-            font-weight: 700;
-        }
-    }
-}
-
-// Er boksen smal, står kortene under hinanden.
-// @container kigger på boksens bredde og ikke skærmens
-.skala-forklaring {
-    container-type: inline-size;
-}
-
-@container (max-width: 34rem) {
-    .skala-trin {
-        grid-template-columns: 1fr;
-    }
+ 
 }
 
 .status {
@@ -679,7 +569,45 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     margin: 0;
 }
 
+/* Kravet til klatreren: en almindelig tekstlinje med ikon, uden boks.
+   Så ser den anderledes ud end banens fakta, som er mørke bokse */
 .bane__krav {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    color: c.$primary_darkgreen;
+}
+
+// Højdekrav-ikonet (hoejdekrav.svg) i en lys firkant med runde hjørner, så det springer i øjnene
+.bane__krav-ikon {
+    flex-shrink: 0;
+    box-sizing: border-box;
+    width: 4rem;
+    height: 4rem;
+    padding: 0.6rem;
+    border-radius: 1rem;
+    background-color: c.$primary_light25;
+    object-fit: contain;
+}
+
+// "Krav for at klatre på banen": lille og lidt svagere, så selve kravet er det, man ser først
+.bane__krav-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    opacity: 0.75;
+}
+
+// Selve kravet, fx "Du skal være mindst 110 cm høj."
+.bane__krav-tekst {
+    margin: 0.1rem 0 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+/* Tilkøb, fx frit fald på Sort */
+.bane__tilkoeb {
     margin: 0;
     padding: 0.75rem 1rem;
     border-radius: 0.75rem;
@@ -816,11 +744,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         outline: 2px solid c.$primary_light25;
         outline-offset: 2px;
     }
-}
-
-// Så headeren ikke dækker forklaringen
-.skala-forklaring {
-    scroll-margin-top: 6rem;
 }
 
 /* --- Trin-bjælke (både på banerne og i forklaringen) ---

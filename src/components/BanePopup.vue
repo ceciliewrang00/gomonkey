@@ -34,7 +34,7 @@ import { computed, ref, onMounted } from 'vue'
 // GoMonkey-aben, der bruges som trin i sværhedsgraden
 import logoUrl from '@/assets/images/gomonkey-logo.svg'
 
-import { trinFor, niveauFor, harSvaerhedsgrad } from '@/services/baner.js'
+import { trinFor, niveauFor, harSvaerhedsgrad, kravTekst } from '@/services/baner.js'
 
 // bane = den bane, der skal vises
 const props = defineProps({
@@ -125,7 +125,7 @@ const skalaer = computed(() => {
     </div>
 
     <p v-if="bane.requirements" class="popup-krav">
-      <strong>Krav:</strong> {{ bane.requirements }}
+      <strong>Krav:</strong> {{ kravTekst(bane) }}
     </p>
 
     <!-- Ekstra pris, fx frit fald på Sort. Vises kun, hvis banen har en -->
