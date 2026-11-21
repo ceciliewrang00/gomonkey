@@ -8,6 +8,7 @@
   import OverviewSection from '@/components/OverviewSection.vue'
   import TrackPickerSection from '@/components/TrackPickerSection.vue'
   import TrackInfo from '@/components/TrackInfo.vue'
+  import PrisSection from '@/components/PrisSection.vue'
   import FoelgBarnetSection from '@/components/FoelgBarnetSection.vue'
   import FaqSection from '@/components/FaqSection.vue'
   import StenBue from '@/components/StenBue.vue'
@@ -30,6 +31,8 @@
     <!-- Pynt: en lyserød bue mellem banneret og banerne -->
     <StenBue side="hoejre" farve="pink" />
     <TrackInfo />
+    <!-- Priser for børn og voksne. Menuens "Priser" linker hertil -->
+    <PrisSection />
     <!-- Hvad den voksne kan gøre, mens barnet klatrer -->
     <FoelgBarnetSection />
     <FaqSection />

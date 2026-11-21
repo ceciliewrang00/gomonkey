@@ -2,7 +2,7 @@
 // Forsidens egen menu med genveje til sektionerne om Forest Odense.
 // Den hører kun til denne side og står derfor ikke i GoMonkeys fælles header,
 // men øverst i main lige under headeren. Den bliver hængende under headeren, når man scroller.
-// Sikkerhed og Priser har ingen egen sektion og fører til FAQ'en, hvor spørgsmålene står
+// Sikkerhed har ingen egen sektion og fører til FAQ'en, hvor spørgsmålene om sikkerhed står
 
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 
@@ -13,7 +13,7 @@ const LINKS = [
   { tekst: 'Kort', href: '#overblik' },
   { tekst: 'Find din bane', href: '#baner' },
   { tekst: 'Sikkerhed', href: '#faq' },
-  { tekst: 'Priser', href: '#faq' },
+  { tekst: 'Priser', href: '#priser' },
   { tekst: 'Kontakt', href: '#kontakt' },
 ]
 
@@ -30,7 +30,7 @@ const listeEl = ref(null)
 // Den sektion, man er ved lige nu, fx '#faq' (null = over den første, fx i hero)
 const aktivSektion = ref(null)
 
-// Det link, man sidst klikkede på. Bruges, når to links fører til samme sektion (Sikkerhed og Priser)
+// Det link, man sidst klikkede på. Bruges, hvis to links fører til samme sektion
 const sidstKlikket = ref(null)
 
 // Teksten på det link, der får stregen

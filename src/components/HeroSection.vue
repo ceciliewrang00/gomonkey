@@ -34,8 +34,8 @@ const wireEl = ref(null)
 // Trisserne på wiren. start og slut er, hvor på wiren trissen glider fra og til (0–1).
 // snor = hvor langt badget hænger nede, vip = hvor skævt det hænger, abe = aben i stedet for badge
 const TRISSER = [
-  { id: 'abe', abe: true, start: 0.17, slut: 0.25, vip: '0deg' },
-  { id: 'svaev', titel: '126 m svæv', under: 'parkens længste', start: 0.78, slut: 0.8, snor: '8.5rem', vip: '8deg' },
+  // Aben hænger der, hvor skiltet med "126 m svæv" sad før
+  { id: 'abe', abe: true, start: 0.78, slut: 0.8, vip: '0deg' },
   { id: 'baner', titel: null, under: 'Næste stop: trætoppene', start: 0.91, slut: 0.93, snor: '5.25rem', vip: '-2deg', link: '#bane-info' },
 ]
 // link = skiltet kan klikkes og fører derhen. Skilte uden link er flade, så de ikke ligner knapper
@@ -584,7 +584,6 @@ onUnmounted(() => {
   }
 
   // Kun "klatrebaner"-badget vises
-  .hero__trisse--svaev,
   .hero__trisse--abe {
     display: none;
   }
