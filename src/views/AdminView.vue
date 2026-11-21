@@ -204,7 +204,7 @@ onUnmounted(() => {
     align-items: start;
 
     @media (min-width: 900px) {
-      grid-template-columns: 16rem minmax(0, 1fr);
+      grid-template-columns: 25rem minmax(0, 1fr);
     }
   }
 
@@ -290,7 +290,7 @@ onUnmounted(() => {
     place-items: center;
     padding: 0;
     border: none;
-    border-radius: 50%;
+    border-radius: 1rem;
     background: none;
     color: c.$primary_black50;
     cursor: pointer;
@@ -315,7 +315,7 @@ onUnmounted(() => {
     z-index: 5;
     width: min(18rem, 80vw);
     padding: 0.75rem 1rem;
-    border-radius: 0.75rem;
+    border-radius: 1rem;
     background-color: c.$primary_darkgreen;
     color: c.$primary_light25;
     font-size: 0.85rem;
@@ -330,6 +330,7 @@ onUnmounted(() => {
     background-color: c.$forest_green25;
     border: 2px solid c.$forest_green100;
     border-radius: 1rem;
+    min-width: 25rem;
 
     li {
       margin-bottom: 0.5rem;
@@ -366,7 +367,7 @@ onUnmounted(() => {
     object-fit: contain;
     box-sizing: border-box;
     padding: 0.5rem;
-    border-radius: 0.75rem;
+    border-radius: 1rem;
   }
 
   // Knapper ved siden af hinanden, der ombrydes på små skærme
@@ -375,6 +376,13 @@ onUnmounted(() => {
     flex-wrap: wrap;
     gap: 0.75rem;
     margin-top: 1rem;
+  }
+
+  // Slet står for sig selv under en streg, langt fra Gem
+  .knapper--slet {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid currentColor;
   }
 
   // Gør deaktiverede knapper tydelige

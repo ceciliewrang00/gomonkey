@@ -1,5 +1,5 @@
-// Henter banerne til det interaktive kort. Linjerne kommer fra Firebase "kortbaner"
-// (eller public/popup.json), teksterne fra "baner", og de sættes sammen ud fra banens id
+// Henter banerne til det interaktive kort. Linjerne kommer fra Firebase "kortbaner",
+// teksterne fra "baner", og de sættes sammen ud fra banens id
 
 import { hentBaner } from '@/services/baner.js'
 
@@ -15,32 +15,11 @@ export async function hentKortbanerFraFirebase({ signal } = {}) {
   return somListe(await response.json())
 }
 
-// Reserven: henter de gamle linjer fra public/popup.json
-export async function hentKortbanerFraFil({ signal } = {}) {
-  const response = await fetch('/popup.json', { signal, cache: 'no-store' })
-
-  if (!response.ok) {
-    throw new Error(`Banedata kunne ikke hentes (HTTP ${response.status}).`)
-  }
-
-  const svar = await response.json()
-
-  // Filen kan være en liste, { baner: [...] } eller et objekt – det bliver altid til en liste
-  return somListe(Array.isArray(svar?.baner) ? svar.baner : svar)
-}
-
 // Henter linjerne, tjekker dem, laver stregerne og sætter teksterne fra "baner" på.
 // Det er den, InteraktivtKort.vue kalder
 export async function hentKortbaner({ signal } = {}) {
-  // Prøver Firebase først. Fejler det, skrives fejlen i konsollen, og vi bruger filen i stedet
-  let geometri = []
-  try {
-    geometri = await hentKortbanerFraFirebase({ signal })
-  } catch (e) {
-    if (e.name === 'AbortError') throw e
-    console.error('Kortbanerne kunne ikke hentes fra Firebase – bruger popup.json', e)
-  }
-  if (geometri.length === 0) geometri = await hentKortbanerFraFil({ signal })
+  // Fejler Firebase, sendes fejlen videre, og kortet viser en fejlbesked
+  const geometri = await hentKortbanerFraFirebase({ signal })
 
   if (geometri.length === 0) {
     throw new Error('Der er ingen baner til kortet.')

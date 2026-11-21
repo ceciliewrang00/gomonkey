@@ -1,5 +1,5 @@
 <script setup>
-// Filen vises i AdminView.vue, når man klikker på fanen "Kort".
+// Denne del er primært lavet af Claude 
 
 // Hent vores egen knap
 import BaseButton from '@/components/BaseButton.vue'
@@ -56,9 +56,6 @@ const redigerer = ref(null)
 
 // true, mens der gemmes (så knappen viser "Gemmer..." og ikke kan trykkes igen)
 const gemmerRedigering = ref(false)
-
-// Id på banen, der er ved at blive slettet, så knappen kan vise "Sletter..."
-const sletterId = ref('')
 
 // ---------- Hent data ----------
 
@@ -459,52 +456,6 @@ async function gemRedigering() {
   }
 }
 
-// ---------- Slet bane ----------
-
-// "Slet bane": fjerner banen fra kortet og kortfiltret.
-// En fast bane bliver liggende under fanen "Baner"
-async function sletBane(bane) {
-  besked.value = ''
-
-  // Spørger først, om man er sikker. Trykker man Annuller, stopper vi
-  const navn = navnFor(bane)
-  const advarsel = faellesFor(bane.id)
-    ? `Vil du slette "${navn}" fra kortet og kortfiltret?\n\nTeksterne under fanen "Baner" bliver liggende.`
-    : `Vil du slette "${navn}" fra kortet og kortfiltret?`
-  if (!window.confirm(advarsel)) return
-
-  sletterId.value = bane.id
-  try {
-    // Sletter det, der ligger på en adresse i Firebase
-    const token = await hentToken()
-    const slet = async (url) => {
-      const res = await fetch(`${url}.json?auth=${encodeURIComponent(token)}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error(`Fejl ${res.status}`)
-    }
-
-    // 1) Sletter banens linjer
-    await slet(`${KORTBANER_URL}/${encodeURIComponent(bane.id)}`)
-
-    // 2) Sletter banens tekster i kortfiltret. Pladsen bliver tom, og de andre beholder deres numre
-    const post = filterFor(bane.id)
-    if (post) {
-      await slet(`${KORTFILTER_URL}/${post.indeks}`)
-      filterPoster.value = filterPoster.value.filter((p) => p !== post)
-    }
-
-    // 3) Fjerner banen fra siden og lukker redigeringen, hvis den var åben
-    kortbaner.value = kortbaner.value.filter((b) => b.id !== bane.id)
-    if (redigerer.value?.id === bane.id) redigerer.value = null
-
-    besked.value = `"${navn}" er slettet.`
-  } catch (e) {
-    besked.value = 'Banen kunne ikke slettes. Prøv igen.'
-    console.error(e)
-  } finally {
-    sletterId.value = ''
-  }
-}
-
 // Når fanen åbnes: hent data, og lyt efter Esc-tasten
 onMounted(() => {
   hentAlt()
@@ -719,22 +670,10 @@ onUnmounted(() => {
           </svg>
         </template>
 
-        <div class="knapper">
+        <div class="knapper knapper--gem">
           <BaseButton type="button" variant="secondary" @click="annullerRedigering">Annuller</BaseButton>
           <BaseButton type="button" variant="primary" :disabled="gemmerRedigering" @click="gemRedigering">
             {{ gemmerRedigering ? 'Gemmer...' : 'Gem ændringer' }}
-          </BaseButton>
-        </div>
-
-        <!-- Slet ligger inde i redigeringen, så man ikke kommer til at trykke på den ved en fejl -->
-        <div class="knapper">
-          <BaseButton
-            type="button"
-            variant="secondary"
-            :disabled="sletterId !== '' || gemmerRedigering"
-            @click="sletBane(bane)"
-          >
-            {{ sletterId === bane.id ? 'Sletter...' : 'Slet bane' }}
           </BaseButton>
         </div>
       </section>

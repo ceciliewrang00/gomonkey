@@ -21,12 +21,15 @@ const NIVEAU_VALG = [
 
 // Hjælpeteksten i (i)'et ved "Giver højst"
 const GIVER_HOEJST_HJAELP =
-  'Den sværeste bane, man kan få anbefalet, hvis man vælger dette svar. ' +
-  'Fx kan "Jeg har aldrig klatret" give højst Let. Quizzen bruger det laveste af alle svarene, ' +
-  'så ét svar med Let giver altid en Let bane. Vælg "Svær (ingen begrænsning)", ' +
-  'hvis svaret ikke skal holde anbefalingen nede.'
+  'Den højeste sværhedsgrad, der kan anbefales, når dette svar er valgt. ' +
+  'Fx kan "Jeg har aldrig klatret" højst give Let. Vælg "Svær (ingen begrænsning)", ' +
+  'hvis svaret ikke skal begrænse anbefalingen.'
 
-// ---------- Info-boblen ved "Giver højst" ----------
+const BARN_HJAELP = 'Denne tekst vises kun, når man svarer for et barn. Hvis den er tom, vises den almindelige tekst.'
+
+const GRUPPE_HJAELP = 'Denne tekst vises kun, når man svarer for en gruppe. Hvis den er tom, vises den almindelige tekst.'
+
+// ---------- Info-boblerne (i) ----------
 // Nøglen på den boble, der er åben (null = ingen)
 const aabenInfo = ref(null)
 
@@ -371,7 +374,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 
       <ul>
         <li v-for="svar in sp.svar" :key="svar.id">
-          {{ svar.tekst }}<template v-if="svar.maksNiveau"> — giver højst {{ niveauTekst(svar.maksNiveau) }}</template>
+          {{ svar.tekst }}<template v-if="svar.maksNiveau"> — Max sværhedsgrad {{ niveauTekst(svar.maksNiveau) }}</template>
         </li>
       </ul>
 
@@ -385,10 +388,12 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
       <section v-if="redigerer?.id === sp.id" class="redigering">
         <h3>Rediger spørgsmål</h3>
 
-        <label :for="'rediger-tekst-' + sp.id">Spørgsmålstekst</label>
-        <input :id="'rediger-tekst-' + sp.id" v-model="redigerer.tekst" type="text" required />
+        <div class="underline">
+          <label :for="'rediger-tekst-' + sp.id">Spørgsmålstekst</label>
+          <input :id="'rediger-tekst-' + sp.id" v-model="redigerer.tekst" type="text" required />
+        </div>
 
-        <div v-for="(svar, indeks) in redigerer.svar" :key="svar.id">
+        <div v-for="(svar, indeks) in redigerer.svar" :key="svar.id" class="underline">
           <label :for="'rediger-svar-' + sp.id + '-' + svar.id">
             Svarmulighed {{ indeks + 1 }}
           </label>
@@ -399,24 +404,69 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             required
           />
 
-          <!-- Valgfri tekster til barn og gruppe -->
-          <label :for="'rediger-svar-barn-' + sp.id + '-' + svar.id">Tekst, når man svarer for sit barn (valgfri)</label>
+          <!-- Valgfri tekster til barn -->
+          <div class="label-med-info">
+            <label :for="'rediger-svar-barn-' + sp.id + '-' + svar.id">Tekst, når man svarer for sit barn (valgfri)</label>
+            <!-- (i)-knappen åbner en boble med forklaringen -->
+            <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
+              <button
+                type="button"
+                class="info__knap"
+                aria-label="Hvad betyder Tekst, når man svarer for sit barn?"
+                :aria-expanded="aabenInfo === 'rediger-barn-' + svar.id"
+                :aria-controls="'info-' + 'rediger-barn-' + svar.id"
+                @click="skiftInfo('rediger-barn-' + svar.id)"
+              >
+                <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+                  <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <circle cx="10" cy="6.2" r="1.15" fill="currentColor" />
+                  <rect x="9.1" y="8.6" width="1.8" height="6" rx="0.9" fill="currentColor" />
+                </svg>
+              </button>
+              <span v-if="aabenInfo === 'rediger-barn-' + svar.id" :id="'info-' + 'rediger-barn-' + svar.id" class="info__boble">
+                {{ BARN_HJAELP }}
+              </span>
+            </span>
+          </div>
           <input :id="'rediger-svar-barn-' + sp.id + '-' + svar.id" v-model="svar.tekstBarn" type="text" />
 
-          <label :for="'rediger-svar-gruppe-' + sp.id + '-' + svar.id">Tekst, når man svarer for en gruppe (valgfri)</label>
+          <!-- Valgfri tekster til gruppe -->
+          <div class="label-med-info">
+            <label :for="'rediger-svar-gruppe-' + sp.id + '-' + svar.id">Tekst, når man svarer for en gruppe (valgfri)</label>
+            <!-- (i)-knappen åbner en boble med forklaringen -->
+            <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
+              <button
+                type="button"
+                class="info__knap"
+                aria-label="Hvad betyder Tekst, når man svarer for en gruppe?"
+                :aria-expanded="aabenInfo === 'rediger-gruppe-' + svar.id"
+                :aria-controls="'info-' + 'rediger-gruppe-' + svar.id"
+                @click="skiftInfo('rediger-gruppe-' + svar.id)"
+              >
+                <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+                  <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <circle cx="10" cy="6.2" r="1.15" fill="currentColor" />
+                  <rect x="9.1" y="8.6" width="1.8" height="6" rx="0.9" fill="currentColor" />
+                </svg>
+              </button>
+              <span v-if="aabenInfo === 'rediger-gruppe-' + svar.id" :id="'info-' + 'rediger-gruppe-' + svar.id" class="info__boble">
+                {{ GRUPPE_HJAELP }}
+              </span>
+            </span>
+          </div>
           <input :id="'rediger-svar-gruppe-' + sp.id + '-' + svar.id" v-model="svar.tekstGruppe" type="text" />
 
           <!-- "Giver højst" kan kun rettes på spørgsmål af typen 'niveau'.
                v-model.number gemmer valget som et tal -->
-          <div v-if="redigerer.type === 'niveau'">
+          <div>
             <div class="label-med-info">
-              <label :for="'rediger-niveau-' + sp.id + '-' + svar.id">Giver højst</label>
+              <label :for="'rediger-niveau-' + sp.id + '-' + svar.id">Max sværhedsgrad</label>
               <!-- (i)-knappen åbner en boble med forklaringen -->
               <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
                 <button
                   type="button"
                   class="info__knap"
-                  aria-label="Hvad betyder Giver højst?"
+                  aria-label="Hvad betyder Max sværhedsgrad?"
                   :aria-expanded="aabenInfo === 'rediger-' + svar.id"
                   :aria-controls="'info-' + 'rediger-' + svar.id"
                   @click="skiftInfo('rediger-' + svar.id)"
@@ -441,8 +491,8 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
           </div>
         </div>
 
-        <div class="knapper">
-          <BaseButton type="button" variant="pink" @click="annullerRedigering">Annuller</BaseButton>
+        <div class="knapper knapper--gem">
+          <BaseButton type="button" variant="secondary" @click="annullerRedigering">Annuller</BaseButton>
           <BaseButton
             type="button"
             variant="primary"
@@ -452,18 +502,18 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             {{ gemmerRedigering ? 'Gemmer...' : 'Gem ændringer' }}
           </BaseButton>
         </div>
-      </section>
 
-      <div class="knapper">
-        <BaseButton
-          type="button"
-          variant="secondary"
-          :disabled="sletterId !== ''"
-          @click="sletSpoergsmaal(sp)"
-        >
-          {{ sletterId === sp.id ? 'Sletter...' : 'Slet spørgsmål' }}
-        </BaseButton>
-      </div>
+        <div class="knapper knapper--slet">
+          <BaseButton
+            type="button"
+            variant="secondary"
+            :disabled="sletterId !== ''"
+            @click="sletSpoergsmaal(sp)"
+          >
+            {{ sletterId === sp.id ? 'Sletter...' : 'Slet spørgsmål' }}
+          </BaseButton>
+        </div>
+      </section>
     </article>
   </div>
 
@@ -471,29 +521,75 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
   <section class="admin-kort">
     <h2>Opret spørgsmål</h2>
 
-    <label for="nyt-spoergsmaal">Spørgsmålstekst</label>
-    <input id="nyt-spoergsmaal" v-model="nytSpoergsmaal.tekst" type="text" required />
+    <div class="underline">
+      <label for="nyt-spoergsmaal">Spørgsmålstekst</label>
+      <input id="nyt-spoergsmaal" v-model="nytSpoergsmaal.tekst" type="text" required />
+    </div>
 
     <!-- Felter pr. svarmulighed -->
-    <div v-for="(svar, indeks) in nytSpoergsmaal.svar" :key="svar.id">
+    <div v-for="(svar, indeks) in nytSpoergsmaal.svar" :key="svar.id" class="underline">
       <label :for="'nyt-svar-' + svar.id">Svarmulighed {{ indeks + 1 }}</label>
       <input :id="'nyt-svar-' + svar.id" v-model="svar.tekst" type="text" required />
 
       <!-- Valgfri tekster til barn og gruppe -->
-      <label :for="'nyt-svar-barn-' + svar.id">Tekst, når man svarer for sit barn (valgfri)</label>
-      <input :id="'nyt-svar-barn-' + svar.id" v-model="svar.tekstBarn" type="text" />
-
-      <label :for="'nyt-svar-gruppe-' + svar.id">Tekst, når man svarer for en gruppe (valgfri)</label>
-      <input :id="'nyt-svar-gruppe-' + svar.id" v-model="svar.tekstGruppe" type="text" />
-
       <div class="label-med-info">
-        <label :for="'nyt-niveau-' + svar.id">Giver højst</label>
+        <label :for="'nyt-svar-barn-' + svar.id">Tekst, når man svarer for sit barn (valgfri)</label>
         <!-- (i)-knappen åbner en boble med forklaringen -->
         <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
           <button
             type="button"
             class="info__knap"
-            aria-label="Hvad betyder Giver højst?"
+            aria-label="Hvad betyder Tekst, når man svarer for sit barn?"
+            :aria-expanded="aabenInfo === 'nyt-barn-' + svar.id"
+            :aria-controls="'info-' + 'nyt-barn-' + svar.id"
+            @click="skiftInfo('nyt-barn-' + svar.id)"
+          >
+            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+              <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <circle cx="10" cy="6.2" r="1.15" fill="currentColor" />
+              <rect x="9.1" y="8.6" width="1.8" height="6" rx="0.9" fill="currentColor" />
+            </svg>
+          </button>
+          <span v-if="aabenInfo === 'nyt-barn-' + svar.id" :id="'info-' + 'nyt-barn-' + svar.id" class="info__boble">
+            {{ BARN_HJAELP }}
+          </span>
+        </span>
+      </div>
+      <input :id="'nyt-svar-barn-' + svar.id" v-model="svar.tekstBarn" type="text" />
+
+      <div class="label-med-info">
+        <label :for="'nyt-svar-gruppe-' + svar.id">Tekst, når man svarer for en gruppe (valgfri)</label>
+        <!-- (i)-knappen åbner en boble med forklaringen -->
+        <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
+          <button
+            type="button"
+            class="info__knap"
+            aria-label="Hvad betyder Tekst, når man svarer for en gruppe?"
+            :aria-expanded="aabenInfo === 'nyt-gruppe-' + svar.id"
+            :aria-controls="'info-' + 'nyt-gruppe-' + svar.id"
+            @click="skiftInfo('nyt-gruppe-' + svar.id)"
+          >
+            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+              <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <circle cx="10" cy="6.2" r="1.15" fill="currentColor" />
+              <rect x="9.1" y="8.6" width="1.8" height="6" rx="0.9" fill="currentColor" />
+            </svg>
+          </button>
+          <span v-if="aabenInfo === 'nyt-gruppe-' + svar.id" :id="'info-' + 'nyt-gruppe-' + svar.id" class="info__boble">
+            {{ GRUPPE_HJAELP }}
+          </span>
+        </span>
+      </div>
+      <input :id="'nyt-svar-gruppe-' + svar.id" v-model="svar.tekstGruppe" type="text" />
+
+      <div class="label-med-info">
+        <label :for="'nyt-niveau-' + svar.id">Max sværhedsgrad</label>
+        <!-- (i)-knappen åbner en boble med forklaringen -->
+        <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
+          <button
+            type="button"
+            class="info__knap"
+            aria-label="Hvad betyder Max sværhedsgrad?"
             :aria-expanded="aabenInfo === 'nyt-' + svar.id"
             :aria-controls="'info-' + 'nyt-' + svar.id"
             @click="skiftInfo('nyt-' + svar.id)"
@@ -526,7 +622,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
       </div>
     </div>
 
-    <div class="knapper">
+    <div class="knapper knapper--gem">
       <BaseButton type="button" variant="secondary" :disabled="gemmer" @click="tilfoejSvarmulighed">
         Tilføj svarmulighed
       </BaseButton>
@@ -538,3 +634,13 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     <p v-if="gemBesked" role="status">{{ gemBesked }}</p>
   </section>
 </template>
+
+<style lang="scss" scoped>
+
+@use '@/assets/styles/colors' as c;
+
+.underline {
+  padding-bottom: 1.5rem;
+  border-bottom: 1.5px solid c.$forest_green100;
+}
+</style>
