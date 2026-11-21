@@ -20,6 +20,7 @@ import {
   lavFritfaldBesked,
   lavGodtAtVide,
   lavFoerstegangsInfo,
+  lavVoksenInfo,
 } from '@/services/quizLogik.js'
 
 import { hentBaner } from '@/services/baner.js'
@@ -134,6 +135,9 @@ const fritfaldBesked = computed(() => {
 const foerstegangsInfo = computed(() =>
   lavFoerstegangsInfo(anbefaletBane.value, valgteSvar.value, baner.value)
 )
+
+// Den voksnes rolle – vises kun, når svaret er "Mit barn"
+const voksenInfo = computed(() => lavVoksenInfo(valgteSvar.value))
 
 // Regler, der er gode at kende før besøget
 const godtAtVide = computed(() => lavGodtAtVide(valgteSvar.value))
@@ -307,6 +311,18 @@ onMounted(async () => {
           <div>
             <h3 class="resultat-regel__titel">{{ foerstegangsInfo.titel }}</h3>
             <p class="resultat-regel__tekst">{{ foerstegangsInfo.tekst }}</p>
+          </div>
+        </div>
+
+        <!-- Den voksnes rolle, når svaret er "Mit barn". Linker til sektionen på forsiden -->
+        <div v-if="voksenInfo" class="resultat-regel">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="3" /><path d="M3 20c0-3.5 2.5-6 6-6s6 2.5 6 6" /><circle cx="17" cy="9" r="2.2" /><path d="M15.5 14.2c3 .2 5.5 2.4 5.5 5.8" /></svg>
+          <div>
+            <h3 class="resultat-regel__titel">{{ voksenInfo.titel }}</h3>
+            <p class="resultat-regel__tekst">
+              {{ voksenInfo.tekst }}
+              <RouterLink :to="{ path: '/', hash: '#foelg-barnet' }" class="resultat-regel__link">Læs mere</RouterLink>
+            </p>
           </div>
         </div>
 
@@ -898,6 +914,12 @@ button:disabled {
   margin: 0.25rem 0 0;
   font-size: 0.95rem;
   line-height: 1.5;
+}
+
+// "Læs mere"-linket i boksen om den voksnes rolle
+.resultat-regel__link {
+  color: inherit;
+  font-weight: 700;
 }
 
 /* 3. Lyserøde bokse med beskeder */

@@ -401,6 +401,17 @@ export function lavFoerstegangsInfo(anbefaling, svar, baner) {
   }
 }
 
+// Kort forklaring af den voksnes rolle, når svaret er "Mit barn".
+// Den lange version står på forsiden i "Sådan følger du dit barn"
+export function lavVoksenInfo(svar) {
+  if (svar.hvem?.hvem !== 'barn') return null
+
+  return {
+    titel: 'Sådan følger du dit barn',
+    tekst: 'Du kan klatre med (kræver selv udstyr og billet), gå med på jorden og heppe eller vente ved start eller mål. Man kan ikke holde sit barn i hånden på banen.',
+  }
+}
+
 // Ekstra linjer til grupper: børn under 110 cm kan hoppe på Bounce,
 // og de større børn kan fortsætte på sværere baner
 export function lavGruppeBesked(anbefaling, svar, baner) {

@@ -7,6 +7,7 @@
   import OverviewSection from '@/components/OverviewSection.vue'
   import TrackPickerSection from '@/components/TrackPickerSection.vue'
   import TrackInfo from '@/components/TrackInfo.vue'
+  import FoelgBarnetSection from '@/components/FoelgBarnetSection.vue'
   import FaqSection from '@/components/FaqSection.vue'
   import StenBue from '@/components/StenBue.vue'
   import Footer from '@/components/Footer.vue'
@@ -26,6 +27,8 @@
     <!-- Pynt: en lyserød bue mellem banneret og banerne -->
     <StenBue side="hoejre" farve="pink" />
     <TrackInfo />
+    <!-- Hvad den voksne kan gøre, mens barnet klatrer -->
+    <FoelgBarnetSection />
     <FaqSection />
   </main>
   <Footer />
