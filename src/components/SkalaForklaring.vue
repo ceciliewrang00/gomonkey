@@ -49,7 +49,7 @@ import { NIVEAUER } from '@/services/baner.js'
   padding-block: 0;
   padding-inline: max(#{s.$spacing-m}, calc((100% - #{s.$indhold-bredde}) / 2));
   background-color: c.$forest_green25;
-  scroll-margin-top: 6rem;  // så headeren ikke dækker forklaringen
+  scroll-margin-top: 9.5rem;  // så headeren med ankermenuen ikke dækker forklaringen
 }
 
 /* --- Selve forklaringen ---

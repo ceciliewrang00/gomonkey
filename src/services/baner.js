@@ -24,13 +24,14 @@ export { NIVEAUER, trinFor, BOUNCE_ID, harSvaerhedsgrad, niveauFor } from './niv
 
 // Faktatallene om en bane. key = feltet i Firebase, label = teksten på siden.
 // kort: true = vises også i popup'en på kortet
+// Banehøjde står sidst, fordi "… over jorden" fylder mere end de andre og så kommer ned på sin egen linje
 export const FAKTA = [
-  { key: 'trackHeight', label: 'Banehøjde', kort: true },
   { key: 'trackLength', label: 'Banelængde', kort: true },
   { key: 'obstacles', label: 'Forhindringer', kort: true },
   { key: 'glideAmount', label: 'Antal svæv', kort: true },
   { key: 'longestGlide', label: 'Længste svæv' },
   { key: 'freeFall', label: 'Frit fald', kort: true },
+  { key: 'trackHeight', label: 'Banehøjde', kort: true },
 ]
 
 // Laver kravet til klatreren om til en sætning til "dig", så det ikke ligner banens egne tal.

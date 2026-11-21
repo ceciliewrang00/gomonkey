@@ -2,6 +2,7 @@
   // Forsiden på /. Den samler sektionerne i den rækkefølge, de står på siden
 
   import AppHeader from '@/components/AppHeader.vue'
+  import SektionsMenu from '@/components/SektionsMenu.vue'
   import HeroSection from '@/components/HeroSection.vue'
   import BannerSection from '@/components/BannerSection.vue'
   import OverviewSection from '@/components/OverviewSection.vue'
@@ -18,6 +19,8 @@
   <AppHeader />
   <!-- forside-klassen giver sektionerne samme bredde (se main.scss) -->
   <main class="forside">
+    <!-- Sidens egen menu med genveje til sektionerne. Bliver hængende under headeren, når man scroller -->
+    <SektionsMenu />
     <HeroSection />
     <!-- Pynt: en blå bue mellem hero og overblikket -->
     <StenBue side="hoejre" farve="blaa" />

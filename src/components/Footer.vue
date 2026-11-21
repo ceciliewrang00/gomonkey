@@ -52,7 +52,8 @@ const aar = new Date().getFullYear()
 </script>
 
 <template>
-  <footer class="footer">
+  <!-- id="kontakt": ankermenuens "Kontakt" hopper hertil -->
+  <footer id="kontakt" class="footer">
     <div class="footer__inner">
       <div class="footer__top">
         <!-- Venstre side: logo, tagline og sociale medier -->

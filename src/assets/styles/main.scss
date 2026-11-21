@@ -40,6 +40,13 @@ section, article {
 .forside > section,
 .forside > article {
     padding-inline: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
+    // Forsidens header er højere pga. ankermenuen (SektionsMenu.vue)
+    scroll-margin-top: 8.5rem;
+}
+
+// Footeren ("Kontakt" i ankermenuen) skal heller ikke gemme sig under headeren
+#kontakt {
+    scroll-margin-top: 8.5rem;
 }
 
 .double-button {

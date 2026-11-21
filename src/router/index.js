@@ -13,7 +13,7 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
 
   // Bestemmer, hvor man står på siden efter et sideskift. Tilbage/frem husker den gamle position,
-  // et link til en sektion (#...) scroller derned med plads til headeren (top: 96)
+  // et link til en sektion (#...) scroller derned med plads til headeren med ankermenuen (top: 140)
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
       return savedPosition
@@ -25,7 +25,7 @@ const router = createRouter({
         const start = Date.now()
         const led = () => {
           if (document.querySelector(to.hash)) {
-            resolve({ el: to.hash, top: 96, behavior: 'smooth' })
+            resolve({ el: to.hash, top: 140, behavior: 'smooth' })
           } else if (Date.now() - start > 3000) {
             resolve({ top: 0 })
           } else {

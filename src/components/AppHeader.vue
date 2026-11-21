@@ -50,7 +50,8 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: s.$spacing-xs s.$spacing-m;
+  // Samme sidemargin som forsidens sektioner, så logo og menu flugter med indholdet på store skærme
+  padding: s.$spacing-xs max(#{s.$spacing-m}, calc((100% - #{s.$indhold-bredde}) / 2));
 }
 
 // Fjerner ekstra luft under logoet

@@ -316,7 +316,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     }
     // Samme grønne baggrund som banerne, med en tynd streg over den første bane
     background-color: c.$forest_green25;
-    scroll-margin-top: 5rem;  // så headeren ikke dækker overskriften
+    scroll-margin-top: 8.5rem;  // så headeren med ankermenuen ikke dækker overskriften
 
     h2 {
         padding-top: 0;
