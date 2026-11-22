@@ -3,6 +3,9 @@
 // Forklarer, hvad den voksne kan gøre, mens barnet klatrer – og hvad man ikke kan.
 // Banevælgeren linker hertil (/#foelg-barnet), når svaret er "Mit barn"
 
+// Ikonet på kortet "Klatr med på banen"
+import klatreIkon from '@/assets/images/klatreikon.svg'
+
 // De tre muligheder. ikon = hvilken tegning der vises (se templaten)
 const MULIGHEDER = [
   {
@@ -38,11 +41,8 @@ const MULIGHEDER = [
     <ul class="foelg__liste">
       <li v-for="m in MULIGHEDER" :key="m.ikon" class="foelg__kort">
         <span class="foelg__ikon" aria-hidden="true">
-          <!-- Klatr med: trin opad med en pil -->
-          <svg v-if="m.ikon === 'klatr'" viewBox="0 0 24 24">
-            <path d="M3 20h5v-5h5v-5h5V5h3" />
-            <path d="m17 3 4 2-2 4" />
-          </svg>
+          <!-- Klatr med: klatreikon.svg -->
+          <img v-if="m.ikon === 'klatr'" :src="klatreIkon" alt="" class="foelg__ikon-billede">
           <!-- Gå med: to fodspor -->
           <svg v-else-if="m.ikon === 'gaa'" viewBox="0 0 24 24">
             <path d="M8 3c-2 0-3 2.5-3 5s1 4 3 4 3-1.5 3-4-1-5-3-5Z" />
@@ -78,12 +78,12 @@ const MULIGHEDER = [
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
 
-// Lys lyserød baggrund, så sektionen skiller sig ud fra banerne over og FAQ'en under
+// Sort baggrund med lys tekst, så sektionen skiller sig ud fra de lyse sektioner før og efter
 .foelg {
   display: flex;
   flex-direction: column;
   gap: s.$spacing-l;
-  background-color: c.$forest_green100;
+  background-color: c.$primary_black100;
   color: c.$primary_light25;
 }
 
@@ -98,6 +98,15 @@ const MULIGHEDER = [
   h2,
   p {
     margin: 0;
+  }
+
+  // Lyserød overskrift som i overblikket over parken, der også står på mørk baggrund
+  h2 {
+    color: c.$forest_pink100;
+  }
+
+  p {
+    opacity: 0.9;
   }
 }
 
@@ -122,18 +131,19 @@ const MULIGHEDER = [
   gap: 0.5rem;
   padding: s.$spacing-m;
   border-radius: 1rem;
-  background-color: c.$primary_light25;
-  color: c.$primary_black100;
+  // Mørkegrønne kort på den sorte baggrund
+  background-color: c.$primary_darkgreen;
+  color: c.$primary_light25;
 }
 
-// Rund lyserød cirkel med ikonet i midten
+// Lyserød firkant med runde hjørner og ikonet i midten (samme form som højdekrav-ikonet på banerne)
 .foelg__ikon {
   display: grid;
   place-items: center;
   width: 3rem;
   height: 3rem;
   margin-bottom: 0.25rem;
-  border-radius: 50%;
+  border-radius: 1rem;
   background-color: c.$forest_pink100;
   color: c.$primary_black100;
 
@@ -148,6 +158,13 @@ const MULIGHEDER = [
   }
 }
 
+// klatreikon.svg er et billede og fylder lidt mere end stregikonerne, så det kan ses tydeligt
+.foelg__ikon-billede {
+  width: 1.75rem;
+  height: 1.75rem;
+  object-fit: contain;
+}
+
 .foelg__titel {
   margin: 0;
   padding: 0;
@@ -160,6 +177,7 @@ const MULIGHEDER = [
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.5;
+  opacity: 0.85;
 }
 
 /* --- Det, man ikke kan --- */
@@ -168,7 +186,8 @@ const MULIGHEDER = [
   align-items: flex-start;
   gap: 0.75rem;
   padding: 0.9rem s.$spacing-s;
-  border: 2px solid c.$primary_black100;
+  // Lyserød kant, så det, man ikke kan, springer i øjnene på den mørke baggrund
+  border: 2px solid c.$forest_pink100;
   border-radius: 0.75rem;
 
   svg {
@@ -176,7 +195,7 @@ const MULIGHEDER = [
     width: 1.5rem;
     height: 1.5rem;
     fill: none;
-    stroke: currentColor;
+    stroke: c.$forest_pink100;
     stroke-width: 2;
     stroke-linecap: round;
   }
@@ -194,6 +213,11 @@ const MULIGHEDER = [
   a {
     color: inherit;
     font-weight: 700;
+    text-underline-offset: 3px;
+
+    &:hover {
+      color: c.$forest_pink100;
+    }
   }
 }
 </style>

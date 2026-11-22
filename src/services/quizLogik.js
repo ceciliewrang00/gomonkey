@@ -293,7 +293,7 @@ function faktaSaetning(bane) {
   return ekstra.length ? `${start}, med ${ekstra.join(' og ')}.` : `${start}.`
 }
 
-// Overskrift og tekst til resultatet, fx "Start på Grøn". Banens quizTekst bruges, hvis den findes,
+// Overskrift og tekst til resultatet, fx "Vi anbefaler: Start på Grøn". Banens quizTekst bruges, hvis den findes,
 // ellers en fast tekst for Bounce eller en tekst bygget af banens fakta
 export function lavResultat(anbefaling, svar = {}) {
   if (!anbefaling) return null
@@ -301,18 +301,18 @@ export function lavResultat(anbefaling, svar = {}) {
 
   const quizTekst = vaelgForHvem(bane.quizTekst, svar)
   if (quizTekst) {
-    return { titel: `Start på ${bane.name}`, tekst: quizTekst }
+    return { titel: `Vi anbefaler: Start på ${bane.name}`, tekst: quizTekst }
   }
 
   if (niveau === 0) {
     return {
-      titel: `Start på ${bane.name}`,
+      titel: `Vi anbefaler: Start på ${bane.name}`,
       tekst: `${bane.name} er trampolinen mellem træerne. Her er der ingen krav til højde, så alle kan være med.`,
     }
   }
 
   return {
-    titel: `Start på ${bane.name}`,
+    titel: `Vi anbefaler: Start på ${bane.name}`,
     tekst: [faktaSaetning(bane), NIVEAU_TEKST[niveau]].filter(Boolean).join(' '),
   }
 }

@@ -132,7 +132,7 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
   <section id="faq" class="faq">
     <!-- Venstre side: overskrift og kontakt -->
     <div class="faq__intro">
-      <span class="badge badge--outline-green">Spørgsmål og svar</span>
+      <span class="badge faq__badge">Spørgsmål og svar</span>
       <h2>Godt at vide før I kommer</h2>
       <p>
         Her er svarene på det, vi oftest bliver spurgt om. Kan du ikke finde det, du leder efter,
@@ -140,8 +140,8 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
       </p>
 
       <div class="double-button faq__kontakt">
-        <a href="tel:+4525533022" class="button-primary button-light">Ring 25 53 30 22</a>
-        <a href="mailto:forestodense@gomonkey.dk" class="button-secondary button-secondary--light">Skriv til os</a>
+        <a href="tel:+4525533022" class="button-primary">Ring 25 53 30 22</a>
+        <a href="mailto:forestodense@gomonkey.dk" class="button-secondary">Skriv til os</a>
       </div>
     </div>
 
@@ -175,11 +175,11 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
 <style lang="scss" scoped>
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
-@use '@/assets/styles/mixins' as m;
 
-// Mørk baggrund med lys tekst
+// Lys baggrund med mørk tekst. Spørgsmålene til højre er stadig mørkegrønne kort med lys tekst
 .faq {
-  @include m.section-black100;
+  background-color: c.$primary_light25;
+  color: c.$primary_black100;
   display: grid;
   grid-template-columns: 1fr;
   gap: s.$spacing-xl;
@@ -229,6 +229,14 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
   padding: 0 s.$spacing-s;
   border-radius: 0.75rem;
   background-color: c.$primary_darkgreen;
+  color: c.$primary_light25;
+}
+
+// Mærket i venstre side: mørk kant og tekst på den lyse baggrund
+.faq__badge {
+  --badge-bg: transparent;
+  --badge-color: #{c.$primary_black100};
+  border: 1.5px solid c.$primary_black100;
 }
 
 // Spørgsmålet: fed tekst til venstre, plus til højre. Browserens egen trekant fjernes

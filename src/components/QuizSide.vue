@@ -104,7 +104,7 @@ const anbefaletBane = computed(() => {
   return beregnBane(valgteSvar.value, baner.value)
 })
 
-// Overskrift og tekst til resultatet, fx "Start på Grøn"
+// Overskrift og tekst til resultatet, fx "Vi anbefaler: Start på Grøn"
 const resultat = computed(() => lavResultat(anbefaletBane.value, valgteSvar.value))
 
 // Listen "Derfor anbefaler vi den"
