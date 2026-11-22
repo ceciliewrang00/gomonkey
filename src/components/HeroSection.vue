@@ -4,7 +4,7 @@
 
 import { ref, onMounted, onUnmounted } from 'vue'
 
-import { hentBaner } from '@/services/baner.js'
+import { hentBaner, harSvaerhedsgrad } from '@/services/baner.js'
 
 import heroBillede from '@/assets/images/gomonkey_bane.webp'
 import abeSvaev from '@/assets/images/Abe.svg'
@@ -12,7 +12,7 @@ import abeSvaev from '@/assets/images/Abe.svg'
 // Banerne fra Firebase – bruges kun til at tælle dem
 const baner = ref([])
 
-// Henter banerne. Går det galt, viser badgen bare "8 klatrebaner"
+// Henter banerne. Går det galt, viser badgen bare "7 klatrebaner"
 onMounted(async () => {
   try {
     baner.value = await hentBaner()
@@ -21,9 +21,11 @@ onMounted(async () => {
   }
 })
 
-// Badgens egen titel – eller antallet af baner, hvis titel er null
+// Badgens egen titel – eller antallet af klatrebaner, hvis titel er null.
+// Bounce tæller ikke med, fordi det er en aktivitet og ikke en klatrebane
 function titelTekst(trisse) {
-  return trisse.titel ?? `${baner.value.length || 8} klatrebaner`
+  const antal = baner.value.filter(harSvaerhedsgrad).length
+  return trisse.titel ?? `${antal || 7} klatrebaner`
 }
 
 // Elementerne i templaten, som vi måler og flytter
@@ -332,7 +334,7 @@ onUnmounted(() => {
   }
 }
 
-/* Skiltet "8 klatrebaner" kan klikkes og fører ned til baneoversigten.
+/* Skiltet "7 klatrebaner" kan klikkes og fører ned til baneoversigten.
    Skygge, pil og hover viser, at det er et link */
 .hero__badge--link {
   text-decoration: none;

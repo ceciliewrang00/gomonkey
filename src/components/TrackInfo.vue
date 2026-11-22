@@ -7,7 +7,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 import SkalaForklaring from './SkalaForklaring.vue'
 
-import { hentBaner, trinFor, niveauFor, harSvaerhedsgrad, faktaFor, kravTekst } from '@/services/baner.js'
+import { hentBaner, trinFor, niveauFor, harSvaerhedsgrad, faktaFor, kravKort } from '@/services/baner.js'
 
 // Ikonet i boksen med kravet til klatreren
 import hoejdekravIkon from '@/assets/images/hoejdekrav.svg'
@@ -166,15 +166,11 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             <div class="bane__content">
                 <p class="bane__beskrivelse">{{ bane.description }}</p>
 
-                <!-- Kravet til klatreren i en lyserød boks, så det ikke ligner banens fakta -->
-                <div v-if="bane.requirements" class="bane__krav">
-                    <!-- Højdekrav-ikonet: en person ved siden af et målebånd -->
+                <!-- Kravet til klatreren som en lys mærkat: ikon, "Krav:" og kravet, fx "mindst 120 cm høj" -->
+                <p v-if="bane.requirements" class="bane__krav">
                     <img :src="hoejdekravIkon" alt="" class="bane__krav-ikon" aria-hidden="true">
-                    <div>
-                        <span class="bane__krav-label">Krav for at klatre på banen</span>
-                        <p class="bane__krav-tekst">{{ kravTekst(bane) }}</p>
-                    </div>
-                </div>
+                    <span><strong>Krav:</strong> {{ kravKort(bane) }}</span>
+                </p>
 
                 <!-- Ekstra pris, fx frit fald på Sort. Vises kun, hvis banen har en -->
                 <p v-if="bane.addOn" class="bane__tilkoeb">
@@ -185,7 +181,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                 <dl class="fakta" v-if="faktaFor(bane).length">
                     <div v-for="f in faktaFor(bane)" :key="f.key" class="fakta__boks">
                         <dt>{{ f.label }}</dt>
-                        <dd>{{ f.key === 'trackHeight' ? `${bane[f.key]} over jorden` : bane[f.key] }}</dd>
+                        <dd>{{ bane[f.key] }}</dd>
                     </div>
                 </dl>
 
@@ -414,10 +410,13 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     gap: s.$spacing-m;
     padding: s.$spacing-l 0;
 
+    // Desktop: tekst og billede deler bredden lige (50/50).
+    // Mindre luft over og under kortet og mellem overskrift og tekst, så der er mindre at scrolle
     @media (min-width: 900px) {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         column-gap: s.$spacing-xl;
-        padding: s.$spacing-xl 0;
+        row-gap: s.$spacing-s;
+        padding: s.$spacing-l 0;
     }
 }
 
@@ -431,18 +430,18 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     font-variant-numeric: tabular-nums;
 }
 
-// Store skærme: overskriften står over teksten, og billedet står ved siden af.
+// Store skærme: overskriften står over teksten, og billedet står ved siden af hele vejen fra toppen.
 // img-right = billedet til højre, ellers til venstre
 @media (min-width: 900px) {
     .bane__kort {
         grid-template-areas:
-            ".       top"
+            "billede top"
             "billede tekst";
     }
 
     .img-right .bane__kort {
         grid-template-areas:
-            "top   ."
+            "top   billede"
             "tekst billede";
     }
 }
@@ -594,6 +593,11 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     display: flex;
     flex-direction: column;
     gap: s.$spacing-s;
+
+    // Desktop: lidt mindre luft mellem tekstdelene
+    @media (min-width: 900px) {
+        gap: 1rem;
+    }
 }
 
 // Stregen under navnet, med runde ender
@@ -602,18 +606,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     display: flex;
     align-items: baseline;
     gap: s.$spacing-s;
-    padding-bottom: calc(#{s.$spacing-s} + 5px);
-
-    &::after {
-        content: '';
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 5px;
-        border-radius: 1rem;
-        background-color: var(--bane-farve);
-    }
+    // Ingen streg under nummer og navn – de står i banens farve
 }
 
 .bane__navn {
@@ -622,48 +615,43 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     line-height: 1.1;
     margin: 0;
     padding-top: 0;
+    // Navnet står i banens farve ligesom nummeret
     color: var(--bane-farve);
 }
 
 .bane__beskrivelse {
     margin: 0;
+    // Ekstra luft ned til kravet og faktaboksene
+    margin-bottom: 0.5rem;
 }
 
-/* Kravet til klatreren: en almindelig tekstlinje med ikon, uden boks.
-   Så ser den anderledes ud end banens fakta, som er mørke bokse */
+/* Kravet til klatreren: en lys mærkat med ikon, så den tydeligt er et krav og ser anderledes ud
+   end beskrivelsen og de mørke faktabokse */
 .bane__krav {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.9rem;
+    align-self: flex-start;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0.5rem 1rem 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+    background-color: c.$primary_light25;
     color: c.$primary_darkgreen;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.35;
+
+    strong {
+        font-weight: 800;
+    }
 }
 
-// Højdekrav-ikonet (hoejdekrav.svg) i en lys firkant med runde hjørner, så det springer i øjnene
+// Højdekrav-ikonet (hoejdekrav.svg)
 .bane__krav-ikon {
     flex-shrink: 0;
-    box-sizing: border-box;
-    width: 4rem;
-    height: 4rem;
-    padding: 0.6rem;
-    border-radius: 1rem;
-    background-color: c.$primary_light25;
+    width: 1.6rem;
+    height: 1.6rem;
     object-fit: contain;
-}
-
-// "Krav for at klatre på banen": lille og lidt svagere, så selve kravet er det, man ser først
-.bane__krav-label {
-    display: block;
-    font-size: 0.85rem;
-    font-weight: 500;
-    opacity: 0.75;
-}
-
-// Selve kravet, fx "Du skal være mindst 110 cm høj."
-.bane__krav-tekst {
-    margin: 0.1rem 0 0;
-    font-size: 1.1rem;
-    font-weight: 800;
-    line-height: 1.35;
 }
 
 /* Tilkøb, fx frit fald på Sort */
@@ -681,6 +669,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 }
 
 /* --- Faktabokse --- */
+// Én mørkegrøn boks pr. fakta med lys tekst
 .fakta {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
@@ -697,14 +686,23 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     dt {
         font-size: 0.8rem;
         font-weight: 500;
-        color: c.$primary_light25;
         opacity: 0.7;
     }
 
+    // Svaret: 16px på mobil og 18px fra 768px (samme trin som brødteksten i _typography.scss)
     dd {
         margin: 0.15rem 0 0;
-        font-size: 1.1rem;
-        font-weight: 800;
+        font-size: 16px;
+        font-weight: 400;
+
+        @media (min-width: 768px) {
+            font-size: 18px;
+        }
+    }
+
+    // Desktop: tre bokse pr. række (3 + 3)
+    @media (min-width: 900px) {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
@@ -716,7 +714,8 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 }
 
 .difficulty {
-    padding-top: s.$spacing-xs;
+    // Ekstra luft op til faktaboksene
+    padding-top: s.$spacing-s;
 
     // "Sværhedsgrad" er en lille, dæmpet etiket. Niveauet står stort og fedt
     .difficulty__label {
@@ -814,8 +813,9 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     gap: 4px;
     width: 100%;
 
+    // Bjælken er lidt tyndere end oprindeligt (0.75rem), men stadig tydelig
     .trin-bjaelke__trin {
-        height: 0.75rem;
+        height: 0.65rem;
         background-color: c.$primary_light50;
     }
 

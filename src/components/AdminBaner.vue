@@ -20,6 +20,7 @@ const BANE_FIELDS = [
   { key: 'longestGlide', label: 'Længste svæv', type: 'text' },
   { key: 'glideAmount', label: 'Antal svæv', type: 'text' },
   { key: 'trackLength', label: 'Banelængde', type: 'text' },
+  { key: 'duration', label: 'Tid på banen (fx ca. 30 min)', type: 'text' },
   { key: 'difficulty', label: 'Sværhedsgrad (fx 37.5%)', type: 'text' },
   { key: 'addOn', label: 'Tilkøb (fx 30 kr.) – tom = intet tilkøb', type: 'text' },
   { key: 'freeFall', label: 'Frit fald (fx 16 m) – tom = intet frit fald', type: 'text' },

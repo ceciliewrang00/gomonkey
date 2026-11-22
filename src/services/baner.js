@@ -24,14 +24,15 @@ export { NIVEAUER, trinFor, BOUNCE_ID, harSvaerhedsgrad, niveauFor } from './niv
 
 // Faktatallene om en bane. key = feltet i Firebase, label = teksten på siden.
 // kort: true = vises også i popup'en på kortet
-// Banehøjde står sidst, fordi "… over jorden" fylder mere end de andre og så kommer ned på sin egen linje
+// Højeste punkt (banens maks. højde over jorden) står sidst
 export const FAKTA = [
   { key: 'trackLength', label: 'Banelængde', kort: true },
   { key: 'obstacles', label: 'Forhindringer', kort: true },
   { key: 'glideAmount', label: 'Antal svæv', kort: true },
   { key: 'longestGlide', label: 'Længste svæv' },
   { key: 'freeFall', label: 'Frit fald', kort: true },
-  { key: 'trackHeight', label: 'Banehøjde', kort: true },
+  { key: 'duration', label: 'Tid', kort: true },
+  { key: 'trackHeight', label: 'Højeste punkt', kort: true },
 ]
 
 // Laver kravet til klatreren om til en sætning til "dig", så det ikke ligner banens egne tal.
@@ -47,6 +48,20 @@ export function kravTekst(bane) {
   if (cm) dele.push(`være mindst ${cm} cm høj`)
   if (kg) dele.push(`veje mindst ${kg} kg`)
   return `Du skal ${dele.join(' og ')}.`
+}
+
+// Kort udgave af kravet til mærkaten på banekortene: "mindst 160 cm høj og 30 kg".
+// Kan teksten ikke læses, vises den, som den står i Firebase
+export function kravKort(bane) {
+  const tekst = bane.requirements ?? ''
+  const cm = tekst.match(/(\d+)\s*cm/i)?.[1]
+  const kg = tekst.match(/(\d+)\s*kg/i)?.[1]
+  if (!cm && !kg) return tekst
+
+  const dele = []
+  if (cm) dele.push(`${cm} cm høj`)
+  if (kg) dele.push(`${kg} kg`)
+  return `mindst ${dele.join(' og ')}`
 }
 
 // Giver de fakta, banen har udfyldt. Med kunKort: true kun dem til popup'en
