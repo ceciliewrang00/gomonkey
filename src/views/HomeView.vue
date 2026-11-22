@@ -4,7 +4,6 @@
   import AppHeader from '@/components/AppHeader.vue'
   import SektionsMenu from '@/components/SektionsMenu.vue'
   import HeroSection from '@/components/HeroSection.vue'
-  import BannerSection from '@/components/BannerSection.vue'
   import OverviewSection from '@/components/OverviewSection.vue'
   import TrackPickerSection from '@/components/TrackPickerSection.vue'
   import TrackInfo from '@/components/TrackInfo.vue'
@@ -24,7 +23,6 @@
     <HeroSection />
     <OverviewSection />
     <TrackPickerSection />
-    <BannerSection />
     <TrackInfo />
     <!-- Priser for børn og voksne. Menuens "Priser" linker hertil -->
     <PrisSection />

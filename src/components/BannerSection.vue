@@ -1,22 +1,17 @@
 <script setup>
-// Banneret "Skru' op for modet" på forsiden med en bookingknap
+// Banneret "Skru' op for modet" på forsiden med en knap ned til baneoversigten
 
 import BaseButton from './BaseButton.vue'
-
-// Link til booking
-import { BOOK_URL } from '@/services/api.js'
 </script>
 
 <template>
   <section id="banner">
     <div class="banner__indhold">
       <span class="badge badge--outline banner__kicker">Klar til at slippe jorden?</span>
-      <h2>
-        Skru’ op for
-        <span class="fremhaev">modet</span>
-      </h2>
+      <h2>Skru’ op for modet</h2>
 
-      <BaseButton variant="primary" :href="BOOK_URL" class="button-pink banner__knap">Book din tur</BaseButton>
+      <!-- Fører ned til baneoversigten (#bane-info) -->
+      <BaseButton variant="primary" href="#bane-info" class="button-pink banner__knap">Se alle klatrebaner</BaseButton>
     </div>
   </section>
 </template>

@@ -30,9 +30,6 @@ import { NIVEAUER } from '@/services/baner.js'
           </div>
           <strong class="skala__navn">{{ niveau.navn }}</strong>
           <p class="skala__kort">{{ niveau.kort }}</p>
-          <p v-if="niveau.passer" class="skala__passer">
-            <strong>Passer til:</strong> {{ niveau.passer }}
-          </p>
         </li>
       </ul>
     </div>
@@ -72,6 +69,7 @@ import { NIVEAUER } from '@/services/baner.js'
 }
 
 .skala__titel {
+  color: c.$primary_black100;
   margin: 0;
   padding: 0;
   font-size: 1.05rem;
@@ -109,6 +107,7 @@ import { NIVEAUER } from '@/services/baner.js'
 }
 
 .skala__navn {
+  color: c.$primary_black100;
   margin-top: 0.3rem;
   font-size: 1rem;
   font-weight: 800;
@@ -118,18 +117,6 @@ import { NIVEAUER } from '@/services/baner.js'
   margin: 0;
   font-size: 0.875rem;
   line-height: 1.45;
-}
-
-// "Passer til": lidt mindre og svagere end beskrivelsen, så det ikke bliver tungt
-.skala__passer {
-  margin: 0;
-  font-size: 0.8rem;
-  line-height: 1.45;
-  opacity: 0.8;
-
-  strong {
-    font-weight: 700;
-  }
 }
 
 /* --- Trin-bjælke (samme som på banerne i TrackInfo) ---

@@ -1,5 +1,39 @@
-<!-- Sektionen "Find din bane" på forsiden: billede, kort tekst og knap til quizzen (/banequiz)
-     og et link ned til banekortene (#bane-info) -->
+<script setup>
+// Første spørgsmål fra banevælgeren ("Hvem skal klatre?") står direkte i sektionen.
+// Et klik på et svar starter banevælgeren med svaret valgt, fx /banequiz?hvem=barn
+
+import { ref, onMounted } from 'vue'
+
+import { SPOERGSMAAL_URL } from '@/services/api.js'
+
+// Bruges, hvis spørgsmålene ikke kan hentes. Samme svar som i Firebase
+const RESERVE_SVAR = [
+  { hvem: 'mig', tekst: 'Mig selv' },
+  { hvem: 'barn', tekst: 'Mit barn' },
+  { hvem: 'gruppeBoern', tekst: 'Børn og voksne sammen' },
+  { hvem: 'gruppeVoksne', tekst: 'En gruppe voksne' },
+]
+
+const spoergsmaalTekst = ref('Hvem skal klatre?')
+const svar = ref(RESERVE_SVAR)
+
+// Henter "Hvem skal klatre?" fra Firebase, så teksterne er de samme som i banevælgeren
+onMounted(async () => {
+  try {
+    const res = await fetch(`${SPOERGSMAAL_URL}.json`)
+    if (!res.ok) return
+    const data = await res.json()
+    const sp = Object.values(data ?? {}).find((s) => s?.id === 'hvem')
+    if (sp?.svar?.length) {
+      spoergsmaalTekst.value = sp.tekst || spoergsmaalTekst.value
+      svar.value = sp.svar.filter((s) => s?.hvem)
+    }
+  } catch (e) {
+    console.error('Spørgsmålet kunne ikke hentes til "Find din bane"', e)
+  }
+})
+</script>
+
 <template>
   <section id="baner" class="baner-section">
     <div class="baner-container">
@@ -8,19 +42,22 @@
       </div>
 
       <div id="baner-content" class="baner-indhold">
-        <!-- Lille mærke, der viser, at det er hurtigt -->
-        <span class="badge baner-badge">Banevælger · under 1 minut</span>
+        <span class="badge baner-badge">Banevælger</span>
 
         <h2>Find din bane</h2>
-        <p>Svar på fem hurtige spørgsmål, så finder vi den bane, der passer til dig, dit barn eller jeres gruppe.</p>
+        <p>Tag vores banevælger: svar på 5 hurtige spørgsmål, så finder vi den bane, der passer til jer. Det tager under et minut.</p>
 
-        <!-- Knapperne står lige under teksten, så man ikke skal lede efter dem -->
-        <div class="baner-knapper">
-          <RouterLink class="button-primary baner-start" to="/banequiz">Start banevælger</RouterLink>
-          <a class="button-arrow baner-se" href="#bane-info">
-            Se alle baner
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-          </a>
+        <!-- Første spørgsmål. Hvert svar er et link, der starter banevælgeren med svaret valgt -->
+        <div class="baner-spoergsmaal">
+          <h3 class="baner-spoergsmaal__titel">{{ spoergsmaalTekst }}</h3>
+          <ul class="baner-svar">
+            <li v-for="s in svar" :key="s.hvem">
+              <RouterLink :to="{ path: '/banequiz', query: { hvem: s.hvem } }" class="baner-svar__knap">
+                <span>{{ s.tekst }}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+              </RouterLink>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
@@ -40,7 +77,8 @@
   .baner-container {
     display: grid;
     grid-template-columns: 2fr 3fr;
-    align-items: center;
+    // Billedet er lige så højt som indholdet, så de flugter i top og bund
+    align-items: stretch;
     gap: s.$spacing-xl;
 
     @media (max-width: 900px) {
@@ -54,7 +92,8 @@
 .billede-ramme {
   border-radius: 1rem;
   overflow: hidden;
-  aspect-ratio: 4 / 3;
+  // Højden følger indholdet ved siden af. På mobil, hvor billedet står alene, er det mindst 16rem højt
+  min-height: 16rem;
 
   .baner-img {
     display: block;
@@ -70,7 +109,6 @@
   flex-direction: column;
   align-items: flex-start;
   gap: s.$spacing-s;
-  max-width: 36rem;
 
   // Hele overskriften er fed
   h2 {
@@ -91,17 +129,92 @@
   border: 1.5px solid c.$primary_black100;
 }
 
-.baner-knapper {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: s.$spacing-s s.$spacing-m;
+/* --- Første spørgsmål --- */
+.baner-spoergsmaal {
+  width: 100%;
   margin-top: s.$spacing-xs;
 }
 
-// "Se alle baner" er mørk, fordi den lyserøde standardfarve ikke kan ses på lyserød baggrund
-.baner-se {
+.baner-spoergsmaal__titel {
+  margin: 0 0 0.75rem;
+  padding: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+// Svarene som store knapper, to pr. række på større skærme
+.baner-svar {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @media (min-width: 520px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  li {
+    padding: 0;
+  }
+}
+
+// Lyst kort med tekst og pil. Bliver mørkt ved hover, og pilen rykker
+.baner-svar__knap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 0.9rem 1.1rem;
+  border-radius: 0.9rem;
+  background-color: c.$primary_light25;
   color: c.$primary_black100;
-  font-weight: 700;
+  font-weight: 400;
+  line-height: 1.3;
+  text-decoration: none;
+  box-shadow: 0 0.25rem 0.75rem rgba(c.$primary_black100, 0.08);
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+
+  svg {
+    flex-shrink: 0;
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    background-color: c.$primary_black100;
+    color: c.$primary_light25;
+    transform: translateY(-2px);
+
+    svg {
+      transform: translateX(4px);
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid c.$primary_black100;
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    svg {
+      transition: none;
+    }
+
+    &:hover {
+      transform: none;
+    }
+  }
 }
 </style>

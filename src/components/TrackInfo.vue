@@ -15,7 +15,7 @@ import hoejdekravIkon from '@/assets/images/hoejdekrav.svg'
 // Banerne fra Firebase
 const baner = ref([])
 
-// Kun klatrebanerne (uden Bounce). Bruges til numrene 01, 02, 03 ...
+// Kun klatrebanerne (uden Bounce)
 const klatrebaner = computed(() => baner.value.filter(harSvaerhedsgrad))
 
 // Klatrebanerne først og Bounce til sidst, fordi Bounce er et ekstra tilbud
@@ -27,11 +27,6 @@ const visteBaner = computed(() => [
 // Banens titel, fx "Grøn bane". Bounce er ikke en bane og hedder bare "Bounce"
 function titelFor(bane) {
     return harSvaerhedsgrad(bane) ? `${bane.name} bane` : bane.name
-}
-
-// Banens nummer som "01", "02" ...
-function nummerFor(bane) {
-    return String(klatrebaner.value.indexOf(bane) + 1).padStart(2, '0')
 }
 
 // true, mens vi venter på databasen
@@ -110,8 +105,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     <div id="bane-info" class="baner-intro">
         <!-- Venstre: overskrift og kort intro -->
         <div class="baner-intro__tekst">
-            <span class="badge baner-intro__badge">Fra let til svær</span>
-            <h2>Vores baner i Forest Odense</h2>
+            <h2>Vores baner i<br>Forest Odense</h2>
             <p class="baner-intro__lead">
                 Banerne står i rækkefølge fra de letteste, hvor alle kan være med, til de vildeste,
                 der kræver mod og erfaring. Hver bane har sin egen farve, så du nemt kan genkende den i parken.
@@ -143,8 +137,8 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         <div class="bane__kort">
             <!-- Overskriften står over teksten, så billedet kun flugter med teksten -->
             <div class="bane__top">
-                <!-- Nummeret i banens farve. Bounce får ikke et nummer -->
-                <span v-if="harSvaerhedsgrad(bane)" class="bane__nr" aria-hidden="true">{{ nummerFor(bane) }}</span>
+                <!-- Prik i banens farve foran navnet, fx 01 ● Grøn bane -->
+                <span class="bane__prik" aria-hidden="true"></span>
                 <h2 class="bane__navn">{{ titelFor(bane) }}</h2>
             </div>
 
@@ -172,10 +166,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                     <span><strong>Krav:</strong> {{ kravKort(bane) }}</span>
                 </p>
 
-                <!-- Ekstra pris, fx frit fald på Sort. Vises kun, hvis banen har en -->
-                <p v-if="bane.addOn" class="bane__tilkoeb">
-                    <strong>Tilkøb:</strong> {{ bane.addOn }}
-                </p>
 
                 <!-- Faktabokse med de fakta, banen har udfyldt -->
                 <dl class="fakta" v-if="faktaFor(bane).length">
@@ -303,10 +293,11 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     padding-bottom: s.$spacing-l;
     padding-inline: max(s.$spacing-m, calc((100% - #{s.$indhold-bredde}) / 2));
 
-    // Desktop: intro til venstre, banevælgeren til højre, flugter i bunden
-    @media (min-width: 900px) {
-        // Introen er højst så bred som overskriften, og boksen med banevælgeren fylder resten ud til kanten
-        grid-template-columns: minmax(0, 47rem) minmax(0, 1fr);
+    // Store skærme: intro til venstre, banevælgeren til højre, flugter i bunden.
+    // Boksen er mindst 18rem og højst 26rem bred, så overskriften og knappen altid har plads.
+    // På smallere skærme står boksen under introen i fuld bredde
+    @media (min-width: 1024px) {
+        grid-template-columns: minmax(0, 1fr) minmax(18rem, 26rem);
         column-gap: s.$spacing-xl;
         align-items: end;
     }
@@ -316,18 +307,12 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 
     h2 {
         padding-top: 0;
+        color: c.$primary_black100;
     }
 
     p {
         margin: 0;
     }
-}
-
-// Badget har kun en mørk kant og mørk tekst, fordi baggrunden er lys
-.baner-intro__badge {
-    --badge-bg: transparent;
-    --badge-color: #{c.$primary_black100};
-    border: 1.5px solid c.$primary_black100;
 }
 
 // Overskrift og intro
@@ -418,16 +403,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         row-gap: s.$spacing-s;
         padding: s.$spacing-l 0;
     }
-}
-
-/* --- Nummer foran overskriften --- */
-.bane__nr {
-    flex-shrink: 0;
-    font-size: clamp(2.5rem, 5vw, 3.75rem);
-    font-weight: 900;
-    line-height: 1;
-    color: var(--bane-farve);
-    font-variant-numeric: tabular-nums;
 }
 
 // Store skærme: overskriften står over teksten, og billedet står ved siden af hele vejen fra toppen.
@@ -604,9 +579,9 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 .bane__top {
     position: relative;
     display: flex;
-    align-items: baseline;
-    gap: s.$spacing-s;
-    // Ingen streg under nummer og navn – de står i banens farve
+    // Prik og navn står midt i højden
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .bane__navn {
@@ -615,8 +590,18 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     line-height: 1.1;
     margin: 0;
     padding-top: 0;
-    // Navnet står i banens farve ligesom nummeret
-    color: var(--bane-farve);
+    // Navn og nummer står i sort (primary_black100) ligesom resten af overskrifterne i baneoversigten
+    color: c.$primary_black100;
+}
+
+// Prik i banens farve foran navnet, så man kan se, hvilken farve banen har på kortet
+.bane__prik {
+    flex-shrink: 0;
+    // Større prik, så banens farve er tydelig ved siden af navnet
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 50%;
+    background-color: var(--bane-farve);
 }
 
 .bane__beskrivelse {
@@ -652,20 +637,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     width: 1.6rem;
     height: 1.6rem;
     object-fit: contain;
-}
-
-/* Tilkøb, fx frit fald på Sort */
-.bane__tilkoeb {
-    margin: 0;
-    padding: 0.75rem 1rem;
-    border-radius: 0.75rem;
-    background-color: c.$primary_darkgreen;
-    color: c.$primary_light25;
-    font-size: 1rem;
-
-    strong {
-        font-weight: 700;
-    }
 }
 
 /* --- Faktabokse --- */

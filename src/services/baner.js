@@ -31,6 +31,8 @@ export const FAKTA = [
   { key: 'glideAmount', label: 'Antal svæv', kort: true },
   { key: 'longestGlide', label: 'Længste svæv' },
   { key: 'freeFall', label: 'Frit fald', kort: true },
+  // Tilkøb, fx 30 kr. for frit fald på Sort. Står i en faktaboks, så det ikke fylder mere end de andre tal
+  { key: 'addOn', label: 'Tilkøb' },
   { key: 'duration', label: 'Tid', kort: true },
   { key: 'trackHeight', label: 'Højeste punkt', kort: true },
 ]

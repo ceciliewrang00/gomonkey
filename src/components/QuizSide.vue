@@ -4,6 +4,9 @@
 
 import { ref, computed, onMounted } from 'vue'
 
+// Giver adgang til adressen (?hvem=barn), når man kommer fra forsiden med et svar valgt
+import { useRoute } from 'vue-router'
+
 import { SPOERGSMAAL_URL } from '@/services/api.js'
 
 // Reglerne for anbefalingen – hver funktion laver én del af quizzen
@@ -222,11 +225,28 @@ async function hentQuizBaner() {
   }
 }
 
+// Kommer man fra "Find din bane" på forsiden med et svar i adressen (fx /banequiz?hvem=barn),
+// vælges svaret på "Hvem skal klatre?" med det samme, og quizzen går videre til næste spørgsmål
+const route = useRoute()
+
+function vaelgSvarFraAdressen() {
+  const hvem = route.query.hvem
+  if (!hvem) return
+
+  const sp = spoergsmaal.value.find((s) => s.id === 'hvem')
+  const svar = sp?.svar?.find((sv) => sv.hvem === hvem)
+  if (!svar) return
+
+  vaelgSvar(sp.id, svar)
+  if (aktivtSpoergsmaal.value?.id === sp.id) naesteSpoergsmaal()
+}
+
 // Henter spørgsmål og baner på samme tid, når siden vises
 onMounted(async () => {
   indlaeser.value = true
   await Promise.all([hentSpoergsmaal(), hentQuizBaner()])
   indlaeser.value = false
+  vaelgSvarFraAdressen()
 })
 </script>
 
