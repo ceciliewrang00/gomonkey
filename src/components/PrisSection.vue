@@ -89,13 +89,14 @@ const TILKOEB = [
 <style lang="scss" scoped>
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
+@use '@/assets/styles/mixins' as m;
 
-// Lys baggrund mellem den grønne baneoversigt og den lyserøde forældre-sektion
+// Lyserød baggrund med blad-mønster, samme som "Find din bane"
 .priser {
+  @include m.blad-baggrund;
   display: grid;
   grid-template-columns: 1fr;
   gap: s.$spacing-xl;
-  background-color: c.$primary_light25;
   color: c.$primary_black100;
 
   // Desktop: tekst til venstre, prisboks til højre
@@ -195,7 +196,7 @@ const TILKOEB = [
     font-weight: 500;
   }
 
-  // Flueben i en lyserød cirkel
+  // Flueben i en mørk cirkel, så de kan ses på den lyserøde baggrund
   svg {
     flex-shrink: 0;
     box-sizing: border-box;
@@ -203,9 +204,9 @@ const TILKOEB = [
     height: 1.6rem;
     padding: 0.3rem;
     border-radius: 50%;
-    background-color: c.$forest_pink100;
+    background-color: c.$primary_darkgreen;
     fill: none;
-    stroke: c.$primary_black100;
+    stroke: c.$primary_light25;
     stroke-width: 3;
     stroke-linecap: round;
     stroke-linejoin: round;

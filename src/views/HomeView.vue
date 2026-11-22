@@ -11,7 +11,6 @@
   import PrisSection from '@/components/PrisSection.vue'
   import FoelgBarnetSection from '@/components/FoelgBarnetSection.vue'
   import FaqSection from '@/components/FaqSection.vue'
-  import StenBue from '@/components/StenBue.vue'
   import Footer from '@/components/Footer.vue'
 
 </script>
@@ -23,13 +22,9 @@
     <!-- Sidens egen menu med genveje til sektionerne. Bliver hængende under headeren, når man scroller -->
     <SektionsMenu />
     <HeroSection />
-    <!-- Pynt: en blå bue mellem hero og overblikket -->
-    <StenBue side="hoejre" farve="blaa" />
     <OverviewSection />
     <TrackPickerSection />
     <BannerSection />
-    <!-- Pynt: en lyserød bue mellem banneret og banerne -->
-    <StenBue side="hoejre" farve="pink" />
     <TrackInfo />
     <!-- Priser for børn og voksne. Menuens "Priser" linker hertil -->
     <PrisSection />

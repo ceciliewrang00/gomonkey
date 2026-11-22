@@ -310,8 +310,8 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         column-gap: s.$spacing-xl;
         align-items: end;
     }
-    // Samme grønne baggrund som banerne, med en tynd streg over den første bane
-    background-color: c.$forest_green25;
+    // Samme lyse baggrund som banerne
+    background-color: c.$primary_light25;
     scroll-margin-top: 8.5rem;  // så headeren med ankermenuen ikke dækker overskriften
 
     h2 {
@@ -384,13 +384,13 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     text-align: center;
     padding: s.$spacing-xl;
     margin: 0;
-    background-color: c.$forest_green25;
+    background-color: c.$primary_light25;
 }
 
 // Stregen mellem banerne går helt ud til siderne af skærmen
 .bane {
     padding-block: 0;
-    background-color: c.$forest_green25;
+    background-color: c.$primary_light25;
   
 
     &:last-of-type {
@@ -525,7 +525,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     padding: 0;
     border: none;
     border-radius: 1.25rem;
-    background-color: c.$forest_green25;
+    background-color: c.$primary_light25;
     box-shadow: 0 1.5rem 4rem rgba(c.$primary_black100, 0.4);
     overflow: hidden;
 
@@ -635,7 +635,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     margin: 0;
     padding: 0.5rem 1rem 0.5rem 0.75rem;
     border-radius: 0.75rem;
-    background-color: c.$primary_light25;
+    background-color: c.$forest_green25;
     color: c.$primary_darkgreen;
     font-size: 1rem;
     font-weight: 500;
@@ -816,7 +816,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     // Bjælken er lidt tyndere end oprindeligt (0.75rem), men stadig tydelig
     .trin-bjaelke__trin {
         height: 0.65rem;
-        background-color: c.$primary_light50;
+        background-color: c.$forest_green25;
     }
 
     // Runde hjørner i hver ende, så trinene ligner én bjælke

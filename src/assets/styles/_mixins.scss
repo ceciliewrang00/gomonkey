@@ -23,3 +23,27 @@
         rgba(c.$primary_black100, 0) 75%
     );
 }
+
+/* Lyserød baggrund med blad-mønster (leaves.svg). Bruges i "Find din bane" og prissektionen.
+   Elementet får position: relative, så mønstret kan ligge bag indholdet */
+@mixin blad-baggrund {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background-color: c.$forest_pink100;
+
+    // Mønstret ligger lidt gennemsigtigt, så bladene ikke bliver for kraftige.
+    // background-color er samme lyserøde som i SVG'en, så der ikke kommer lyse streger mellem fliserne
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background-color: c.$forest_pink100;
+        background-image: url('@/assets/images/leaves.svg');
+        background-size: 200px;
+        background-repeat: repeat;
+        opacity: 0.7;
+        pointer-events: none;
+    }
+}

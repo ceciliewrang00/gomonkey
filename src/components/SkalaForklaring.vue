@@ -43,12 +43,12 @@ import { NIVEAUER } from '@/services/baner.js'
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
 
-// Står inde i TrackInfo mellem introen og banerne: samme grønne baggrund og samme sidemargin
+// Står inde i TrackInfo mellem introen og banerne: samme lyse baggrund og samme sidemargin
 // som forsidens sektioner, og ingen luft i top og bund, da introen og banerne har deres egen
 .skala-sektion {
   padding-block: 0;
   padding-inline: max(#{s.$spacing-m}, calc((100% - #{s.$indhold-bredde}) / 2));
-  background-color: c.$forest_green25;
+  background-color: c.$primary_light25;
   scroll-margin-top: 9.5rem;  // så headeren med ankermenuen ikke dækker forklaringen
 }
 
@@ -143,7 +143,7 @@ import { NIVEAUER } from '@/services/baner.js'
 
   .trin-bjaelke__trin {
     height: 0.6rem;
-    background-color: c.$primary_light50;
+    background-color: c.$forest_green25;
   }
 
   // Runde hjørner i hver ende, så trinene ligner én bjælke

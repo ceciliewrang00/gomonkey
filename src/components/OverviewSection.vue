@@ -84,8 +84,6 @@ onMounted(async () => {
 
 #overblik {
   @include m.section-black100;
-  // Ingen luft i bunden, så sektionen går direkte over i den næste (også sort)
-  padding-bottom: 0;
 
   // Tekst 2/5 til venstre, kort 3/5 til højre
   .overblik-container {

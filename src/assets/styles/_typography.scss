@@ -58,8 +58,13 @@ ul {
 @mixin button {
     font-family: ft.$font;
     font-weight: 900;
-    font-size: 16px; /* 8 x 2 */
+    font-size: 16px; /* 8 x 2 – mobil */
     text-decoration: none;
+
+    /* Desktop: 18px */
+    @media (min-width: 768px) {
+        font-size: 18px;
+    }
 }
 
 /* Skriften på menupunkterne i headeren */
