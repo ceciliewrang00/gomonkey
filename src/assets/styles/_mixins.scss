@@ -1,6 +1,7 @@
 // Mixins til baggrunde, som flere sektioner bruger
 
 @use 'colors' as c;
+@use 'fonts' as ft;
 
 // Sort sektion med lys tekst
 @mixin section-black100 {
@@ -46,4 +47,37 @@
         opacity: 0.7;
         pointer-events: none;
     }
+}
+
+/* Brødtekst – samme regler som p, .text og li. Til tekst, der ikke står i et <p> eller <li>,
+   fx links i footeren og spørgsmålene i FAQ'en */
+@mixin brodtekst {
+    font-family: ft.$font;
+    font-weight: 300;
+    font-size: 16px; /* 8 x 2 – mobil */
+    line-height: 1.6;
+
+    @media (min-width: 768px) {
+        font-size: 18px;
+    }
+}
+
+/* Skriften på knapper */
+@mixin button {
+    font-family: ft.$font;
+    font-weight: 900;
+    font-size: 16px; /* 8 x 2 – mobil */
+    text-decoration: none;
+
+    /* Desktop: 18px */
+    @media (min-width: 768px) {
+        font-size: 18px;
+    }
+}
+
+/* Skriften på menupunkterne i headeren */
+@mixin button_header {
+    font-family: ft.$font;
+    font-weight: 500;
+    font-size: 16px; /* 8 x 2 */
 }

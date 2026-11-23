@@ -74,14 +74,14 @@ const aar = new Date().getFullYear()
         <!-- Højre side: link-kolonner -->
         <nav class="footer__nav">
           <div class="footer__group">
-            <h3 class="footer__heading">Vores lokationer</h3>
+            <h4 class="footer__heading">Vores lokationer</h4>
             <ul class="footer__links">
               <li v-for="l in lokationer" :key="l.navn"><a :href="l.href">{{ l.navn }}</a></li>
             </ul>
           </div>
 
           <div class="footer__group">
-            <h3 class="footer__heading">Alt godt om GoMonkey</h3>
+            <h4 class="footer__heading">Alt godt om GoMonkey</h4>
             <ul class="footer__links">
               <li v-for="l in altGodt" :key="l.navn"><a :href="l.href">{{ l.navn }}</a></li>
             </ul>
@@ -115,6 +115,7 @@ const aar = new Date().getFullYear()
 @use '@/assets/styles/fonts' as ft;
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
+@use '@/assets/styles/mixins' as m;
 
 $tekst: c.$primary_light25;
 $linje: rgba(239, 233, 229, 0.08);
@@ -170,10 +171,9 @@ $linje: rgba(239, 233, 229, 0.08);
   opacity: 0.93;
 }
 
+// Teksten følger brødtekst-reglerne for p i _typography.scss
 .footer__tagline {
-  font-size: clamp(1.25rem, 2vw, 1.6rem);
-  font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.4;
   max-width: 32rem;
   margin: s.$spacing-l 0;
 }
@@ -205,9 +205,8 @@ $linje: rgba(239, 233, 229, 0.08);
   gap: s.$spacing-xl;
 }
 
+// Overskrifterne er h4 og følger h4-reglerne i _typography.scss (størrelse og vægt)
 .footer__heading {
-  font-size: clamp(1.1rem, 1.6vw, 1.25rem);
-  font-weight: 500;
   padding: 0 0 0.75rem;
   margin: 0 0 s.$spacing-xs;
   border-bottom: 1px solid $linje;
@@ -222,10 +221,9 @@ $linje: rgba(239, 233, 229, 0.08);
     grid-template-columns: repeat(3, 1fr);
   }
 
+  // Samme regler som brødtekst i _typography.scss (16/18px, vægt 300)
   a {
-    font-size: 0.95rem;
-    font-weight: 500;
-    line-height: 1.6;
+    @include m.brodtekst;
   }
 }
 
@@ -244,9 +242,8 @@ $linje: rgba(239, 233, 229, 0.08);
   align-items: center;
   gap: 0.75rem;
   margin: 0;
-  font-size: 0.95rem;
-  font-weight: 300;
-  line-height: 1.4;
+  // Samme regler som brødtekst i _typography.scss (16/18px, vægt 300)
+  @include m.brodtekst;
 
   strong {
     font-weight: 600;

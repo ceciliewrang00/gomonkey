@@ -84,7 +84,7 @@ const skalaer = computed(() => {
     <div class="popup-header">
       <div class="popup-titel-gruppe">
         <span class="bane-farve-indikator" aria-hidden="true"></span>
-        <h3 id="popup-titel">{{ bane.navn }}</h3>
+        <h3 id="popup-titel" class="h4">{{ bane.navn }}</h3>
       </div>
       <button
         type="button"
@@ -96,13 +96,18 @@ const skalaer = computed(() => {
       </button>
     </div>
 
+    <!-- Sværhedsgraden med ord i en lille mørk kasse under navnet. Bounce får bare "For alle" -->
+    <span class="popup-niveau lille-tekst">
+      {{ medSvaerhedsgrad ? `Sværhedsgrad: ${niveau}` : niveau }}
+    </span>
+
     <!-- Den korte linje om banen fra kortfiltret -->
-    <p v-if="undertekst" class="popup-undertekst">
+    <p v-if="undertekst" class="popup-undertekst lille-tekst">
       {{ undertekst }}
     </p>
 
     <!-- Hver skala som 3 aber (de fyldte = niveauet) og ordet ved siden af -->
-    <div v-for="s in skalaer" :key="s.label" class="skala">
+    <div v-for="s in skalaer" :key="s.label" class="skala lille-tekst">
       <span class="skala-label">{{ s.label }}</span>
       <span class="skala-vaerdi">
         <span
@@ -124,12 +129,12 @@ const skalaer = computed(() => {
       </span>
     </div>
 
-    <p v-if="bane.requirements" class="popup-krav">
+    <p v-if="bane.requirements" class="popup-krav lille-tekst">
       <strong>Krav:</strong> {{ kravTekst(bane) }}
     </p>
 
     <!-- Ekstra pris, fx frit fald på Sort. Vises kun, hvis banen har en -->
-    <p v-if="bane.addOn" class="popup-krav">
+    <p v-if="bane.addOn" class="popup-krav lille-tekst">
       <strong>Tilkøb:</strong> {{ bane.addOn }}
     </p>
 
@@ -211,11 +216,10 @@ const skalaer = computed(() => {
   align-items: center;
   gap: 0.6rem;
 
+  // Navnet er en h3 for skærmlæsere, men ser ud som .h4 i _typography.scss (18/20px, 900)
   h3 {
     margin: 0;
     padding-top: 0;  // fjerner padding fra h3
-    font-size: 1.25rem;
-    font-weight: 900;
     line-height: 1.2;
   }
 }
@@ -263,12 +267,22 @@ const skalaer = computed(() => {
   }
 }
 
+/* --- Sværhedsgraden med ord --- */
+// Lille mørk kasse med .lille-tekst, fx "Sværhedsgrad: Mellem"
+.popup-niveau {
+  display: inline-block;
+  margin-top: 0.6rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 1rem;
+  background-color: c.$primary_darkgreen;
+  color: c.$primary_light25;
+  white-space: nowrap;
+}
+
 /* --- Undertekst fra kortfiltret --- */
+// Teksten følger .lille-tekst i _typography.scss
 .popup-undertekst {
   margin: 0.4rem 0 0.6rem;
-  font-size: 0.95rem;
-  font-weight: 400;
-  line-height: 1.4;
 }
 
 /* --- Sværhedsgrad (aberne) --- */
@@ -281,12 +295,11 @@ const skalaer = computed(() => {
   padding: 0.6rem 0.9rem;
   border-radius: 1rem;
   background-color: c.$forest_green25;
-  font-size: 0.875rem;
+  // Teksten følger .lille-tekst i _typography.scss
   line-height: 1.3;
 }
 
 .skala-label {
-  font-weight: 600;
   color: c.$primary_darkgreen;
 }
 
@@ -322,11 +335,9 @@ const skalaer = computed(() => {
 }
 
 /* --- Krav --- */
+// Teksten følger .lille-tekst i _typography.scss. "Krav:" og "Tilkøb:" står fede
 .popup-krav {
   margin: 0.6rem 0 0;
-  font-size: 0.875rem;
-  font-weight: 400;
-  line-height: 1.4;
 
   strong {
     font-weight: 800;
@@ -334,12 +345,10 @@ const skalaer = computed(() => {
 }
 
 /* --- Link til forsiden --- */
-// Mørk, så den kan læses på den lyse baggrund
+// Teksten følger .button-arrow i _buttons.scss. Mørk, så den kan læses på den lyse baggrund
 .popup-link {
   margin-top: 0.75rem;
   color: c.$primary_darkgreen;
-  font-size: 0.95rem;
-  font-weight: 700;
 }
 
 @media (prefers-reduced-motion: reduce) {

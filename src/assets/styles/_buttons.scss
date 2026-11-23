@@ -2,7 +2,7 @@
 
 @use 'fonts' as ft;
 @use '_colors' as c;
-@use '_typography' as t;
+@use 'mixins' as m;
 
 /* Mobil: knapperne bliver lidt mindre (mindre luft). Skriftstørrelsen står i @mixin button i _typography.scss */
 @mixin mobil-knap {
@@ -17,7 +17,7 @@
     background-color: c.$primary_black100;
     color: c.$primary_light25;
     padding:0.5rem 1.5rem;
-    @include t.button;
+    @include m.button;
     border: solid 2px transparent;
     border-radius: 1rem;
     width: fit-content;
@@ -66,7 +66,7 @@
 .button-secondary {
     background-color: none;
     padding:0.5rem 1.5rem;
-    @include t.button;
+    @include m.button;
     width: fit-content;
     border-radius: 1rem;
     color: c.$primary_black100;
@@ -183,7 +183,7 @@
 
 /* Menupunkterne i headeren: tekst, der bliver lilla ved hover */
 .button-header {
-    @include t.button_header;
+    @include m.button_header;
     color: c.$primary_black100;
     text-decoration: none;
     font-weight: 800;

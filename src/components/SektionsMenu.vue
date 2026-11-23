@@ -145,7 +145,7 @@ onUnmounted(() => {
   <div ref="menuEl" class="sektionsmenu" :style="{ '--header-hoejde': `${headerHoejde}px` }">
     <nav class="sektionsmenu__indhold" aria-label="Genveje til Forest Odense">
       <!-- Hvilken side menuen hører til -->
-      <span class="sektionsmenu__navn">
+      <span class="sektionsmenu__navn etiket etiket--lys">
         <img :src="forestIkon" alt="" class="sektionsmenu__ikon">
         Forest Odense
       </span>
@@ -161,6 +161,7 @@ onUnmounted(() => {
           <a
             :href="link.href"
             :data-link="link.tekst"
+            class="lille-tekst"
             :class="{ aktiv: aktivtLink === link.tekst }"
             :aria-current="aktivtLink === link.tekst ? 'location' : undefined"
             @click="vaelgLink(link)"
@@ -201,10 +202,7 @@ onUnmounted(() => {
   flex-shrink: 0;
   padding-right: s.$spacing-m;
   border-right: 1px solid rgba(c.$primary_light25, 0.2);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  // Teksten følger .etiket i _typography.scss
   white-space: nowrap;
 
   // Vises fra tablet og op – på mobil er der kun plads til linkene
@@ -261,8 +259,7 @@ onUnmounted(() => {
     display: block;
     padding: 0.5rem 0.75rem;
     color: rgba(c.$primary_light25, 0.8);
-    font-size: 0.9rem;
-    font-weight: 600;
+    // Teksten følger .lille-tekst i _typography.scss (14px, vægt 300)
     text-decoration: none;
     white-space: nowrap;
     transition: color 0.2s ease;

@@ -1,32 +1,50 @@
 @use 'fonts' as ft;
 @use 'colors' as c;
 
-/* Små etiketter over overskrifter, fx "Udforsk terrænet".
+/* Mærker: en pille over en sektionsoverskrift (h2), fx "Udforsk terrænet". Højst én pr. sektion.
+   Almindelige bogstaver og ingen ekstra bogstavafstand – det adskiller dem fra .etiket,
+   som er ren tekst med store bogstaver inde i indholdet.
    Farven kan ændres med variablerne --badge-bg og --badge-color */
 
 .badge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     align-self: flex-start;  // bliver ikke strakt ud i flex-kolonner
     width: fit-content;
-    padding: 0.6rem 1rem;
+    padding: 0.55rem 1rem 0.55rem 0.85rem;
     border-radius: 1rem;
     // Bruger --badge-bg, hvis den er sat – ellers lyserød
     background-color: var(--badge-bg, #{c.$forest_pink100});
     color: var(--badge-color, #{c.$primary_black100});
     font-family: ft.$font;
-    font-size: 0.85rem;
+    font-size: 14px;  // samme størrelse som .lille-tekst
     font-weight: 700;
-    letter-spacing: 0.05em;
     line-height: 1.2;
+
+    // Lille prik foran teksten. Farven styres med --badge-prik (lyserød som standard)
+    &::before {
+        content: '';
+        flex-shrink: 0;
+        width: 0.45rem;
+        height: 0.45rem;
+        border-radius: 50%;
+        background-color: var(--badge-prik, #{c.$forest_pink100});
+    }
 }
 
-// Lys – til mørke baggrunde
+// Standard-mærket er lyserødt, så prikken er mørk
+.badge:not([class*="badge--"]) {
+    --badge-prik: #{c.$primary_black100};
+}
+
+// Lys og udfyldt – til mørke baggrunde
 .badge--light {
     --badge-bg: #{c.$primary_light25};
     --badge-color: #{c.$primary_black100};
 }
 
-// Mørk – til lyse eller lyserøde baggrunde
+// Mørk og udfyldt – til lyse og lyserøde baggrunde
 .badge--dark {
     --badge-bg: #{c.$primary_black100};
     --badge-color: #{c.$primary_light25};
@@ -45,4 +63,12 @@
     --badge-bg: transparent;
     --badge-color: #{c.$forest_green25};
     border: 1.5px solid c.$forest_green25;
+}
+
+// Gennemsigtig med sort kant – til lyse og lyserøde baggrunde
+.badge--outline-dark {
+    --badge-bg: transparent;
+    --badge-color: #{c.$primary_black100};
+    --badge-prik: #{c.$primary_black100};
+    border: 1.5px solid c.$primary_black100;
 }

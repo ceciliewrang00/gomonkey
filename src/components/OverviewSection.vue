@@ -40,7 +40,7 @@ onMounted(async () => {
       </RouterLink>
 
       <div id="overblik-tekst" class="tekst-indhold">
-        <span class="badge badge--outline-green">Udforsk terrænet</span>
+        <span class="badge badge--light">Udforsk terrænet</span>
         <h2>Overblik over parken</h2>
         <p class="lead">
           Før du kaster dig ud i eventyret, så få styr på terrænet. Vores interaktive kort viser dig alle baner, startpunkter og højdekurver.
@@ -51,7 +51,7 @@ onMounted(async () => {
 
         <!-- Hvilken farve hver bane har på kortet -->
         <div class="farve-forklaring">
-          <h3 id="banefarver-titel" class="farve-titel">Banernes farver</h3>
+          <h3 id="banefarver-titel" class="farve-titel etiket etiket--lys">Banernes farver</h3>
 
           <ul class="farve-liste" aria-labelledby="banefarver-titel">
             <li v-for="f in baneFarver" :key="f.klasse">
@@ -62,7 +62,7 @@ onMounted(async () => {
 
           <!-- Bounce er ikke en klatrebane og står derfor for sig selv -->
           <template v-if="andreAktiviteter.length">
-            <h3 id="andre-aktiviteter-titel" class="farve-titel farve-titel--andre">Andre aktiviteter</h3>
+            <h3 id="andre-aktiviteter-titel" class="farve-titel farve-titel--andre etiket etiket--lys">Andre aktiviteter</h3>
 
             <ul class="farve-liste" aria-labelledby="andre-aktiviteter-titel">
               <li v-for="f in andreAktiviteter" :key="f.klasse" class="farve-liste__andet">
@@ -137,12 +137,8 @@ onMounted(async () => {
       margin: 0;
     }
 
-    .lead {
-      font-size: clamp(1.05rem, 1.5vw, 1.2rem);
-    }
 
     .sub-tekst {
-      font-size: 1rem;
       color: c.$primary_light25;
       padding-left: s.$spacing-s;
       border-left: 2px solid c.$forest_pink100;
@@ -155,14 +151,10 @@ onMounted(async () => {
   }
 
   // Lille overskrift med store bogstaver
+  // Teksten følger .etiket i _typography.scss. Her sættes kun luften omkring
   .farve-titel {
     margin: 0 0 0.6rem;
     padding: 0;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: rgba(c.$primary_light25, 0.7);
 
     // Luft over overskriften til Bounce
     &--andre {
@@ -194,8 +186,7 @@ onMounted(async () => {
       padding: 0.3rem 0.75rem 0.3rem 0.55rem;
       border-radius: 1rem;
       background-color: rgba(c.$primary_light25, 0.07);
-      font-size: 0.85rem;
-      font-weight: 500;
+      // Teksten følger brødtekst-reglerne for li i _typography.scss
       line-height: 1.2;
     }
 

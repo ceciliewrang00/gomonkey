@@ -37,8 +37,8 @@ const wireEl = ref(null)
 // snor = hvor langt badget hænger nede, vip = hvor skævt det hænger, abe = aben i stedet for badge
 const TRISSER = [
   // Aben hænger der, hvor skiltet med "126 m svæv" sad før
-  { id: 'abe', abe: true, start: 0.78, slut: 0.8, vip: '0deg' },
-  { id: 'baner', titel: null, under: 'Næste stop: trætoppene', start: 0.91, slut: 0.93, snor: '5.25rem', vip: '-2deg', link: '#bane-info' },
+  { id: 'abe', abe: true, start: 0.72, slut: 0.74, vip: '0deg' },
+  { id: 'baner', titel: null, under: 'Næste stop: trætoppene', start: 0.86, slut: 0.88, snor: '5.25rem', vip: '-2deg', link: '#bane-info' },
 ]
 // link = skiltet kan klikkes og fører derhen. Skilte uden link er flade, så de ikke ligner knapper
 // Alle trisse-elementerne på siden
@@ -138,22 +138,22 @@ onUnmounted(() => {
       <span v-if="!trisse.abe" class="hero__trisse-snor" aria-hidden="true"></span>
       <!-- Skilt med link: kan klikkes og har en pil -->
       <a v-if="!trisse.abe && trisse.link" :href="trisse.link" class="hero__badge hero__badge--link">
-        <strong>
+        <strong class="h4">
           {{ titelTekst(trisse) }}
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
         </strong>
-        <span>{{ trisse.under }}</span>
+        <span class="etiket">{{ trisse.under }}</span>
       </a>
       <!-- Skilt uden link: fladt, uden skygge -->
       <p v-else-if="!trisse.abe" class="hero__badge">
-        <strong>{{ titelTekst(trisse) }}</strong>
-        <span>{{ trisse.under }}</span>
+        <strong class="h4">{{ titelTekst(trisse) }}</strong>
+        <span class="etiket">{{ trisse.under }}</span>
       </p>
     </div>
 
     <!-- Indhold til venstre -->
     <div class="hero__indhold">
-      <p class="hero__label">
+      <p class="hero__label etiket etiket--lys">
         <img src="@/assets/images/forrest-ikon.webp" alt="" class="hero__label-ikon">
         Forest Odense
       </p>
@@ -303,7 +303,6 @@ onUnmounted(() => {
   color: c.$primary_darkgreen;
   // Fladt: ingen skygge, så skiltet ikke ligner en knap
   box-shadow: none;
-  font-size: 0.75rem;
   line-height: 1.25;
   text-align: center;
   white-space: nowrap;
@@ -323,14 +322,9 @@ onUnmounted(() => {
     transform: translateX(-50%);
   }
 
+  // Titlen følger .h4 og undertitlen .etiket i _typography.scss
   strong {
-    font-size: 0.95rem;
-    font-weight: 900;
-    letter-spacing: -0.01em;
-  }
-
-  span {
-    color: c.$primary_black75;
+    padding: 0;
   }
 }
 
@@ -430,10 +424,7 @@ onUnmounted(() => {
   justify-content: flex-start;
   gap: s.$spacing-xs;
   margin: 0 0 s.$spacing-s;
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  // Teksten følger .etiket i _typography.scss
 }
 
 .hero__label-ikon {
@@ -515,12 +506,7 @@ onUnmounted(() => {
   padding: 0;
   list-style: none;
 
-  li {
-    font-size: 0.9rem;
-    font-weight: 500;
-    line-height: 1.6;
-  }
-
+  // Teksten følger brødtekst-reglerne for li i _typography.scss
   li + li::before {
     content: '·' / '';
     margin: 0 0.6rem;
@@ -535,8 +521,6 @@ onUnmounted(() => {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      font-size: 0.85rem;
-      line-height: 1.5;
     }
 
     // Prikken står foran alle tre i stedet for imellem dem

@@ -763,11 +763,11 @@ onBeforeUnmount(() => {
 
       <div v-else-if="fejl" class="kort-status fejl" role="alert">
         <p>{{ fejl }}</p>
-        <button type="button" @click="indlaesKort">Prøv igen</button>
+        <button type="button" class="button-primary" @click="indlaesKort">Prøv igen</button>
       </div>
 
       <!-- Hjælpetekst, der skifter, når man har zoomet ind -->
-      <div class="kort-vejledning" aria-hidden="true">
+      <div class="kort-vejledning lille-tekst" aria-hidden="true">
         {{ zoom <= 1 ? 'Hele parken er synlig · Zoom for at udforske banerne' : 'Træk for at udforske' }}
       </div>
 
@@ -778,7 +778,7 @@ onBeforeUnmount(() => {
         <button type="button" aria-label="Zoom ud" :disabled="zoom <= 1" @click="saetZoom(zoom / 1.3)">−</button>
       </div>
 
-      <span class="kort-zoom" aria-live="polite">{{ zoom.toFixed(1) }}×</span>
+      <span class="kort-zoom etiket" aria-live="polite">{{ zoom.toFixed(1) }}×</span>
 
       <!-- Popup'en for den valgte bane. Lukkeknappen fravælger banen -->
       <Transition name="fade">

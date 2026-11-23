@@ -132,7 +132,7 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
   <section id="faq" class="faq">
     <!-- Venstre side: overskrift og kontakt -->
     <div class="faq__intro">
-      <span class="badge faq__badge">Spørgsmål og svar</span>
+      <span class="badge badge--dark">Spørgsmål og svar</span>
       <h2>Godt at vide før I kommer</h2>
       <p>
         Her er svarene på det, vi oftest bliver spurgt om. Kan du ikke finde det, du leder efter,
@@ -175,6 +175,7 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
 <style lang="scss" scoped>
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
+@use '@/assets/styles/mixins' as m;
 
 // Lys baggrund med mørk tekst. Spørgsmålene til højre er stadig mørkegrønne kort med lys tekst
 .faq {
@@ -232,13 +233,6 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
   color: c.$primary_light25;
 }
 
-// Mærket i venstre side: mørk kant og tekst på den lyse baggrund
-.faq__badge {
-  --badge-bg: transparent;
-  --badge-color: #{c.$primary_black100};
-  border: 1.5px solid c.$primary_black100;
-}
-
 // Spørgsmålet: fed tekst til venstre, plus til højre. Browserens egen trekant fjernes
 .faq__spoergsmaal {
   display: flex;
@@ -246,8 +240,8 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
   align-items: center;
   gap: s.$spacing-s;
   padding: s.$spacing-s 0;
-  font-size: clamp(1.05rem, 1.5vw, 1.2rem);
-  font-weight: 700;
+  // Samme regler som brødtekst i _typography.scss (16/18px, vægt 300)
+  @include m.brodtekst;
   line-height: 1.35;
   list-style: none;
   cursor: pointer;
@@ -332,10 +326,7 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
     padding: 0 0 0 1.25rem;
   }
 
-  li {
-    font-size: 1rem;
-    line-height: 1.6;
-  }
+  // Punkterne følger brødtekst-reglerne for li i _typography.scss
 }
 
 @media (prefers-reduced-motion: reduce) {

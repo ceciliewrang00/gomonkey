@@ -244,8 +244,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     background: rgba(c.$primary_light25, 0.93);
     border-radius: 1rem;
     padding: 5px 9px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    // Teksten følger .etiket i _typography.scss
   }
 
   // ---------- Valgt bane og vejledning ----------
@@ -302,8 +301,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     left: clamp(16px, 3vw, 42px);
     z-index: 2;
     color: c.$primary_black100;
-    font-size: 0.85rem;
-    font-weight: 400;
+    // Teksten følger .lille-tekst i _typography.scss
     background: rgba(c.$primary_light25, 0.85);
     padding: 11px 14px;
     border-radius: 1rem;
@@ -329,17 +327,9 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
       color: c.$secondary_orange100;
     }
 
+    // "Prøv igen" er en almindelig .button-primary fra _buttons.scss
     button {
-      border: 0;
-      background: c.$primary_black100;
-      color: c.$primary_light25;
-      border-radius: 1rem;
-      padding: 0.5rem 1.5rem;
-      font-weight: 900;
-
-      &:hover {
-        background: c.$secondary_purple100;
-      }
+      margin-top: 0.75rem;
     }
   }
 

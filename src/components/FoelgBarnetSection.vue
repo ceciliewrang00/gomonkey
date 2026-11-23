@@ -35,7 +35,7 @@ const MULIGHEDER = [
 <template>
   <section id="foelg-barnet" class="foelg" aria-labelledby="foelg-titel">
     <div class="foelg__intro">
-      <span class="badge badge--outline-green">For forældre</span>
+      <span class="badge badge--light">For forældre</span>
       <h2 id="foelg-titel">Sådan følger du dit barn</h2>
       <p>
         Du bestemmer selv, hvor tæt du vil være på. Vores instruktører holder øje med banerne
@@ -54,7 +54,7 @@ const MULIGHEDER = [
           <!-- Vent ved start eller mål: ikon_start.svg -->
           <img v-else :src="startIkon" alt="" class="foelg__ikon-billede foelg__ikon-billede--start">
         </span>
-        <h3 class="foelg__titel">{{ m.titel }}</h3>
+        <h4 class="foelg__titel">{{ m.titel }}</h4>
         <p class="foelg__tekst">{{ m.tekst }}</p>
       </li>
     </ul>
@@ -168,17 +168,15 @@ const MULIGHEDER = [
   height: 2.25rem;
 }
 
+// Korttitlerne er h4 og følger h4-reglerne i _typography.scss (størrelse og vægt)
 .foelg__titel {
   margin: 0;
   padding: 0;
-  font-size: 1.1rem;
-  font-weight: 800;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 .foelg__tekst {
   margin: 0;
-  font-size: 0.95rem;
   line-height: 1.5;
   opacity: 0.85;
 }
@@ -205,7 +203,6 @@ const MULIGHEDER = [
 
   p {
     margin: 0;
-    font-size: 0.95rem;
     line-height: 1.5;
   }
 

@@ -105,6 +105,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     <div id="bane-info" class="baner-intro">
         <!-- Venstre: overskrift og kort intro -->
         <div class="baner-intro__tekst">
+            <span class="badge badge--dark">Baneoversigt</span>
             <h2>Vores baner i<br>Forest Odense</h2>
             <p class="baner-intro__lead">
                 Banerne står i rækkefølge fra de letteste, hvor alle kan være med, til de vildeste,
@@ -139,7 +140,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
             <div class="bane__top">
                 <!-- Prik i banens farve foran navnet, fx 01 ● Grøn bane -->
                 <span class="bane__prik" aria-hidden="true"></span>
-                <h2 class="bane__navn">{{ titelFor(bane) }}</h2>
+                <h3 class="bane__navn">{{ titelFor(bane) }}</h3>
             </div>
 
             <!-- Klik på billedet åbner det stort -->
@@ -170,7 +171,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                 <!-- Faktabokse med de fakta, banen har udfyldt -->
                 <dl class="fakta" v-if="faktaFor(bane).length">
                     <div v-for="f in faktaFor(bane)" :key="f.key" class="fakta__boks">
-                        <dt>{{ f.label }}</dt>
+                        <dt class="etiket etiket--lys">{{ f.label }}</dt>
                         <dd>{{ bane[f.key] }}</dd>
                     </div>
                 </dl>
@@ -179,7 +180,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                     <div class="difficulty__label">
                         <!-- "Sværhedsgrad" med en (i)-knap, der åbner en forklaring -->
                         <span
-                            class="info"
+                            class="info etiket"
                             @focusout="lukVedFokusUd"
                             @keydown.esc="aabenInfo = null"
                         >
@@ -258,7 +259,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
             </button>
             <img :src="billedeSrc(stortBillede)" :alt="stortBillede.altImg" class="billed-dialog__img">
-            <figcaption class="billed-dialog__tekst">
+            <figcaption class="billed-dialog__tekst h4">
                 <span class="billed-dialog__prik" :class="`bane--${stortBillede.id}`" aria-hidden="true"></span>
                 {{ titelFor(stortBillede) }}
             </figcaption>
@@ -269,6 +270,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 <style lang="scss" scoped>
 @use '@/assets/styles/colors' as c;
 @use '@/assets/styles/spacings' as s;
+@use '@/assets/styles/mixins' as m;
 
 // Banens farve fra $kort-bane-farver ud fra klassen, fx .bane--bane-1. Ukendte baner bliver grå
 .bane {
@@ -347,7 +349,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     }
 
     p {
-        font-size: 0.95rem;
         line-height: 1.5;
     }
 
@@ -552,8 +553,8 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     align-items: center;
     gap: 0.5rem;
     margin-top: s.$spacing-xs;
-    font-size: 1.1rem;
-    font-weight: 800;
+    // Teksten følger .h4 i _typography.scss
+    padding: 0;
 }
 
 .billed-dialog__prik {
@@ -584,13 +585,12 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     gap: 0.75rem;
 }
 
+// Banenavnet er en h3 og følger h3-reglerne i _typography.scss (størrelse og vægt).
+// Her fjernes kun den ekstra luft over, og farven sættes
 .bane__navn {
-    font-weight: 900;
-    font-size: clamp(1.5rem, 3vw, 2.25rem);
     line-height: 1.1;
     margin: 0;
     padding-top: 0;
-    // Navn og nummer står i sort (primary_black100) ligesom resten af overskrifterne i baneoversigten
     color: c.$primary_black100;
 }
 
@@ -622,8 +622,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     border-radius: 1rem;
     background-color: c.$forest_green25;
     color: c.$primary_darkgreen;
-    font-size: 1rem;
-    font-weight: 500;
+    // Teksten følger brødtekst-reglerne for p i _typography.scss
     line-height: 1.35;
 
     strong {
@@ -654,10 +653,9 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         color: c.$primary_light25;
     }
 
+    // Overskriften følger .etiket i _typography.scss (lysegrå, som kan læses på den mørke boks)
     dt {
-        font-size: 0.8rem;
-        font-weight: 500;
-        opacity: 0.7;
+        margin: 0;
     }
 
     // Svaret: 16px på mobil og 18px fra 768px (samme trin som brødteksten i _typography.scss)
@@ -688,24 +686,17 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     // Ekstra luft op til faktaboksene
     padding-top: s.$spacing-s;
 
-    // "Sværhedsgrad" er en lille, dæmpet etiket. Niveauet står stort og fedt
+    // "Sværhedsgrad" til venstre (følger .etiket i _typography.scss), niveauet stort og fedt til højre
     .difficulty__label {
         display: flex;
         justify-content: space-between;
         align-items: flex-end;
         margin-bottom: 0.5rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: c.$primary_black75;
     }
 
     .difficulty__niveau {
         font-size: 1.1rem;
         font-weight: 900;
-        letter-spacing: 0;
-        text-transform: none;
         line-height: 1;
         color: c.$primary_black100;
     }
@@ -753,10 +744,10 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     border-radius: 1rem;
     background-color: c.$primary_darkgreen;
     color: c.$primary_light25;
-    font-size: 0.85rem;
-    font-weight: 400;
+    // Brødtekst-regler fra _typography.scss. Farven er lys, fordi boblen er mørk.
+    // text-transform og letter-spacing nulstiller "SVÆRHEDSGRAD"-etiketten, som boblen sidder inde i
+    @include m.brodtekst;
     line-height: 1.45;
-    // Nulstiller etikettens store bogstaver, så boblens tekst er almindelig
     text-transform: none;
     letter-spacing: normal;
     box-shadow: 0 0.5rem 1.5rem rgba(c.$primary_darkgreen, 0.25);

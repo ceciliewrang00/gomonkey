@@ -11,7 +11,7 @@ import { NIVEAUER } from '@/services/baner.js'
     <div class="skala">
       <!-- Overskrift og én linje om, hvordan bjælken læses -->
       <div class="skala__intro">
-        <h3 id="skala-titel" class="skala__titel">Sådan læser du sværhedsgraden</h3>
+        <h4 id="skala-titel" class="skala__titel">Sådan læser du sværhedsgraden</h4>
         <p class="skala__tekst">
           Bjælken viser højde, svæv og hvor hårdt det er. Jo flere fyldte felter, jo sværere bane.
         </p>
@@ -28,7 +28,7 @@ import { NIVEAUER } from '@/services/baner.js'
               :class="{ 'er-fyldt': t <= i + 1 }"
             ></span>
           </div>
-          <strong class="skala__navn">{{ niveau.navn }}</strong>
+          <h4 class="skala__navn">{{ niveau.navn }}</h4>
           <p class="skala__kort">{{ niveau.kort }}</p>
         </li>
       </ul>
@@ -68,18 +68,16 @@ import { NIVEAUER } from '@/services/baner.js'
   }
 }
 
+// Overskriften er en h4 og følger h4-reglerne i _typography.scss (størrelse og vægt)
 .skala__titel {
   color: c.$primary_black100;
   margin: 0;
   padding: 0;
-  font-size: 1.05rem;
-  font-weight: 800;
   line-height: 1.3;
 }
 
 .skala__tekst {
   margin: 0.35rem 0 0;
-  font-size: 0.9rem;
   line-height: 1.5;
 }
 
@@ -106,16 +104,15 @@ import { NIVEAUER } from '@/services/baner.js'
   cursor: default;
 }
 
+// Let, Mellem og Svær er h4 og følger h4-reglerne i _typography.scss (størrelse og vægt)
 .skala__navn {
   color: c.$primary_black100;
-  margin-top: 0.3rem;
-  font-size: 1rem;
-  font-weight: 800;
+  margin: 0.3rem 0 0;
+  padding: 0;
 }
 
 .skala__kort {
   margin: 0;
-  font-size: 0.875rem;
   line-height: 1.45;
 }
 

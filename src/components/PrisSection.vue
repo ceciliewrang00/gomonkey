@@ -30,11 +30,11 @@ const TILKOEB = [
   <section id="priser" class="priser" aria-labelledby="priser-titel">
     <!-- Venstre: overskrift og hvad der er med -->
     <div class="priser__intro">
-      <span class="badge priser__badge">Priser</span>
+      <span class="badge badge--dark">Priser</span>
       <h2 id="priser-titel">Det koster et besøg</h2>
       <p>Prisen gælder hele besøget – udstyr, instruktion og Bounce er med.</p>
 
-      <h3 class="priser__undertitel">Det får I</h3>
+      <h4 class="priser__undertitel">Det får I</h4>
       <ul class="priser__inkluderet">
         <li v-for="punkt in INKLUDERET" :key="punkt">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
@@ -44,7 +44,7 @@ const TILKOEB = [
 
       <!-- Grupper og arrangementer har egne priser – her står, hvordan man kontakter parken -->
       <div class="priser__grupper">
-        <h3 class="priser__undertitel">Skole, institution eller arrangement?</h3>
+        <h4 class="priser__undertitel">Skole, institution eller arrangement?</h4>
         <p>
           Kommer I som skole eller institution, eller skal I holde fødselsdag, polterabend,
           teambuilding eller blå mandag? Så har vi særlige priser og pakker. Kontakt os, så finder vi det rigtige til jer.
@@ -59,14 +59,14 @@ const TILKOEB = [
 
     <!-- Højre: selve prisboksen -->
     <div class="priser__boks">
-      <p class="priser__boks-titel">Standard klatring · 3 timer</p>
+      <p class="priser__boks-titel etiket etiket--lys">Standard klatring · 3 timer</p>
 
       <!-- Børn og voksne -->
       <dl class="priser__liste">
         <div v-for="p in PRISER" :key="p.navn" class="priser__pris">
           <dt>
             <strong>{{ p.navn }}</strong>
-            <span>{{ p.alder }}</span>
+            <span class="etiket etiket--lys">{{ p.alder }}</span>
           </dt>
           <dd>{{ p.pris }} <span>kr.</span></dd>
         </div>
@@ -81,7 +81,7 @@ const TILKOEB = [
       </ul>
 
       <a :href="BOOK_URL" class="button-primary button-pink priser__knap">Book jeres besøg</a>
-      <p class="priser__note">Priserne er vejledende. Den endelige pris ser du, når du booker.</p>
+      <p class="priser__note lille-tekst">Priserne er vejledende. Den endelige pris ser du, når du booker.</p>
     </div>
   </section>
 </template>
@@ -124,18 +124,10 @@ const TILKOEB = [
   }
 }
 
-// Mærket har kun en mørk kant og mørk tekst, fordi baggrunden er lys
-.priser__badge {
-  --badge-bg: transparent;
-  --badge-color: #{c.$primary_black100};
-  border: 1.5px solid c.$primary_black100;
-}
-
+// Små overskrifter er h4 og følger h4-reglerne i _typography.scss (størrelse og vægt)
 .priser__undertitel {
   margin: s.$spacing-xs 0 0;
   padding: 0;
-  font-size: 1.05rem;
-  font-weight: 800;
 }
 
 // Grupper og arrangementer: adskilt fra listen over med en tynd streg
@@ -153,7 +145,6 @@ const TILKOEB = [
   }
 
   p {
-    font-size: 0.95rem;
     line-height: 1.55;
   }
 }
@@ -192,8 +183,7 @@ const TILKOEB = [
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    font-size: 1rem;
-    font-weight: 500;
+    // Teksten følger brødtekst-reglerne for li i _typography.scss
   }
 
   // Flueben i en mørk cirkel, så de kan ses på den lyserøde baggrund
@@ -224,13 +214,9 @@ const TILKOEB = [
   color: c.$primary_light25;
 }
 
+// Teksten følger .etiket i _typography.scss. Her fjernes kun luften
 .priser__boks-titel {
   margin: 0;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.75;
 }
 
 // Børn og voksne som to rækker med prisen stort til højre
@@ -257,10 +243,7 @@ const TILKOEB = [
       font-weight: 800;
     }
 
-    span {
-      font-size: 0.85rem;
-      opacity: 0.75;
-    }
+    // Alderen følger .etiket i _typography.scss
   }
 
   dd {
@@ -289,7 +272,6 @@ const TILKOEB = [
     display: flex;
     justify-content: space-between;
     gap: s.$spacing-s;
-    font-size: 0.9rem;
     line-height: 1.4;
   }
 }
@@ -307,10 +289,8 @@ const TILKOEB = [
   text-align: center;
 }
 
+// Teksten følger .lille-tekst i _typography.scss (brødtekst i 14px)
 .priser__note {
   margin: 0;
-  font-size: 0.8rem;
-  line-height: 1.4;
-  opacity: 0.7;
 }
 </style>

@@ -301,7 +301,7 @@ onMounted(async () => {
       <!-- Mangler databasen de nye spørgsmål, kan vi ikke finde en bane -->
       <div v-if="!resultat" class="resultat-top">
         <span class="badge">Dit resultat</span>
-        <h2>Vi kunne ikke finde en bane</h2>
+        <h2 class="h3">Vi kunne ikke finde en bane</h2>
         <p>Quizzen er ved at blive opdateret. Prøv igen senere, eller kontakt os.</p>
       </div>
 
@@ -309,7 +309,7 @@ onMounted(async () => {
         <!-- 1. Den anbefalede bane og en kort beskrivelse -->
         <div class="resultat-top">
           <span class="badge">Dit resultat</span>
-          <h2>
+          <h2 class="h3">
             <span class="resultat-prik" aria-hidden="true"></span>
             {{ resultat.titel }}
           </h2>
@@ -329,7 +329,7 @@ onMounted(async () => {
         <div v-if="foerstegangsInfo" class="resultat-regel">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" /><path d="M12 11v6M12 7.5v.01" /></svg>
           <div>
-            <h3 class="resultat-regel__titel">{{ foerstegangsInfo.titel }}</h3>
+            <h3 class="resultat-regel__titel h4">{{ foerstegangsInfo.titel }}</h3>
             <p class="resultat-regel__tekst">{{ foerstegangsInfo.tekst }}</p>
           </div>
         </div>
@@ -338,7 +338,7 @@ onMounted(async () => {
         <div v-if="voksenInfo" class="resultat-regel">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="3" /><path d="M3 20c0-3.5 2.5-6 6-6s6 2.5 6 6" /><circle cx="17" cy="9" r="2.2" /><path d="M15.5 14.2c3 .2 5.5 2.4 5.5 5.8" /></svg>
           <div>
-            <h3 class="resultat-regel__titel">{{ voksenInfo.titel }}</h3>
+            <h3 class="resultat-regel__titel h4">{{ voksenInfo.titel }}</h3>
             <p class="resultat-regel__tekst">
               {{ voksenInfo.tekst }}
               <RouterLink :to="{ path: '/', hash: '#foelg-barnet' }" class="resultat-regel__link">Læs mere</RouterLink>
@@ -381,7 +381,7 @@ onMounted(async () => {
         <!-- 4. To lister: hvorfor denne bane, og praktiske regler -->
         <div class="resultat-info">
           <div v-if="begrundelse.length">
-            <h3 class="resultat-overskrift">Derfor anbefaler vi den</h3>
+            <h3 class="resultat-overskrift etiket">Derfor anbefaler vi den</h3>
             <ul class="resultat-liste resultat-liste--tjek">
               <li v-for="grund in begrundelse" :key="grund">{{ grund }}</li>
             </ul>
@@ -389,7 +389,7 @@ onMounted(async () => {
 
           <!-- Praktiske regler fra gomonkey.dk/praktisk-info -->
           <div>
-            <h3 class="resultat-overskrift">Godt at vide</h3>
+            <h3 class="resultat-overskrift etiket">Godt at vide</h3>
             <ul class="resultat-liste">
               <li v-for="linje in godtAtVide" :key="linje">{{ linje }}</li>
             </ul>
@@ -403,10 +403,10 @@ onMounted(async () => {
       <!-- Spørgsmålsnummer og procent over fremdriftsbjælken -->
       <div class="quiz-fremdrift">
         <div class="quiz-fremdrift__tekst">
-          <span class="quiz-meta">
+          <span class="quiz-meta etiket">
             Spørgsmål {{ aktivtIndeks + 1 }} af {{ synligeSpoergsmaal.length }}
           </span>
-          <span class="quiz-meta">{{ fremdrift }}%</span>
+          <span class="quiz-meta etiket">{{ fremdrift }}%</span>
         </div>
 
         <progress
@@ -434,7 +434,7 @@ onMounted(async () => {
         </button>
       </div>
 
-      <p v-if="valgteSvar[aktivtSpoergsmaal.id]" class="quiz-valgt">
+      <p v-if="valgteSvar[aktivtSpoergsmaal.id]" class="quiz-valgt lille-tekst">
         Du har valgt: {{ visSvarTekst(valgteSvar[aktivtSpoergsmaal.id], valgteSvar) }}
       </p>
 
@@ -526,15 +526,14 @@ onMounted(async () => {
   padding: 0;
   margin: 0;
 
+  // Overskriften er 48px på alle skærme, så den ikke fylder for meget ved siden af quizkortet.
+  // Teksten følger p i _typography.scss
   h1 {
-    font-size: clamp(2.25rem, 4.5vw, 3.5rem);
-    line-height: 1.05;
-    letter-spacing: -0.02em;
+    font-size: 48px;
   }
 
   p {
     margin: 0;
-    font-size: 16px;
   }
 
   @media (min-width: 1000px) {
@@ -556,9 +555,7 @@ onMounted(async () => {
     display: flex;
     align-items: flex-start;
     gap: 0.6rem;
-    font-size: 0.95rem;
-    font-weight: 500;
-    line-height: 1.4;
+    // Teksten følger brødtekst-reglerne for li i _typography.scss
 
     &::before {
       content: '✓';
@@ -580,10 +577,9 @@ onMounted(async () => {
 /* Statusbeskederne bruger samme boks som quizkortet */
 
 /* Lille, dæmpet hjælpetekst, fx "Spørgsmål 1 af 5" */
+// Teksten følger .etiket i _typography.scss
 .quiz-meta {
   display: block;
-  font-size: 0.875rem;
-  color: c.$primary_black75;
 }
 
 /* Quizkortet: lys boks med blød skygge */
@@ -617,9 +613,9 @@ onMounted(async () => {
 }
 
 
+// Spørgsmålet følger h4 i _typography.scss
 .quiz-kort h4 {
   padding-bottom: 25px;
-font-weight: 900;
 }
 
 .quiz-svarknap {
@@ -628,7 +624,7 @@ font-weight: 900;
   min-height: 3.5rem;
    padding:0.5rem 1.5rem;
    line-height: 1.4;
-    font-size: 16px;
+   // Teksten følger .text i _typography.scss (brødtekst)
   border: 1px solid c.$primary_black100;
   border-radius: 1rem;
   background-color: transparent;
@@ -740,9 +736,8 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* "Du har valgt: …" – lille og kursiv */
+/* "Du har valgt: …" – .lille-tekst fra _typography.scss, i kursiv */
 .quiz-valgt {
-  font-size: 14px;
   font-style: italic;
 }
 
@@ -865,17 +860,16 @@ button:disabled {
   align-items: flex-start;
   gap: s.$spacing-xs;
 
+  // Resultatets overskrift er en h2 for skærmlæsere, men ser ud som .h3 i _typography.scss (24/32px)
   h2 {
     margin: 0;
     padding: 0;
-    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
-    font-weight: 900;
     line-height: 1.1;
   }
 }
 
+// Teksten følger p i _typography.scss
 .resultat-tekst {
-  font-size: 1rem;
   line-height: 1.55;
 }
 
@@ -923,16 +917,14 @@ button:disabled {
   }
 }
 
+// Titlen ser ud som .h4 og teksten følger p i _typography.scss
 .resultat-regel__titel {
   margin: 0;
   padding: 0;
-  font-size: 1rem;
-  font-weight: 800;
 }
 
 .resultat-regel__tekst {
   margin: 0.25rem 0 0;
-  font-size: 0.95rem;
   line-height: 1.5;
 }
 
@@ -954,7 +946,7 @@ button:disabled {
   border-left: 4px solid c.$forest_pink100;
   border-radius: 1rem;
   background-color: c.$forest_pink25;
-  font-size: 0.95rem;
+  // Teksten følger p i _typography.scss
   line-height: 1.5;
 }
 
@@ -971,14 +963,10 @@ button:disabled {
   }
 }
 
+// Teksten følger .etiket i _typography.scss
 .resultat-overskrift {
   margin: 0 0 s.$spacing-xs;
   padding: 0;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: c.$primary_black75;
 }
 
 /* Vores egne punkter i stedet for browserens prikker */
@@ -993,8 +981,7 @@ button:disabled {
   li {
     display: flex;
     gap: 0.6rem;
-    font-size: 0.95rem;
-    font-weight: 400;
+    // Teksten følger brødtekst-reglerne for li i _typography.scss
     line-height: 1.5;
 
     &::before {
@@ -1045,7 +1032,7 @@ button:disabled {
 .quiz-hjaelp {
   margin: -1.2rem 0 2rem;
   color: c.$primary_black75;
-  font-size: 16px;
+  // Teksten følger p i _typography.scss
 }
 
 </style>

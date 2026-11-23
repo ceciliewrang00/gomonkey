@@ -10,7 +10,7 @@ import { useRoute } from 'vue-router'
 import { KORTFILTER_URL } from '@/services/api.js'
 
 // hentBaner hedder hentFaellesBaner her, fordi filen selv har en funktion, der hedder hentBaner
-import { hentBaner as hentFaellesBaner, niveauFor, BOUNCE_ID } from '@/services/baner.js'
+import { hentBaner as hentFaellesBaner, BOUNCE_ID } from '@/services/baner.js'
 
 // 'filter-changed' sendes op til KortView med de valgte baner
 const emit = defineEmits(['filter-changed'])
@@ -62,7 +62,7 @@ async function hentBaner() {
     const medFaellesData = (item) => {
       const bane = faelles.find((b) => b.id === item.id)
       if (!bane) return item
-      return { ...item, titel: bane.name, svaerhed: niveauFor(bane) }
+      return { ...item, titel: bane.name }
     }
 
     // Firebase kan sende listen som en liste eller som et objekt
@@ -132,7 +132,7 @@ function togglerFilter() {
     <!-- "Filtre"-knappen (kun mobil). Tallet viser, hvor mange baner der er valgt -->
     <button type="button" class="mobil-filter-knap" :aria-expanded="erAaben" @click="togglerFilter">
       <span>Filtre</span>
-      <span v-if="valgteFiltre.length > 0" class="filter-badge">{{ valgteFiltre.length }}</span>
+      <span v-if="valgteFiltre.length > 0" class="filter-badge etiket">{{ valgteFiltre.length }}</span>
     </button>
 
     <!-- Mørk baggrund bag det åbne filter på mobil. Klik lukker filteret -->
@@ -156,11 +156,11 @@ function togglerFilter() {
         <button type="button" class="luk-knap" aria-label="Luk filtre" @click="erAaben = false">×</button>
       </div>
 
-      <p class="hjaelpe-tekst">Vælg de baner, du vil se på kortet. Kortet opdateres med det samme.</p>
+      <p class="hjaelpe-tekst lille-tekst">Vælg de baner, du vil se på kortet. Kortet opdateres med det samme.</p>
 
       <div class="filter-sektion">
 
-        <div v-if="indlaeser" class="indlaeser-tekst">
+        <div v-if="indlaeser" class="indlaeser-tekst lille-tekst">
           Henter baner...
         </div>
 
@@ -182,7 +182,7 @@ function togglerFilter() {
             <!-- Overskrift, antal og en streg, der fylder resten af linjen -->
             <h4 class="gruppe-titel">
               {{ gruppe.titel }}
-              <span class="gruppe-antal" aria-hidden="true">{{ gruppe.baner.length }}</span>
+              <span class="gruppe-antal etiket" aria-hidden="true">{{ gruppe.baner.length }}</span>
             </h4>
 
             <!-- Én række pr. bane. Hele rækken er en <label>, så man kan klikke hvor som helst på den -->
@@ -190,7 +190,7 @@ function togglerFilter() {
               v-for="bane in gruppe.baner"
               :key="bane.id"
               class="filter-item"
-              :class="{ aktiv: valgteFiltre.includes(bane.id) }"
+              :class="[`filter-item--${bane.id}`, { aktiv: valgteFiltre.includes(bane.id) }]"
             >
               <input
                 type="checkbox"
@@ -198,15 +198,12 @@ function togglerFilter() {
                 @change="vaelgBane(bane.id, $event.target.checked)"
               />
               <div class="filter-tekst">
+                <!-- Navnet med underteksten ved siden af, fx "Grøn  Klatrevæg & net" -->
                 <div class="titel-linie">
+                  <!-- Prik i banens farve, ligesom stregen på kortet -->
+                  <span class="filter-prik" aria-hidden="true"></span>
                   <span class="titel">{{ bane.titel }}</span>
-                </div>
-                <!-- Undertekst til venstre og sværhed til højre. Bounce får bare "For alle" -->
-                <div v-if="bane.undertekst || bane.svaerhed" class="under-linie">
-                  <span v-if="bane.undertekst" class="undertekst">{{ bane.undertekst }}</span>
-                  <span v-if="bane.svaerhed" class="badge ekstra-info">
-                    {{ bane.id === BOUNCE_ID ? bane.svaerhed : `Sværhedsgrad: ${bane.svaerhed}` }}
-                  </span>
+                  <span v-if="bane.undertekst" class="undertekst lille-tekst">{{ bane.undertekst }}</span>
                 </div>
               </div>
             </label>
@@ -230,6 +227,7 @@ function togglerFilter() {
 <style lang="scss" scoped>
 @use '@/assets/styles/fonts' as ft;
 @use '@/assets/styles/colors' as c;
+@use '@/assets/styles/mixins' as m;
 
 // Skygge under knapper oven på kortet
 $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
@@ -267,17 +265,17 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   border: solid 2px c.$primary_black100;
   padding: 0.5rem 1.5rem;
   border-radius: 1rem;
-  font-weight: 900;
-  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  // Teksten følger knap-reglen i _mixins.scss (16/18px, vægt 900)
+  @include m.button;
   box-shadow: $skygge;
   cursor: pointer;
 }
 
 /* Boblen med antal valgte baner */
+// Teksten følger .etiket i _typography.scss
 .filter-badge {
   background: c.$forest_pink100;
   color: c.$primary_black100;
-  font-size: 0.75rem;
   padding: 2px 7px;
   border-radius: 1rem;
 }
@@ -306,8 +304,10 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   background-color: c.$primary_light25;
   border: none;
   border-radius: 0;
-  padding: 1.5rem;
-  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  // --kant = luften i siderne. Bruges også af rækkerne, så deres baggrund kan gå helt ud til kanten
+  --kant: 1.5rem;
+  padding: var(--kant);
+  padding-bottom: calc(var(--kant) + env(safe-area-inset-bottom));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -323,6 +323,10 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 .filter-sektion {
   flex: 1;
   overflow-y: auto;
+  // Scrollområdet går helt ud til panelets kanter, så rækkernes baggrund ikke bliver klippet af.
+  // Luften i siderne lægges ind igen som padding, så indholdet står samme sted som før
+  margin-inline: calc(-1 * var(--kant));
+  padding-inline: var(--kant);
 }
 
 .filter-sidebar.er-aaben {
@@ -354,14 +358,12 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 .filter-header h3 {
   margin: 0;
   padding: 0;
-  font-weight: 900;
   color: c.$primary_black100;
 }
 
+// Teksten følger .lille-tekst i _typography.scss
 .hjaelpe-tekst {
   margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.4;
   color: c.$primary_black100;
 }
 
@@ -371,9 +373,8 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   cursor: pointer;
 }
 
+// Teksten følger .lille-tekst i _typography.scss
 .indlaeser-tekst {
-  font-size: 0.9rem;
-  font-weight: 300;
   color: c.$primary_black100;
   padding: 0.5rem 0;
 }
@@ -381,17 +382,45 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 .filter-liste {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 0.25rem;
 }
 
 .filter-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding-bottom: 25px;
+  // Baggrunden ved hover og valgt går helt ud til panelets kanter.
+  // Den negative margin trækker rækken ud, og paddingen holder tjekboksen samme sted som overskriften
+  margin-inline: calc(-1 * var(--kant));
+  padding: 0.65rem var(--kant);
   cursor: pointer;
   color: c.$primary_black100;
   transition: background-color 0.2s ease;
+}
+
+// Valgt række: svag lilla flade
+.filter-item.aktiv {
+  background-color: rgba(c.$secondary_purple100, 0.08);
+}
+
+// Banens farve til prikken, fx .filter-item--bane-1. Ukendte baner bliver grå
+.filter-item {
+  --bane-farve: #{c.$primary_black50};
+}
+
+@each $id, $farve in c.$kort-bane-farver {
+  .filter-item--#{$id} {
+    --bane-farve: #{$farve};
+  }
+}
+
+.filter-prik {
+  flex-shrink: 0;
+  align-self: center;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background-color: var(--bane-farve);
 }
 
 /* Overskrift over hver gruppe ("Baner" og "Aktiviteter") */
@@ -401,8 +430,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   gap: 0.5rem;
   margin: 0.5rem 0 1rem;
   padding: 0;
-  font-size: 1rem;
-  font-weight: 900;
+  // Størrelse og vægt følger h4 i _typography.scss
   line-height: 1.2;
   color: c.$primary_darkgreen;
 
@@ -425,8 +453,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   padding: 0 0.4rem;
   border-radius: 1rem;
   background-color: c.$forest_green25;
-  font-size: 0.75rem;
-  font-weight: 800;
+  // Teksten følger .etiket i _typography.scss
   color: c.$primary_darkgreen;
 }
 
@@ -436,8 +463,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 }
 
 /* Valgt række: teksten bliver blå/lilla */
-.filter-item.aktiv .titel,
-.filter-item.aktiv .undertekst {
+.filter-item.aktiv .titel {
   color: c.$secondary_purple100;
 }
 
@@ -489,22 +515,26 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   min-width: 0;
 }
 
+// Navn og undertekst på samme linje. Er der ikke plads, ryger underteksten ned under navnet
 .titel-linie {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.5rem;
 }
 
+
+// Banenavnet følger brødtekst-reglerne (16/18px), men står fed
 .filter-tekst .titel {
-  font-size: 0.95rem;
+  @include m.brodtekst;
   font-weight: 700;
+  line-height: 1.3;
   color: c.$primary_black100;
 }
 
+// Undertitlen følger .lille-tekst i _typography.scss og står dæmpet, så navnet er det, man ser først
 .filter-tekst .undertekst {
-  font-size: 0.8rem;
-  color: c.$primary_black100;
-  font-weight: 400;
+  color: c.$primary_black75;
 }
 
 /* Bunden med "Vis ... på kortet" (kun mobil) står helt nede */
@@ -521,35 +551,9 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   border: none;
   padding: 0.75rem;
   border-radius: 1rem;
-  font-weight: 900;
-  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  // Teksten følger knap-reglen i _mixins.scss (16/18px, vægt 900)
+  @include m.button;
   cursor: pointer;
-}
-
-/* Undertekst og sværheds-mærke på samme linje */
-.under-linie {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-/* Sværheds-mærket: en mindre .badge, der aldrig brydes over to linjer */
-.ekstra-info {
-  --badge-bg: #{c.$primary_darkgreen};
-  --badge-color: #{c.$primary_light50};
-  align-self: center;
-  flex-shrink: 0;
-  padding: 0.25rem 0.6rem;
-  white-space: nowrap;
-  font-size: 0.65rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  transition: background-color 0.2s ease;
-}
-
-/* Valgt bane: mærket får samme blå/lilla farve som teksten */
-.filter-item.aktiv .ekstra-info {
-  --badge-bg: #{c.$secondary_purple100};
 }
 
 /* Desktop: filteret svæver oven på kortet, og mobil-knapperne skjules.
@@ -585,7 +589,8 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     background-color: c.$primary_light25;
     border-radius: 1rem;
     box-shadow: $skygge;
-    padding: 1.25rem;
+    --kant: 1.25rem;
+    padding: var(--kant);
     z-index: 1;
     pointer-events: auto;
   }
@@ -594,13 +599,17 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 /* Hover kun på enheder med mus – på touch ville det "hænge fast" */
 @media (hover: hover) {
   /* Hover: teksten og tjekboksens kant bliver blå/lilla */
-  .filter-item:hover .titel,
-  .filter-item:hover .undertekst {
-    color: c.$secondary_purple100;
+  // Hover: svag flade bag rækken, og navnet bliver lilla
+  .filter-item:hover {
+    background-color: rgba(c.$primary_darkgreen, 0.06);
   }
 
-  .filter-item:hover .ekstra-info {
-    --badge-bg: #{c.$secondary_purple100};
+  .filter-item.aktiv:hover {
+    background-color: rgba(c.$secondary_purple100, 0.12);
+  }
+
+  .filter-item:hover .titel {
+    color: c.$secondary_purple100;
   }
 
   .filter-item:hover input[type="checkbox"] {

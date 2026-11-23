@@ -42,14 +42,14 @@ onMounted(async () => {
       </div>
 
       <div id="baner-content" class="baner-indhold">
-        <span class="badge baner-badge">Banevælger</span>
+        <span class="badge badge--dark">Banevælger</span>
 
         <h2>Find din bane</h2>
         <p>Tag vores banevælger: svar på 5 hurtige spørgsmål, så finder vi den bane, der passer til jer. Det tager under et minut.</p>
 
         <!-- Første spørgsmål. Hvert svar er et link, der starter banevælgeren med svaret valgt -->
         <div class="baner-spoergsmaal">
-          <h3 class="baner-spoergsmaal__titel">{{ spoergsmaalTekst }}</h3>
+          <h4 class="baner-spoergsmaal__titel">{{ spoergsmaalTekst }}</h4>
           <ul class="baner-svar">
             <li v-for="s in svar" :key="s.hvem">
               <RouterLink :to="{ path: '/banequiz', query: { hvem: s.hvem } }" class="baner-svar__knap">
@@ -122,24 +122,16 @@ onMounted(async () => {
   }
 }
 
-// Mærket: mørk kant og tekst på den lyse baggrund
-.baner-badge {
-  --badge-bg: transparent;
-  --badge-color: #{c.$primary_black100};
-  border: 1.5px solid c.$primary_black100;
-}
-
 /* --- Første spørgsmål --- */
 .baner-spoergsmaal {
   width: 100%;
   margin-top: s.$spacing-xs;
 }
 
+// "Hvem skal klatre?" er en h4 og følger h4-reglerne i _typography.scss (størrelse og vægt)
 .baner-spoergsmaal__titel {
   margin: 0 0 0.75rem;
   padding: 0;
-  font-size: 1.15rem;
-  font-weight: 800;
 }
 
 // Svarene som store knapper, to pr. række på større skærme
