@@ -62,7 +62,7 @@ const MULIGHEDER = [
     <!-- Det, man ikke kan, står tydeligt for sig -->
     <div class="foelg__obs">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" /><path d="M12 7v6M12 16.5v.01" /></svg>
-      <p>
+      <p class="lille-tekst">
         <strong>Godt at vide:</strong> Man kan ikke holde sit barn i hånden på banen.
         Hvor mange voksne der skal med, afhænger af barnets alder –
         <a href="#faq">se svarene nedenfor</a>.
@@ -201,9 +201,9 @@ const MULIGHEDER = [
     stroke-linecap: round;
   }
 
+  // Teksten følger .lille-tekst i _typography.scss
   p {
     margin: 0;
-    line-height: 1.5;
   }
 
   strong {
