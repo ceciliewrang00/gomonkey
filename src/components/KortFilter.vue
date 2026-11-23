@@ -130,7 +130,7 @@ function togglerFilter() {
 <template>
   <div class="filter-wrapper">
     <!-- "Filtre"-knappen (kun mobil). Tallet viser, hvor mange baner der er valgt -->
-    <button type="button" class="mobil-filter-knap" :aria-expanded="erAaben" @click="togglerFilter">
+    <button type="button" class="button-primary mobil-filter-knap" :aria-expanded="erAaben" @click="togglerFilter">
       <span>Filtre</span>
       <span v-if="valgteFiltre.length > 0" class="filter-badge etiket">{{ valgteFiltre.length }}</span>
     </button>
@@ -153,7 +153,9 @@ function togglerFilter() {
         </button>
 
         <!-- Luk-kryds (kun på mobil) -->
-        <button type="button" class="luk-knap" aria-label="Luk filtre" @click="erAaben = false">×</button>
+        <button type="button" class="button-close button-close--paa-lys luk-knap" aria-label="Luk filtre" @click="erAaben = false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
       </div>
 
       <p class="hjaelpe-tekst lille-tekst">Vælg de baner, du vil se på kortet. Kortet opdateres med det samme.</p>
@@ -214,7 +216,7 @@ function togglerFilter() {
 
       <!-- Kun mobil: lukker filteret og viser kortet -->
       <div class="filter-footer">
-        <button type="button" class="vis-kort-knap" @click="erAaben = false">
+        <button type="button" class="button-primary vis-kort-knap" @click="erAaben = false">
           <template v-if="valgteFiltre.length === 0">Vis alt på kortet</template>
           <template v-else-if="valgteFiltre.length === 1">Vis 1 bane på kortet</template>
           <template v-else>Vis {{ valgteFiltre.length }} af {{ banerListe.length }} baner på kortet</template>
@@ -259,16 +261,8 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   top: 15px;
   left: 15px;
   z-index: 10;
-  background: c.$primary_black100;
-  color: c.$primary_light25;
-  // Samme kant som Tilbage-knappen, så de er lige høje
-  border: solid 2px c.$primary_black100;
-  padding: 0.5rem 1.5rem;
-  border-radius: 1rem;
-  // Teksten følger knap-reglen i _mixins.scss (16/18px, vægt 900)
-  @include m.button;
+  // Udseendet kommer fra .button-primary i _buttons.scss. Her sættes kun placering og skygge
   box-shadow: $skygge;
-  cursor: pointer;
 }
 
 /* Boblen med antal valgte baner */
@@ -334,14 +328,9 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
 }
 
 /* Krydset, der lukker filteret på mobil */
+// Lukkeknappen bruger .button-close fra _buttons.scss
 .luk-knap {
-  display: block;
-  background: none;
-  border: none;
-  font-size: 1.8rem;
-  color: c.$primary_black100;
-  cursor: pointer;
-  line-height: 1;
+  flex-shrink: 0;
 }
 
 /* Overskriften "Filtre" og knapperne ved siden af */
@@ -544,16 +533,9 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   border-top: 2px solid c.$primary_black100;
 }
 
+// Udseendet kommer fra .button-primary i _buttons.scss. Her fylder knappen kun hele bredden
 .vis-kort-knap {
   width: 100%;
-  background-color: c.$primary_black100;
-  color: c.$primary_light25;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 1rem;
-  // Teksten følger knap-reglen i _mixins.scss (16/18px, vægt 900)
-  @include m.button;
-  cursor: pointer;
 }
 
 /* Desktop: filteret svæver oven på kortet, og mobil-knapperne skjules.
@@ -616,11 +598,5 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     border-color: c.$secondary_purple100;
   }
 
-
-  .vis-kort-knap:hover,
-  .mobil-filter-knap:hover {
-    background-color: c.$secondary_purple100;
-    border-color: c.$secondary_purple100;
-  }
 }
 </style>

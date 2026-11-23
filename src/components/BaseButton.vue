@@ -3,15 +3,15 @@
 
 import { computed } from 'vue'
 
-// variant = hvordan knappen ser ud ('primary', 'secondary', 'pink', 'light' eller 'header').
+// variant = hvordan knappen ser ud ('primary', 'secondary', 'pink' eller 'header').
 // href = har knappen en adresse, bliver den et link (<a>), ellers en <button>
 const props = defineProps({
   variant: { type: String, default: 'primary' },
   href: String
 })
 
-// 'pink' og 'light' er farver af den primære knap, så de får begge klasser
-const farveVarianter = ['pink', 'light']
+// 'pink' er en farve af den primære knap, så den får begge klasser
+const farveVarianter = ['pink']
 
 // Vælger klasserne ud fra variant, fx 'pink' → ['button-primary', 'button-pink']
 const klasser = computed(() =>

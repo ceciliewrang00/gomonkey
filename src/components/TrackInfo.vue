@@ -117,7 +117,10 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
         <div class="baner-intro__quiz">
             <h4>I tvivl om, hvilken bane der passer til dig?</h4>
             <p>Svar på et par hurtige spørgsmål, så finder vi den rigtige bane.</p>
-            <RouterLink to="/banequiz" class="button-secondary button-pink baner-intro__quiz-knap">Tag banevælgeren</RouterLink>
+            <RouterLink to="/banequiz" class="button-primary button-pink baner-intro__quiz-knap">
+                Tag banevælgeren
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+            </RouterLink>
         </div>
     </div>
 
@@ -357,14 +360,6 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     }
 }
 
-// Lyserød knap: kanten får samme farve som fyldet (lilla ved hover, som button-pink)
-.baner-intro__quiz-knap {
-    border-color: c.$forest_pink100;
-
-    &:hover {
-        border-color: c.$secondary_purple100;
-    }
-}
 
 .status {
     text-align: center;

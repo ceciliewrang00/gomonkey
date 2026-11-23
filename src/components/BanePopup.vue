@@ -88,7 +88,7 @@ const skalaer = computed(() => {
       </div>
       <button
         type="button"
-        class="popup-luk"
+        class="button-close button-close--lille button-close--paa-lys popup-luk"
         aria-label="Luk information"
         @click="$emit('luk')"
       >
@@ -233,38 +233,9 @@ const skalaer = computed(() => {
   
 }
 
+// Lukkeknappen bruger .button-close fra _buttons.scss (lille, på lys baggrund)
 .popup-luk {
   flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background-color: c.$primary_light50;
-  color: c.$primary_darkgreen;
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
-
-  svg {
-    width: 1rem;
-    height: 1rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2.5;
-    stroke-linecap: round;
-  }
-
-  &:hover {
-    background-color: c.$primary_darkgreen;
-    color: c.$primary_light25;
-  }
-
-  &:focus-visible {
-    outline: 3px solid c.$secondary_purple100;
-    outline-offset: 2px;
-  }
 }
 
 /* --- Sværhedsgraden med ord --- */

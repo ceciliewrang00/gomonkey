@@ -169,7 +169,7 @@ onUnmounted(() => {
 
       <div class="double-button hero__knapper">
         <a href="#baner" class="button-primary button-pink">Find din bane</a>
-        <RouterLink to="/kort" class="button-secondary button-secondary--light hero__kort-knap">
+        <RouterLink to="/kort" class="button-primary">
           Se oversigtskort
           <!-- Samme pil som i "Se banerne"-knappen -->
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
@@ -439,45 +439,6 @@ onUnmounted(() => {
 
   @media (max-width: 767px) {
     display: inline;
-  }
-}
-
-// "Se oversigtskort": sort knap med lys tekst. Ved hover bliver den lys som før
-.hero__kort-knap {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background-color: c.$primary_black100;
-  border-color: c.$primary_black100;
-  color: c.$primary_light25;
-
-  // Pilen, som i .button-arrow
-  svg {
-    width: 1.1rem;
-    height: 1.1rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    transition: transform 0.2s ease;
-  }
-
-  &:hover {
-    background-color: c.$primary_light25;
-    border-color: c.$primary_light25;
-    color: c.$primary_darkgreen;
-
-    // Pilen rykker lidt til højre ved hover
-    svg {
-      transform: translateX(4px);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    svg {
-      transition: none;
-    }
   }
 }
 
