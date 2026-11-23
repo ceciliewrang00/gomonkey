@@ -8,12 +8,13 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 
 import forestIkon from '@/assets/images/forrest-ikon.webp'
 
+// Samme rækkefølge som sektionerne på siden (se HomeView.vue)
 const LINKS = [
-  { tekst: 'Baner', href: '#bane-info' },
   { tekst: 'Kort', href: '#overblik' },
   { tekst: 'Find din bane', href: '#baner' },
-  { tekst: 'Sikkerhed', href: '#faq' },
+  { tekst: 'Baner', href: '#bane-info' },
   { tekst: 'Priser', href: '#priser' },
+  { tekst: 'Sikkerhed', href: '#faq' },
   { tekst: 'Kontakt', href: '#kontakt' },
 ]
 
@@ -97,6 +98,19 @@ watch(aktivtLink, async (tekst) => {
   if (liste && a) liste.scrollTo({ left: a.offsetLeft - 16, behavior: 'smooth' })
 })
 
+// ---------- Udtoning i kanten, når der er flere links (mobil) ----------
+// true, hvis der er links skjult til venstre / til højre
+const merVenstre = ref(false)
+const merHoejre = ref(false)
+let listeObserver = null
+
+function opdaterKanter() {
+  const liste = listeEl.value
+  if (!liste) return
+  merVenstre.value = liste.scrollLeft > 2
+  merHoejre.value = liste.scrollLeft + liste.clientWidth < liste.scrollWidth - 2
+}
+
 onMounted(() => {
   const header = document.querySelector('header')
   if (header) {
@@ -106,12 +120,22 @@ onMounted(() => {
     observer.observe(header)
   }
 
+  // Tjekker kanterne, når man scroller i menuen, og når skærmen ændrer størrelse
+  if (listeEl.value) {
+    listeEl.value.addEventListener('scroll', opdaterKanter, { passive: true })
+    listeObserver = new ResizeObserver(opdaterKanter)
+    listeObserver.observe(listeEl.value)
+  }
+
   window.addEventListener('scroll', vedScroll, { passive: true })
   findAktivSektion()
+  opdaterKanter()
 })
 
 onUnmounted(() => {
   observer?.disconnect()
+  listeObserver?.disconnect()
+  listeEl.value?.removeEventListener('scroll', opdaterKanter)
   window.removeEventListener('scroll', vedScroll)
   clearTimeout(stopTimer)
 })
@@ -126,7 +150,12 @@ onUnmounted(() => {
         Forest Odense
       </span>
 
-      <ul ref="listeEl" class="sektionsmenu__links">
+      <!-- Klasserne viser en udtoning i den side, hvor der er flere links at scrolle til -->
+      <ul
+        ref="listeEl"
+        class="sektionsmenu__links"
+        :class="{ 'mer-venstre': merVenstre, 'mer-hoejre': merHoejre }"
+      >
         <li v-for="link in LINKS" :key="link.tekst">
           <!-- Det aktive link får en lyserød streg under og aria-current, så skærmlæsere også ved det -->
           <a
@@ -203,6 +232,19 @@ onUnmounted(() => {
 
   &::-webkit-scrollbar {
     display: none;
+  }
+
+  // Udtoning i kanten, hvor der er flere links, så man kan se, at menuen kan scrolles
+  &.mer-hoejre {
+    mask-image: linear-gradient(to right, #000 calc(100% - 3rem), transparent);
+  }
+
+  &.mer-venstre {
+    mask-image: linear-gradient(to left, #000 calc(100% - 3rem), transparent);
+  }
+
+  &.mer-venstre.mer-hoejre {
+    mask-image: linear-gradient(to right, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
   }
 
   @media (min-width: 768px) {

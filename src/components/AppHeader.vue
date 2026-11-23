@@ -6,9 +6,6 @@ import { ref } from 'vue'
 
 import BaseButton from './BaseButton.vue'
 
-// Link til booking
-import { BOOK_URL } from '@/services/api.js'
-
 // false = menuen er lukket, true = menuen er åben
 const isOpen = ref(false)
 </script>
@@ -32,7 +29,8 @@ const isOpen = ref(false)
           <button class="burger" aria-label="Menu" @click="isOpen = !isOpen">
             {{ isOpen ? '✕' : '☰' }}
           </button>
-          <BaseButton variant="primary" :href="BOOK_URL">BOOK</BaseButton>
+          <!-- Uden link: knappen er kun til pynt og gør ingenting, når man klikker -->
+          <BaseButton variant="primary" type="button">BOOK</BaseButton>
         </div>
       </div>
   </header>
