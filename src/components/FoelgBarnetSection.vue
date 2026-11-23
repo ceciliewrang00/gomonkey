@@ -6,6 +6,12 @@
 // Ikonet på kortet "Klatr med på banen"
 import klatreIkon from '@/assets/images/klatreikon.svg'
 
+// Ikonet på kortet "Gå med på jorden og hep"
+import stepsIkon from '@/assets/images/stepsikon.svg'
+
+// Ikonet på kortet "Vent ved start eller mål"
+import startIkon from '@/assets/images/ikon_start.svg'
+
 // De tre muligheder. ikon = hvilken tegning der vises (se templaten)
 const MULIGHEDER = [
   {
@@ -43,19 +49,10 @@ const MULIGHEDER = [
         <span class="foelg__ikon" aria-hidden="true">
           <!-- Klatr med: klatreikon.svg -->
           <img v-if="m.ikon === 'klatr'" :src="klatreIkon" alt="" class="foelg__ikon-billede">
-          <!-- Gå med: to fodspor -->
-          <svg v-else-if="m.ikon === 'gaa'" viewBox="0 0 24 24">
-            <path d="M8 3c-2 0-3 2.5-3 5s1 4 3 4 3-1.5 3-4-1-5-3-5Z" />
-            <path d="M5.5 15.5 6 19a2 2 0 0 0 4 0l.5-3.5" />
-            <path d="M16 6c2 0 3 2.5 3 5s-1 4-3 4-3-1.5-3-4 1-5 3-5Z" />
-            <path d="M13.5 18.5 14 21" />
-            <path d="M18.5 18.5 18 21" />
-          </svg>
-          <!-- Vent ved mål: et flag -->
-          <svg v-else viewBox="0 0 24 24">
-            <path d="M5 21V4" />
-            <path d="M5 4h11l-2 4 2 4H5" />
-          </svg>
+          <!-- Gå med: stepsikon.svg -->
+          <img v-else-if="m.ikon === 'gaa'" :src="stepsIkon" alt="" class="foelg__ikon-billede">
+          <!-- Vent ved start eller mål: ikon_start.svg -->
+          <img v-else :src="startIkon" alt="" class="foelg__ikon-billede foelg__ikon-billede--start">
         </span>
         <h3 class="foelg__titel">{{ m.titel }}</h3>
         <p class="foelg__tekst">{{ m.tekst }}</p>
@@ -163,6 +160,12 @@ const MULIGHEDER = [
   width: 1.75rem;
   height: 1.75rem;
   object-fit: contain;
+}
+
+// Startikonet har mere luft i selve filen og vises derfor lidt større
+.foelg__ikon-billede--start {
+  width: 2.25rem;
+  height: 2.25rem;
 }
 
 .foelg__titel {
