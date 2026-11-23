@@ -192,7 +192,7 @@ onMounted(async () => {
       white-space: nowrap;
       gap: 0.4rem;
       padding: 0.3rem 0.75rem 0.3rem 0.55rem;
-      border-radius: 2rem;
+      border-radius: 1rem;
       background-color: rgba(c.$primary_light25, 0.07);
       font-size: 0.85rem;
       font-weight: 500;

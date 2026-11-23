@@ -423,7 +423,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
   min-width: 1.4rem;
   height: 1.4rem;
   padding: 0 0.4rem;
-  border-radius: 999px;
+  border-radius: 1rem;
   background-color: c.$forest_green25;
   font-size: 0.75rem;
   font-weight: 800;

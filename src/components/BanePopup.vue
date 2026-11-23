@@ -279,7 +279,7 @@ const skalaer = computed(() => {
   gap: s.$spacing-xs;
   margin-top: 0.4rem;
   padding: 0.6rem 0.9rem;
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   background-color: c.$forest_green25;
   font-size: 0.875rem;
   line-height: 1.3;

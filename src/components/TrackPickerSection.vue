@@ -169,7 +169,7 @@ onMounted(async () => {
   height: 100%;
   box-sizing: border-box;
   padding: 0.9rem 1.1rem;
-  border-radius: 0.9rem;
+  border-radius: 1rem;
   background-color: c.$primary_light25;
   color: c.$primary_black100;
   font-weight: 400;

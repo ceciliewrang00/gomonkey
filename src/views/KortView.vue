@@ -203,7 +203,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     button {
       background: transparent;
       border: 0;
-      border-radius: 0.75rem;
+      border-radius: 1rem;
       width: 46px;
       height: 46px;
       color: c.$primary_black100;
@@ -242,7 +242,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     z-index: 4;
     color: c.$primary_black100;
     background: rgba(c.$primary_light25, 0.93);
-    border-radius: 0.75rem;
+    border-radius: 1rem;
     padding: 5px 9px;
     font-size: 0.8rem;
     font-weight: 600;
@@ -274,7 +274,7 @@ $skygge: 0 4px 16px rgba(c.$primary_black100, 0.2);
     button {
       background: rgba(c.$primary_light25, 0.15);
       border: 0;
-      border-radius: 0.75rem;
+      border-radius: 1rem;
       color: c.$primary_light25;
       font-size: 24px;
       line-height: 1;

@@ -191,7 +191,7 @@ const MULIGHEDER = [
   padding: 0.9rem s.$spacing-s;
   // Lyserød kant, så det, man ikke kan, springer i øjnene på den mørke baggrund
   border: 2px solid c.$forest_pink100;
-  border-radius: 0.75rem;
+  border-radius: 1rem;
 
   svg {
     flex-shrink: 0;

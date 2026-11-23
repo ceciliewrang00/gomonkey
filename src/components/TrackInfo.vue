@@ -434,7 +434,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     min-height: 16rem;
     padding: 0;
     border: none;
-    border-radius: 1.25rem;
+    border-radius: 1rem;
     overflow: hidden;
     background: none;
     cursor: zoom-in;
@@ -499,7 +499,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     max-height: calc(100dvh - 2rem);
     padding: 0;
     border: none;
-    border-radius: 1.25rem;
+    border-radius: 1rem;
     background-color: c.$primary_light25;
     box-shadow: 0 1.5rem 4rem rgba(c.$primary_black100, 0.4);
     overflow: hidden;
@@ -619,7 +619,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     gap: 0.6rem;
     margin: 0;
     padding: 0.5rem 1rem 0.5rem 0.75rem;
-    border-radius: 0.75rem;
+    border-radius: 1rem;
     background-color: c.$forest_green25;
     color: c.$primary_darkgreen;
     font-size: 1rem;
@@ -649,7 +649,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 
     .fakta__boks {
         padding: 0.75rem 1rem;
-        border-radius: 0.75rem;
+        border-radius: 1rem;
         background-color: c.$primary_darkgreen;
         color: c.$primary_light25;
     }
@@ -750,7 +750,7 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     z-index: 5;
     width: min(18rem, 80vw);
     padding: 0.75rem 1rem;
-    border-radius: 0.75rem;
+    border-radius: 1rem;
     background-color: c.$primary_darkgreen;
     color: c.$primary_light25;
     font-size: 0.85rem;

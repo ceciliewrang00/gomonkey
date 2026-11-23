@@ -219,7 +219,7 @@ const TILKOEB = [
   flex-direction: column;
   gap: s.$spacing-s;
   padding: s.$spacing-l;
-  border-radius: 1.25rem;
+  border-radius: 1rem;
   background-color: c.$primary_darkgreen;
   color: c.$primary_light25;
 }

@@ -227,7 +227,7 @@ const synlige = SPOERGSMAAL.filter((s) => !s.mangler)
 .faq__punkt {
   flex-shrink: 0;  // kortene må ikke klemmes sammen
   padding: 0 s.$spacing-s;
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   background-color: c.$primary_darkgreen;
   color: c.$primary_light25;
 }

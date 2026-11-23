@@ -298,7 +298,7 @@ onUnmounted(() => {
   gap: 0.1rem;
   margin: 0;
   padding: 0.7rem 1.1rem 0.6rem;
-  border-radius: 0.8rem;
+  border-radius: 1rem;
   background-color: c.$primary_light25;
   color: c.$primary_darkgreen;
   // Fladt: ingen skygge, så skiltet ikke ligner en knap

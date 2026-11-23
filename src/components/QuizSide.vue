@@ -885,7 +885,7 @@ button:disabled {
   align-items: flex-start;
   gap: 0.75rem;
   padding: 0.75rem s.$spacing-s;
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   background-color: c.$primary_black100;
   color: c.$primary_light25;
   font-weight: 700;
@@ -910,7 +910,7 @@ button:disabled {
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   border: 2px solid c.$primary_black100;
-  border-radius: 0.75rem;
+  border-radius: 1rem;
 
   svg {
     flex-shrink: 0;
@@ -952,7 +952,7 @@ button:disabled {
 .resultat-besked {
   padding: 0.75rem 1rem;
   border-left: 4px solid c.$forest_pink100;
-  border-radius: 0.5rem;
+  border-radius: 1rem;
   background-color: c.$forest_pink25;
   font-size: 0.95rem;
   line-height: 1.5;
