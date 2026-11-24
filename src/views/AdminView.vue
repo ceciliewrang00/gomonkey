@@ -90,7 +90,7 @@ onUnmounted(() => {
   <main class="admin">
     <!-- Øverste række: logo til venstre, knapper til højre -->
     <div class="head">
-      <img src="@/assets/images/logo.svg" alt="GoMonkey logo">
+      <img src="@/assets/images/logo.webp" alt="GoMonkey logo" width="108" height="48">
 
       <div class="double-button">
         <RouterLink to="/" class="button-primary">← Tilbage til forsiden</RouterLink>

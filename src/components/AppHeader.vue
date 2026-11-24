@@ -13,7 +13,7 @@ const isOpen = ref(false)
 <template>
   <header>
       <a href="#" class="logo-link">
-        <img src="@/assets/images/logo.svg" alt="GoMonkey – se Forest lokationer">
+        <img src="@/assets/images/logo.webp" alt="GoMonkey – se Forest lokationer" width="108" height="48">
       </a>
       <div class="menu">
         <!-- Klassen "open" sættes på, når menuen er åben -->
