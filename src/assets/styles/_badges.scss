@@ -1,7 +1,7 @@
 @use 'fonts' as ft;
 @use 'colors' as c;
 
-/* Mærker: en pille over en sektionsoverskrift (h2), fx "Udforsk terrænet". Højst én pr. sektion.
+/* Mærker: en pille over en sektionsoverskrift (h2), fx "Udforsk området". Højst én pr. sektion.
    Almindelige bogstaver og ingen ekstra bogstavafstand – det adskiller dem fra .etiket,
    som er ren tekst med store bogstaver inde i indholdet.
    Farven kan ændres med variablerne --badge-bg og --badge-color */

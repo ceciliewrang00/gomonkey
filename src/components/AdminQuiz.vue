@@ -104,6 +104,19 @@ function rydSvar(svar) {
   return ren
 }
 
+// Hjælpeteksten under spørgsmålet: almindelig, til barn og til gruppe.
+// Tomme felter slettes, så quizzen bruger den almindelige tekst (eller ingen)
+const HJAELP_FELTER = ['hjaelp', 'hjaelpBarn', 'hjaelpGruppe']
+
+function rydHjaelp(data) {
+  for (const felt of HJAELP_FELTER) {
+    const vaerdi = (data[felt] ?? '').trim()
+    if (vaerdi) data[felt] = vaerdi
+    else delete data[felt]
+  }
+  return data
+}
+
 // ---------- Opret spørgsmål ----------
 
 // Formularen "Opret spørgsmål"
@@ -170,13 +183,16 @@ async function opretSpoergsmaal() {
     const sidstePlacering = Math.max(0, ...spoergsmaal.value.map((sp) => Number(sp.raekkefoelge) || 0))
 
     // type 'niveau' = spørgsmålet er med til at bestemme anbefalingen
-    const data = {
+    const data = rydHjaelp({
       id,
       tekst: nytSpoergsmaal.value.tekst.trim(),
+      hjaelp: nytSpoergsmaal.value.hjaelp,
+      hjaelpBarn: nytSpoergsmaal.value.hjaelpBarn,
+      hjaelpGruppe: nytSpoergsmaal.value.hjaelpGruppe,
       type: 'niveau',
       raekkefoelge: sidstePlacering + 1,
       svar: nytSpoergsmaal.value.svar.map(rydSvar)
-    }
+    })
 
     // PUT gemmer spørgsmålet på spoergsmaal/<id> med beviset på login
     const response = await fetch(`${SPOERGSMAAL_URL}/${id}.json?auth=${encodeURIComponent(token)}`, {
@@ -252,6 +268,7 @@ async function gemRedigering() {
   // Rydder op i teksterne. Alle andre felter bliver, som de er
   data.tekst = data.tekst.trim()
   data.svar = data.svar.map(rydSvar)
+  rydHjaelp(data)
 
   gemmerRedigering.value = true
 
@@ -393,6 +410,18 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
           <input :id="'rediger-tekst-' + sp.id" v-model="redigerer.tekst" type="text" required />
         </div>
 
+        <!-- Hjælpeteksten, der står under spørgsmålet i quizzen -->
+        <div class="underline">
+          <label :for="'rediger-hjaelp-' + sp.id">Hjælpetekst under spørgsmålet (valgfri)</label>
+          <input :id="'rediger-hjaelp-' + sp.id" v-model="redigerer.hjaelp" type="text" />
+
+          <label :for="'rediger-hjaelp-barn-' + sp.id">Hjælpetekst, når man svarer for sit barn (valgfri)</label>
+          <input :id="'rediger-hjaelp-barn-' + sp.id" v-model="redigerer.hjaelpBarn" type="text" />
+
+          <label :for="'rediger-hjaelp-gruppe-' + sp.id">Hjælpetekst, når man svarer for en gruppe (valgfri)</label>
+          <input :id="'rediger-hjaelp-gruppe-' + sp.id" v-model="redigerer.hjaelpGruppe" type="text" />
+        </div>
+
         <div v-for="(svar, indeks) in redigerer.svar" :key="svar.id" class="underline">
           <label :for="'rediger-svar-' + sp.id + '-' + svar.id">
             Svarmulighed {{ indeks + 1 }}
@@ -524,6 +553,18 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
     <div class="underline">
       <label for="nyt-spoergsmaal">Spørgsmålstekst</label>
       <input id="nyt-spoergsmaal" v-model="nytSpoergsmaal.tekst" type="text" required />
+    </div>
+
+    <!-- Hjælpeteksten, der står under spørgsmålet i quizzen -->
+    <div class="underline">
+      <label for="nyt-hjaelp">Hjælpetekst under spørgsmålet (valgfri)</label>
+      <input id="nyt-hjaelp" v-model="nytSpoergsmaal.hjaelp" type="text" />
+
+      <label for="nyt-hjaelp-barn">Hjælpetekst, når man svarer for sit barn (valgfri)</label>
+      <input id="nyt-hjaelp-barn" v-model="nytSpoergsmaal.hjaelpBarn" type="text" />
+
+      <label for="nyt-hjaelp-gruppe">Hjælpetekst, når man svarer for en gruppe (valgfri)</label>
+      <input id="nyt-hjaelp-gruppe" v-model="nytSpoergsmaal.hjaelpGruppe" type="text" />
     </div>
 
     <!-- Felter pr. svarmulighed -->

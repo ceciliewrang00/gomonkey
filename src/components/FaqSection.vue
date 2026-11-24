@@ -11,16 +11,14 @@ const SPOERGSMAAL = [
   {
     sp: 'Er det sikkert at klatre?',
     svar: [
-      'Ja. Vi bruger et sikkerhedssystem med "continuous belay": Du klikker dig på sikkerhedswiren nede på jorden og kan slet ikke klikke dig af, før du står på jorden igen efter banen. Læs mere om ',
-      { tekst: 'vores sikkerhedssystem', href: 'https://gomonkey.dk/inspiration/sikkerhedssystem/' },
-      '.',
+      'Ja. Vi bruger et sikkerhedssystem med "continuous belay": Du klikker dig på sikkerhedswiren nede på jorden og kan slet ikke klikke dig af, før du står på jorden igen efter banen. Læs mere om vores sikkerhedssystem.',
     ],
   },
   {
     sp: 'Hvordan foregår instruktionen?',
     svar: ['Alle starter med en grundig instruktion, hvor vi viser, hvordan selen bruges, og forklarer reglerne i parken. Vores guider tjekker, at alles seler sidder rigtigt.'],
     liste: [
-      'Bagefter prøver du en kort prøvebane – så mange gange du har lyst.',
+      'Bagefter prøver du en kort prøvebane, så mange gange du har lyst.',
       'Ingen bliver sendt op i træerne, før de føler sig helt trygge.',
     ],
   },
@@ -38,7 +36,7 @@ const SPOERGSMAAL = [
   },
   {
     sp: 'Kan man komme ned, hvis man fortryder?',
-    svar: ['Ja. Der er flere nedgangsstiger undervejs på klatrebanerne, så du kan komme ned, hvis du ikke har lyst til at fortsætte.'],
+    svar: ['Ja. Der er nedgangsstiger på rød bane, så du kan komme ned, hvis du ikke har lyst til at fortsætte. På de andre baner skal man bede om hjælp fra vores instruktøre'],
   },
   {
     sp: 'Hvad koster det, og hvor længe må vi klatre?',

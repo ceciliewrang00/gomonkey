@@ -45,7 +45,7 @@ onMounted(async () => {
         <span class="badge badge--dark">Banevælger</span>
 
         <h2>Find din bane</h2>
-        <p>Tag vores banevælger: svar på 5 hurtige spørgsmål, så finder vi den bane, der passer til jer. Det tager under et minut.</p>
+        <p>Tag vores banevælger: Svar på et par hurtige spørgsmål, så finder vi den bane, der passer til jer. Det tager under et minut.</p>
 
         <!-- Første spørgsmål. Hvert svar er et link, der starter banevælgeren med svaret valgt -->
         <div class="baner-spoergsmaal">

@@ -159,8 +159,7 @@ onUnmounted(() => {
       </p>
 
       <h1>
-        Hvor højt<br>
-        tør du?
+        Hvilken bane passer til dig?
       </h1>
 
       <!-- h2 for strukturen, men samme udseende som h3 -->

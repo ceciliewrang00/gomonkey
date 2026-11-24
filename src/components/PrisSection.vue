@@ -31,8 +31,8 @@ const TILKOEB = [
     <!-- Venstre: overskrift og hvad der er med -->
     <div class="priser__intro">
       <span class="badge badge--dark">Priser</span>
-      <h2 id="priser-titel">Det koster et besøg</h2>
-      <p>Prisen gælder hele besøget – udstyr, instruktion og Bounce er med.</p>
+      <h2 id="priser-titel">Hvad koster et besøg?</h2>
+      <p>Prisen gælder hele besøget: <br>Udstyr, instruktion og Bounce er med.</p>
 
       <h4 class="priser__undertitel">Det får I</h4>
       <ul class="priser__inkluderet">

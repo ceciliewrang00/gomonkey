@@ -139,14 +139,14 @@ export function skalVises(sp, svar) {
 function grundFor(id, niveau, svar) {
   const hvem = subjekt(svar, 'andet')  // "Du", "Dit barn" eller "Nogle i gruppen"
   // Tilføjelsen kommer kun med, hvis man faktisk er tryg ved højder
-  const trygTillaeg = svar.tryghed?.maksNiveau > 1 ? ' – også selvom man er tryg ved højder' : ''
+  const trygTillaeg = svar.tryghed?.maksNiveau > 1 ? ', også selvom man er tryg ved højder' : ''
   const tekster = {
     erfaring: niveau === 1
       ? `${hvem} har ikke klatret før, og hos GoMonkey starter alle førstegangsklatrere på en let bane og lærer udstyret at kende${trygTillaeg}.`
       : 'De svære baner anbefaler vi først, når man har klatret på høje baner før.',
     tryghed: niveau === 1
       ? `${hvem} har det ikke helt godt med højder, så en lav bane giver den bedste start.`
-      : 'Lidt sus i maven er helt normalt – en mellembane giver plads til at vænne sig til højden.',
+      : 'Lidt sus i maven er helt normalt. En mellembane giver plads til at vænne sig til højden.',
     oplevelse: niveau === 1
       ? 'Ønsket om en rolig og tryg tur passer bedst til de lette baner.'
       : 'Svarene peger på en mellembane frem for de sværeste baner.',
@@ -260,7 +260,7 @@ export function beregnBane(svar, baner) {
 // En kort, neutral sætning om niveauet, som passer til både voksne, børn og grupper
 const NIVEAU_TEKST = {
   1: 'En god første bane, hvor man lærer udstyret at kende i trygge rammer.',
-  2: 'Her er der mere højde og længere svæv – den passer, når man er klar til lidt sus i maven.',
+  2: 'Her er der mere højde og længere svæv. Den passer, når man er klar til lidt sus i maven.',
   3: 'En af parkens mest udfordrende baner med høj puls og flot udsigt.',
 }
 
@@ -351,7 +351,7 @@ export function lavBegrundelse(anbefaling, svar) {
     .map((l) => l.grund)
   const unikke = [...new Set(grunde)].slice(0, 2)
 
-  unikke.push('Vi anbefaler altid den letteste bane på niveauet – så er der noget at glæde sig til bagefter.')
+  unikke.push('Vi anbefaler altid den letteste bane på niveauet, så der er noget at glæde sig til bagefter.')
   return unikke
 }
 
@@ -397,7 +397,7 @@ export function lavFoerstegangsInfo(anbefaling, svar, baner) {
 
   return {
     titel: 'Første gang i GoMonkey?',
-    tekst: `Alle, der ikke har klatret før, starter på ${lette} – uanset alder, mod og lyst. Her lærer man udstyret og sikkerheden at kende sammen med vores instruktører. ${Subj} vælger selv, hvilken af dem ${f.igen} starter på, og bagefter må ${f.igen} klatre på alle de baner, ${f.igen} er ${f.hoej} nok til.`,
+    tekst: `Alle, der ikke har klatret før, starter på ${lette}, uanset alder, mod og lyst. Her lærer man udstyret og sikkerheden at kende sammen med vores instruktører. ${Subj} vælger selv, hvilken af dem ${f.igen} starter på, og bagefter må ${f.igen} klatre på alle de baner, ${f.igen} er ${f.hoej} nok til.`,
   }
 }
 
@@ -419,7 +419,7 @@ export function lavGruppeBesked(anbefaling, svar, baner) {
 
   if (smaaIGruppen(svar)) {
     linjer.push(
-      `Børnene under ${KRAV.let} cm kan ikke klatre på banerne endnu. Til gengæld er der ingen krav på Bounce – trampolinen mellem træerne – så de små kan hoppe, mens resten klatrer.`
+      `Børnene under ${KRAV.let} cm kan ikke klatre på banerne endnu. Til gengæld er der ingen krav på Bounce, trampolinen mellem træerne, så de små kan hoppe, mens resten klatrer.`
     )
   }
 
@@ -468,13 +468,13 @@ export function lavFritfaldBesked(anbefaling, svar, baner) {
   }
 
   if (anbefaling?.niveau === 3) {
-    return `Er der mod på mere efter ${anbefaling.bane.name}, slutter ${navn} med et frit fald fra op til 16 meters højde – altid sammen med en instruktør.`
+    return `Er der mod på mere efter ${anbefaling.bane.name}, slutter ${navn} med et frit fald fra op til 16 meters højde, altid sammen med en instruktør.`
   }
 
   // Førstegangsklatrere kan prøve Sort efter den lette startbane
   if (foerstegangUdenRegel(anbefaling, svar, baner) === 3) {
     const f = former(svar)
-    return `${navn} er en mulighed, når ${f.subj} har prøvet ${anbefaling.bane.name} først. Den slutter med et frit fald fra 16 meter – altid sammen med en instruktør.`
+    return `${navn} er en mulighed, når ${f.subj} har prøvet ${anbefaling.bane.name} først. Den slutter med et frit fald fra 16 meter, altid sammen med en instruktør.`
   }
 
   return `${navn} er parkens sværeste bane og slutter med et frit fald fra 16 meter. Prøv de andre baner først, og tal med en instruktør, når du er klar.`

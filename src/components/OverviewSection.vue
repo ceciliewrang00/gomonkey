@@ -40,10 +40,10 @@ onMounted(async () => {
       </RouterLink>
 
       <div id="overblik-tekst" class="tekst-indhold">
-        <span class="badge badge--light">Udforsk terrænet</span>
+        <span class="badge badge--light">Udforsk området</span>
         <h2>Overblik over parken</h2>
         <p class="lead">
-          Før du kaster dig ud i eventyret, så få styr på terrænet. Vores interaktive kort viser dig alle baner, startpunkter og højdekurver.
+          Før du kaster dig ud i eventyret, så få styr på området. Vores interaktive kort viser dig alle baner, startpunkter og højdekurver.
         </p>
         <p class="sub-tekst">
           Hver bane har sin egen unikke farve og sværhedsgrad, så du nemt kan finde den perfekte udfordring for dig.
@@ -162,10 +162,12 @@ onMounted(async () => {
     }
   }
 
-  // 4 lige brede mærker pr. linje, så de står præcis under hinanden
+  // 4 lige lange mærker pr. linje, så de står præcis under hinanden.
+  // Fast bredde, der er plads til det længste navn (Lyserød) med luft. Også Bounce får samme bredde
   .farve-liste {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 7.5rem));
+    justify-content: start;
     gap: 0.4rem;
     list-style: none;
     margin: 0;
@@ -173,7 +175,7 @@ onMounted(async () => {
 
     // Mobil: 2 mærker pr. linje
     @media (max-width: 520px) {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 7.5rem));
     }
 
     // Ét mærke pr. bane med svag lys baggrund
@@ -204,6 +206,8 @@ onMounted(async () => {
     .farve-liste__andet {
       background-color: transparent;
       border: 1px dashed rgba(c.$primary_light25, 0.35);
+      // Kanten (1px) trækkes fra paddingen, så Bounce har samme størrelse og luft som de andre
+      padding: calc(0.3rem - 1px) calc(0.75rem - 1px) calc(0.3rem - 1px) calc(0.55rem - 1px);
     }
   }
 

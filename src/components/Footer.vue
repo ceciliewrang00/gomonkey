@@ -18,31 +18,26 @@ const altGodt = [
   { navn: 'Gavekort', href: '#' },
 ]
 
-// Sociale medier. path er tegningen af ikonet
+// Sociale medier (kun ikoner, ingen links). path er tegningen af ikonet
 const sociale = [
   {
     navn: 'LinkedIn',
-    href: 'https://www.linkedin.com/',
     path: 'M6.94 8.5H3.56V20h3.38V8.5zM5.25 3A1.97 1.97 0 1 0 5.25 6.94 1.97 1.97 0 0 0 5.25 3zM20.44 13.3c0-3.1-1.66-4.55-3.87-4.55-1.79 0-2.59.98-3.03 1.67V8.5h-3.38c.04.95 0 11.5 0 11.5h3.38v-6.42c0-.34.02-.69.13-.93.27-.69.9-1.4 1.95-1.4 1.38 0 1.93 1.05 1.93 2.59V20h3.38l.01-6.7z',
   },
   {
     navn: 'Facebook',
-    href: 'https://www.facebook.com/',
     path: 'M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z',
   },
   {
     navn: 'Instagram',
-    href: 'https://www.instagram.com/',
     path: 'M12 7.2a4.8 4.8 0 1 0 0 9.6 4.8 4.8 0 0 0 0-9.6zm0 7.9a3.1 3.1 0 1 1 0-6.2 3.1 3.1 0 0 1 0 6.2zM17.1 5.8a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2zM16 2H8a6 6 0 0 0-6 6v8a6 6 0 0 0 6 6h8a6 6 0 0 0 6-6V8a6 6 0 0 0-6-6zm4.2 14A4.2 4.2 0 0 1 16 20.2H8A4.2 4.2 0 0 1 3.8 16V8A4.2 4.2 0 0 1 8 3.8h8A4.2 4.2 0 0 1 20.2 8v8z',
   },
   {
     navn: 'TikTok',
-    href: 'https://www.tiktok.com/',
     path: 'M16.6 2h-3.3v13.3a2.9 2.9 0 1 1-2.1-2.8V9.1a6.3 6.3 0 1 0 5.4 6.2V8.6a7.7 7.7 0 0 0 4.4 1.4V6.7a4.4 4.4 0 0 1-4.4-4.4V2z',
   },
   {
     navn: 'YouTube',
-    href: 'https://www.youtube.com/',
     path: 'M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8zM9.8 15.1V8.9L15.6 12l-5.8 3.1z',
   },
 ]
@@ -64,9 +59,9 @@ const aar = new Date().getFullYear()
           </p>
           <ul class="footer__social">
             <li v-for="s in sociale" :key="s.navn">
-              <a :href="s.href" :aria-label="s.navn" target="_blank" rel="noopener">
+              <span class="footer__ikon" role="img" :aria-label="s.navn">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="s.path" /></svg>
-              </a>
+              </span>
             </li>
           </ul>
         </div>
@@ -76,14 +71,14 @@ const aar = new Date().getFullYear()
           <div class="footer__group">
             <h4 class="footer__heading">Vores lokationer</h4>
             <ul class="footer__links">
-              <li v-for="l in lokationer" :key="l.navn"><a :href="l.href">{{ l.navn }}</a></li>
+              <li v-for="l in lokationer" :key="l.navn"><a :href="l.href" class="lille-tekst">{{ l.navn }}</a></li>
             </ul>
           </div>
 
           <div class="footer__group">
             <h4 class="footer__heading">Alt godt om GoMonkey</h4>
             <ul class="footer__links">
-              <li v-for="l in altGodt" :key="l.navn"><a :href="l.href">{{ l.navn }}</a></li>
+              <li v-for="l in altGodt" :key="l.navn"><a :href="l.href" class="lille-tekst">{{ l.navn }}</a></li>
             </ul>
           </div>
         </nav>
@@ -182,7 +177,7 @@ $linje: rgba(239, 233, 229, 0.08);
   display: flex;
   gap: 0.85rem;
 
-  a {
+  .footer__ikon {
     display: grid;
     place-items: center;
     width: 2rem;
@@ -221,10 +216,7 @@ $linje: rgba(239, 233, 229, 0.08);
     grid-template-columns: repeat(3, 1fr);
   }
 
-  // Samme regler som brødtekst i _typography.scss (16/18px, vægt 300)
-  a {
-    @include m.brodtekst;
-  }
+  // Teksten følger .lille-tekst i _typography.scss (14px, vægt 300)
 }
 
 /* --- Bund --- */

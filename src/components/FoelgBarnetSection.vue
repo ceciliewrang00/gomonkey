@@ -16,7 +16,7 @@ import startIkon from '@/assets/images/ikon_start.svg'
 const MULIGHEDER = [
   {
     ikon: 'klatr',
-    titel: 'Klatr med på banen',
+    titel: 'Klatre med på banen',
     tekst: 'Du klatrer sammen med dit barn. Så skal du selv have udstyr på og købe billet.',
   },
   {
