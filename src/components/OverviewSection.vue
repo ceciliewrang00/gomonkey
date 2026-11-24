@@ -30,7 +30,7 @@ onMounted(async () => {
       <!-- Kortet er ét stort link til kortsiden -->
       <RouterLink to="/kort" class="kort-kort" aria-label="Se det fulde kort">
         <img
-          src="@/assets/images/kort_forrestodense.png"
+          src="@/assets/images/kort.webp"
           alt="Kort over GoMonkey Odense"
           class="overblik-kort"
         >

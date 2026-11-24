@@ -53,7 +53,7 @@ const aar = new Date().getFullYear()
       <div class="footer__top">
         <!-- Venstre side: logo, tagline og sociale medier -->
         <div class="footer__brand">
-          <img class="footer__logo" src="@/assets/images/logo.svg" alt="GoMonkey logo" />
+          <img class="footer__logo" src="@/assets/images/logo.webp" alt="GoMonkey logo" />
           <p class="footer__tagline">
             Vi skaber unikke klatreoplevelser med nervepirrende frihed.
           </p>
