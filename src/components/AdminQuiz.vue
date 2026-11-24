@@ -29,6 +29,11 @@ const BARN_HJAELP = 'Denne tekst vises kun, når man svarer for et barn. Hvis de
 
 const GRUPPE_HJAELP = 'Denne tekst vises kun, når man svarer for en gruppe. Hvis den er tom, vises den almindelige tekst.'
 
+// Hjælpeteksten i (i)'et ved "Hjælpetekst under spørgsmålet"
+const SPOERGSMAAL_HJAELP =
+  'En kort forklaring, der står med lille skrift under spørgsmålet i quizzen. ' +
+  'Den vises for alle, medmindre der er skrevet en særlig tekst til barn eller gruppe herunder.'
+
 // ---------- Info-boblerne (i) ----------
 // Nøglen på den boble, der er åben (null = ingen)
 const aabenInfo = ref(null)
@@ -412,13 +417,79 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 
         <!-- Hjælpeteksten, der står under spørgsmålet i quizzen -->
         <div class="underline">
-          <label :for="'rediger-hjaelp-' + sp.id">Hjælpetekst under spørgsmålet (valgfri)</label>
+          <div class="label-med-info">
+            <label :for="'rediger-hjaelp-' + sp.id">Hjælpetekst under spørgsmålet (valgfri)</label>
+            <!-- (i)-knappen åbner en boble med forklaringen -->
+            <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
+              <button
+                type="button"
+                class="info__knap"
+                aria-label="Hvad betyder Hjælpetekst under spørgsmålet?"
+                :aria-expanded="aabenInfo === 'rediger-hjaelp-' + sp.id"
+                :aria-controls="'info-' + 'rediger-hjaelp-' + sp.id"
+                @click="skiftInfo('rediger-hjaelp-' + sp.id)"
+              >
+                <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+                  <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <circle cx="10" cy="6.2" r="1.15" fill="currentColor" />
+                  <rect x="9.1" y="8.6" width="1.8" height="6" rx="0.9" fill="currentColor" />
+                </svg>
+              </button>
+              <span v-if="aabenInfo === 'rediger-hjaelp-' + sp.id" :id="'info-' + 'rediger-hjaelp-' + sp.id" class="info__boble">
+                {{ SPOERGSMAAL_HJAELP }}
+              </span>
+            </span>
+          </div>
           <input :id="'rediger-hjaelp-' + sp.id" v-model="redigerer.hjaelp" type="text" />
 
-          <label :for="'rediger-hjaelp-barn-' + sp.id">Hjælpetekst, når man svarer for sit barn (valgfri)</label>
+          <div class="label-med-info">
+            <label :for="'rediger-hjaelp-barn-' + sp.id">Hjælpetekst, når man svarer for sit barn (valgfri)</label>
+            <!-- (i)-knappen åbner en boble med forklaringen -->
+            <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
+              <button
+                type="button"
+                class="info__knap"
+                aria-label="Hvad betyder Hjælpetekst, når man svarer for sit barn?"
+                :aria-expanded="aabenInfo === 'rediger-hjaelp-barn-' + sp.id"
+                :aria-controls="'info-' + 'rediger-hjaelp-barn-' + sp.id"
+                @click="skiftInfo('rediger-hjaelp-barn-' + sp.id)"
+              >
+                <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+                  <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <circle cx="10" cy="6.2" r="1.15" fill="currentColor" />
+                  <rect x="9.1" y="8.6" width="1.8" height="6" rx="0.9" fill="currentColor" />
+                </svg>
+              </button>
+              <span v-if="aabenInfo === 'rediger-hjaelp-barn-' + sp.id" :id="'info-' + 'rediger-hjaelp-barn-' + sp.id" class="info__boble">
+                {{ BARN_HJAELP }}
+              </span>
+            </span>
+          </div>
           <input :id="'rediger-hjaelp-barn-' + sp.id" v-model="redigerer.hjaelpBarn" type="text" />
 
-          <label :for="'rediger-hjaelp-gruppe-' + sp.id">Hjælpetekst, når man svarer for en gruppe (valgfri)</label>
+          <div class="label-med-info">
+            <label :for="'rediger-hjaelp-gruppe-' + sp.id">Hjælpetekst, når man svarer for en gruppe (valgfri)</label>
+            <!-- (i)-knappen åbner en boble med forklaringen -->
+            <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
+              <button
+                type="button"
+                class="info__knap"
+                aria-label="Hvad betyder Hjælpetekst, når man svarer for en gruppe?"
+                :aria-expanded="aabenInfo === 'rediger-hjaelp-gruppe-' + sp.id"
+                :aria-controls="'info-' + 'rediger-hjaelp-gruppe-' + sp.id"
+                @click="skiftInfo('rediger-hjaelp-gruppe-' + sp.id)"
+              >
+                <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+                  <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <circle cx="10" cy="6.2" r="1.15" fill="currentColor" />
+                  <rect x="9.1" y="8.6" width="1.8" height="6" rx="0.9" fill="currentColor" />
+                </svg>
+              </button>
+              <span v-if="aabenInfo === 'rediger-hjaelp-gruppe-' + sp.id" :id="'info-' + 'rediger-hjaelp-gruppe-' + sp.id" class="info__boble">
+                {{ GRUPPE_HJAELP }}
+              </span>
+            </span>
+          </div>
           <input :id="'rediger-hjaelp-gruppe-' + sp.id" v-model="redigerer.hjaelpGruppe" type="text" />
         </div>
 
@@ -557,13 +628,79 @@ onUnmounted(() => document.removeEventListener('click', lukVedKlikUdenfor))
 
     <!-- Hjælpeteksten, der står under spørgsmålet i quizzen -->
     <div class="underline">
-      <label for="nyt-hjaelp">Hjælpetekst under spørgsmålet (valgfri)</label>
+      <div class="label-med-info">
+        <label for="nyt-hjaelp">Hjælpetekst under spørgsmålet (valgfri)</label>
+        <!-- (i)-knappen åbner en boble med forklaringen -->
+        <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
+          <button
+            type="button"
+            class="info__knap"
+            aria-label="Hvad betyder Hjælpetekst under spørgsmålet?"
+            :aria-expanded="aabenInfo === 'nyt-hjaelp'"
+            :aria-controls="'info-' + 'nyt-hjaelp'"
+            @click="skiftInfo('nyt-hjaelp')"
+          >
+            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+              <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <circle cx="10" cy="6.2" r="1.15" fill="currentColor" />
+              <rect x="9.1" y="8.6" width="1.8" height="6" rx="0.9" fill="currentColor" />
+            </svg>
+          </button>
+          <span v-if="aabenInfo === 'nyt-hjaelp'" :id="'info-' + 'nyt-hjaelp'" class="info__boble">
+            {{ SPOERGSMAAL_HJAELP }}
+          </span>
+        </span>
+      </div>
       <input id="nyt-hjaelp" v-model="nytSpoergsmaal.hjaelp" type="text" />
 
-      <label for="nyt-hjaelp-barn">Hjælpetekst, når man svarer for sit barn (valgfri)</label>
+      <div class="label-med-info">
+        <label for="nyt-hjaelp-barn">Hjælpetekst, når man svarer for sit barn (valgfri)</label>
+        <!-- (i)-knappen åbner en boble med forklaringen -->
+        <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
+          <button
+            type="button"
+            class="info__knap"
+            aria-label="Hvad betyder Hjælpetekst, når man svarer for sit barn?"
+            :aria-expanded="aabenInfo === 'nyt-hjaelp-barn'"
+            :aria-controls="'info-' + 'nyt-hjaelp-barn'"
+            @click="skiftInfo('nyt-hjaelp-barn')"
+          >
+            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+              <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <circle cx="10" cy="6.2" r="1.15" fill="currentColor" />
+              <rect x="9.1" y="8.6" width="1.8" height="6" rx="0.9" fill="currentColor" />
+            </svg>
+          </button>
+          <span v-if="aabenInfo === 'nyt-hjaelp-barn'" :id="'info-' + 'nyt-hjaelp-barn'" class="info__boble">
+            {{ BARN_HJAELP }}
+          </span>
+        </span>
+      </div>
       <input id="nyt-hjaelp-barn" v-model="nytSpoergsmaal.hjaelpBarn" type="text" />
 
-      <label for="nyt-hjaelp-gruppe">Hjælpetekst, når man svarer for en gruppe (valgfri)</label>
+      <div class="label-med-info">
+        <label for="nyt-hjaelp-gruppe">Hjælpetekst, når man svarer for en gruppe (valgfri)</label>
+        <!-- (i)-knappen åbner en boble med forklaringen -->
+        <span class="info" @focusout="lukVedFokusUd" @keydown.esc="aabenInfo = null">
+          <button
+            type="button"
+            class="info__knap"
+            aria-label="Hvad betyder Hjælpetekst, når man svarer for en gruppe?"
+            :aria-expanded="aabenInfo === 'nyt-hjaelp-gruppe'"
+            :aria-controls="'info-' + 'nyt-hjaelp-gruppe'"
+            @click="skiftInfo('nyt-hjaelp-gruppe')"
+          >
+            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+              <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <circle cx="10" cy="6.2" r="1.15" fill="currentColor" />
+              <rect x="9.1" y="8.6" width="1.8" height="6" rx="0.9" fill="currentColor" />
+            </svg>
+          </button>
+          <span v-if="aabenInfo === 'nyt-hjaelp-gruppe'" :id="'info-' + 'nyt-hjaelp-gruppe'" class="info__boble">
+            {{ GRUPPE_HJAELP }}
+          </span>
+        </span>
+      </div>
       <input id="nyt-hjaelp-gruppe" v-model="nytSpoergsmaal.hjaelpGruppe" type="text" />
     </div>
 
